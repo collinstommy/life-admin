@@ -1,0 +1,40 @@
+{
+  "scripts": {
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:generate": "drizzle-kit generate",
+    "db:introspect": "drizzle-kit introspect:sqlite",
+    "deploy": "tailwind && wrangler deploy",
+    "dev": "wrangler dev --live-reload",
+    "start": "concurrently \"npm:tailwind:watch\" \"npm:dev\" \"npm:client:watch\"",
+    "tailwind": "tailwindcss -i ./src/styles.css -o ./assets/static/styles.css",
+    "tailwind:watch": "tailwindcss -i ./src/styles.css -o ./assets/static/styles.css --watch",
+    "client:watch": "bun build ./src/client/index.js --outdir ./assets/static --watch"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.1.8",
+    "@notionhq/client": "^2.2.15",
+    "clsx": "^2.0.0",
+    "drizzle-orm": "^0.31.0",
+    "hono": "^4.2.7",
+    "notion-to-md": "^3.1.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231016.0",
+    "@iconify-json/mdi-light": "^1.1.10",
+    "@iconify/json": "^2.2.190",
+    "@iconify/tailwind": "^0.1.4",
+    "@tailwindcss/forms": "^0.5.6",
+    "@typescript-eslint/eslint-plugin": "^6.7.3",
+    "@typescript-eslint/parser": "^6.7.3",
+    "concurrently": "^8.2.2",
+    "daisyui": "^4.7.2",
+    "drizzle-kit": "^0.21.1",
+    "eslint": "^8.50.0",
+    "prettier": "^3.0.3",
+    "prettier-plugin-tailwindcss": "^0.5.4",
+    "tailwindcss": "^3.3.3",
+    "typescript": "^5.0.4",
+    "wrangler": "^3.0.0"
+  }
+}

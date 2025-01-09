@@ -1,0 +1,12 @@
+node_modules/
+.wrangler
+out.js
+.env
+.dev.vars
+/dist
+*.pem
+*.crx
+
+# Ignore the built files
+/assets/static/index.js
+/assets/static/styles.css

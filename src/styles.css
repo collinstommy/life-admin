@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+#map { height: calc(100vh - 180px); }
+
+.fade-me-out.htmx-swapping {
+  opacity: 0;
+  transition: opacity .2s ease-out;
+}
+
+.htmx-request .icon{
+  display: none;
+}
+
+.htmx-request .loading-spinner {
+  display: block;
+}
