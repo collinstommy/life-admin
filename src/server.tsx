@@ -4,8 +4,25 @@ import { serveStatic } from "hono/cloudflare-workers";
 import manifest from "__STATIC_CONTENT_MANIFEST";
 import { app } from "./app";
 import { NotionApiClient } from "./api/notion";
+import type { MiddlewareHandler } from "hono";
+import { HonoApp } from "./types";
 
-// Initialize Notion client with environment variables
+// Middleware to verify API key
+const authenticateApiKey: MiddlewareHandler<HonoApp> = async (c, next) => {
+  const apiKey = c.req.header("X-API-Key");
+  console.log(apiKey);
+  if (!apiKey || apiKey !== c.env.DAILY_LOG_API_KEY) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  await next();
+};
+
+app.use("/*", async (c, next) => {
+  if (c.req.path.startsWith("/static/")) {
+    return next();
+  }
+  return authenticateApiKey(c, next);
+});
 
 app.get("/static/*", serveStatic({ root: "./", manifest }));
 

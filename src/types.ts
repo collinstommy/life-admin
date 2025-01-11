@@ -7,6 +7,7 @@ type Bindings = {
   NOTION_TOKEN: string;
   NOTION_DATABASE_ID: string;
   DAILY_LOG_CACHE: KVNamespace;
+  DAILY_LOG_API_KEY: string;
 };
 
 export type HonoApp = {
