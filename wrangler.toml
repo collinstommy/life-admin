@@ -1,6 +1,11 @@
-name = "template"
+name = "life-admin"
 main = "src/server.tsx"
 compatibility_date = "2023-09-18"
 
 [site]
 bucket = "./assets"
+
+[[kv_namespaces]]
+binding = "DAILY_LOG_CACHE"
+id = "4deb025f5a424e4ab756cace57bd39d0"
+preview_id = "eae9aca434284992a0429673c2ca3b2e"

@@ -13,6 +13,7 @@ app.get("/logs", async (c) => {
   const notionClient = new NotionApiClient(
     c.env.NOTION_TOKEN,
     c.env.NOTION_DATABASE_ID,
+    c.env.DAILY_LOG_CACHE,
   );
 
   try {
