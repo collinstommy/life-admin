@@ -170,6 +170,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const result = await response.json();
 
+        // Safely display the transcript
+        const transcriptTextElement = document.getElementById("transcriptText");
+        if (transcriptTextElement) {
+          if (result.transcript) {
+            transcriptTextElement.textContent = result.transcript;
+          } else {
+            transcriptTextElement.textContent = "No transcript available.";
+          }
+        } else {
+          console.error(
+            "Cannot find transcript element with ID 'transcriptText'",
+          );
+        }
+
         // Display the result
         resultJson.textContent = JSON.stringify(result.data || result, null, 2);
         processingStatus.style.display = "none";
@@ -203,16 +217,17 @@ document.addEventListener("DOMContentLoaded", () => {
    * Handle discard recording button click
    */
   function handleDiscardRecording() {
-    // Reset audio preview
-    audioPreview.src = "";
+    // Reset the recorder
+    recorder.reset();
 
-    // Hide preview section
-    previewSection.style.display = "none";
-
-    // Reset recorder status
+    // Reset UI
+    startRecordingBtn.disabled = false;
+    stopRecordingBtn.disabled = true;
     recorderStatus.textContent = "Ready to record";
+    previewSection.style.display = "none";
+    resultSection.style.display = "none";
+    processingStatus.style.display = "none";
+    resultData.style.display = "none";
+    resultJson.textContent = "";
   }
-
-  // Initialize the recorder when the page loads
-  initializeRecorder();
 });

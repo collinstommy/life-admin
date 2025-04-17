@@ -98,8 +98,11 @@ app.post("/api/health-log", async (c) => {
       const mockId = Math.floor(Math.random() * 1000);
 
       console.log("Successfully processed health log", {
+        success: true,
+        message: "Health log processed successfully",
         id: mockId,
-        audioUrl,
+        transcript,
+        data: healthData,
       });
 
       // Return the structured data with a mock ID

@@ -1,0 +1,56 @@
+{
+  "date": "2024-04-17",
+  "screenTimeHours": null,
+  "workouts": [
+    {
+      "type": "physio exercises",
+      "durationMinutes": 45,
+      "distanceKm": null,
+      "intensity": 7,
+      "notes": null
+    },
+    {
+      "type": "commute",
+      "durationMinutes": null,
+      "distanceKm": 10,
+      "intensity": null,
+      "notes": "commuted to and from the office"
+    }
+  ],
+  "meals": [
+    {
+      "type": "Breakfast",
+      "notes": "overnight oats with some granola. I had 1 tablespoon of granola."
+    },
+    {
+      "type": "Lunch",
+      "notes": "rice for chicken curry and some tofu"
+    },
+    {
+      "type": "Dinner",
+      "notes": "black bean tacos with guacamole"
+    },
+    {
+      "type": "Snacks",
+      "notes": "40 grams of chocolate"
+    }
+  ],
+  "waterIntakeLiters": 3,
+  "painDiscomfort": {
+    "location": null,
+    "intensity": null,
+    "notes": null
+  },
+  "sleep": {
+    "hours": 8,
+    "quality": 9
+  },
+  "energyLevel": 8,
+  "mood": {
+    "rating": null,
+    "notes": null
+  },
+  "weightKg": null,
+  "otherActivities": null,
+  "notes": "I had a busy day in work."
+}
