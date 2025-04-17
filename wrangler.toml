@@ -9,3 +9,19 @@ bucket = "./assets"
 binding = "DAILY_LOG_CACHE"
 id = "4deb025f5a424e4ab756cace57bd39d0"
 preview_id = "eae9aca434284992a0429673c2ca3b2e"
+
+# R2 bucket for storing audio recordings
+[[r2_buckets]]
+binding = "HEALTH_RECORDINGS"
+bucket_name = "health-recordings"
+preview_bucket_name = "health-recordings-dev"
+
+# Enable Cloudflare AI
+[ai]
+binding = "AI"
+
+# D1 Database for health tracker
+[[d1_databases]]
+binding = "DB"
+database_name = "health-tracker"
+database_id = ""

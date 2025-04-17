@@ -1,0 +1,286 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f7fa;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Header styles */
+header {
+    background-color: #4a6fa5;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    margin-bottom: 5px;
+    font-size: 2rem;
+}
+
+/* Main content */
+main {
+    padding: 20px;
+}
+
+section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+h2 {
+    color: #4a6fa5;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #e1e1e1;
+    padding-bottom: 10px;
+}
+
+/* Recorder styles */
+.recorder-container {
+    text-align: center;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+}
+
+.recorder-status {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.recorder-timer {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 15px 0;
+    color: #4a6fa5;
+    font-family: monospace;
+}
+
+.recorder-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Button styles */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    font-weight: 500;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background-color: #4a6fa5;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #3a5e8c;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.btn-success {
+    background-color: #2ecc71;
+    color: #fff;
+}
+
+.btn-success:hover {
+    background-color: #27ae60;
+}
+
+.btn-secondary {
+    background-color: #95a5a6;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #7f8c8d;
+}
+
+/* Audio player */
+.audio-player {
+    margin: 20px 0;
+}
+
+audio {
+    width: 100%;
+}
+
+/* Preview section */
+.preview-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Result section */
+.processing-status {
+    text-align: center;
+    padding: 20px;
+}
+
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #4a6fa5;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.result-data {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+}
+
+pre {
+    background-color: #f4f4f4;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    font-family: monospace;
+}
+
+/* Instructions section */
+.instructions ul {
+    padding-left: 20px;
+    margin-bottom: 15px;
+}
+
+.instructions li {
+    margin-bottom: 8px;
+}
+
+.example {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 4px solid #4a6fa5;
+}
+
+.example h3 {
+    margin-bottom: 10px;
+    color: #4a6fa5;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 15px;
+    background-color: #f1f2f6;
+    color: #777;
+    font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        border-radius: 0;
+    }
+
+    .recorder-timer {
+        font-size: 2rem;
+    }
+
+    .recorder-controls, .preview-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+
+/* Transcript and JSON containers */
+.transcript-container,
+.json-container {
+  margin-bottom: 20px;
+}
+
+.transcript-container h4,
+.json-container h4 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.transcript {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-size: 14px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+#resultJson {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+}

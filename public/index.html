@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Tracking Voice Recorder</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Daily Health Log</h1>
+        <p>Record your daily health activities by voice</p>
+      </header>
+
+      <main>
+        <section class="recorder-section">
+          <div class="recorder-container">
+            <div class="recorder-status" id="recorderStatus">
+              Ready to record
+            </div>
+            <div class="recorder-timer" id="recordingTimer">00:00</div>
+            <div class="recorder-controls">
+              <button id="startRecordingBtn" class="btn btn-primary">
+                Start Recording
+              </button>
+              <button id="stopRecordingBtn" class="btn-danger btn" disabled>
+                Stop Recording
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="preview-section"
+          id="previewSection"
+          style="display: none"
+        >
+          <h2>Recording Preview</h2>
+          <div class="audio-player">
+            <audio id="audioPreview" controls></audio>
+          </div>
+          <div class="preview-controls">
+            <button id="uploadRecordingBtn" class="btn btn-success">
+              Upload Recording
+            </button>
+            <button id="discardRecordingBtn" class="btn btn-secondary">
+              Discard & Record Again
+            </button>
+          </div>
+        </section>
+
+        <section
+          class="result-section"
+          id="resultSection"
+          style="display: none"
+        >
+          <h2>Processing Results</h2>
+          <div class="processing-status" id="processingStatus">
+            <div class="loader"></div>
+            <p>Processing your recording...</p>
+          </div>
+          <div class="result-data" id="resultData" style="display: none">
+            <h3>Your Health Log Summary</h3>
+            <div class="transcript-container">
+              <h4>Raw Transcript</h4>
+              <div class="transcript" id="rawTranscript"></div>
+            </div>
+            <div class="json-container">
+              <h4>Structured Data</h4>
+              <pre id="resultJson"></pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="instructions">
+          <h2>Recording Tips</h2>
+          <ul>
+            <li>Speak clearly and at a normal pace</li>
+            <li>
+              Include information about your meals, exercise, sleep, water
+              intake, mood, etc.
+            </li>
+            <li>Mention the date if it's not for today</li>
+            <li>For meals, specify breakfast, lunch, dinner, and snacks</li>
+            <li>
+              For workouts, include the type, duration, intensity (1-10), and
+              any notes
+            </li>
+            <li>For sleep, mention hours and quality (1-10)</li>
+          </ul>
+          <div class="example">
+            <h3>Example Recording:</h3>
+            <p>
+              "Today, June 15th, I had overnight oats with berries for
+              breakfast, a quinoa salad with chickpeas for lunch, and stir-fried
+              veggies with tofu for dinner. Snacks included an apple and some
+              nuts. I did a 45-minute yoga session with intensity 7, focusing on
+              stretching. I also went for a 30-minute walk. I slept 7.5 hours
+              with quality 8. My mood was good, about 8 out of 10. I drank 2.5
+              liters of water. My screen time was about 3.5 hours. I experienced
+              mild lower back pain, intensity 3, after sitting for long
+              periods."
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>&copy; 2023 Health Tracking App</p>
+      </footer>
+    </div>
+
+    <script src="js/recorder.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
