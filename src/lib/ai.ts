@@ -31,7 +31,7 @@ interface StructuredHealthData {
   };
   weightKg: number | null;
   otherActivities: string | null;
-  generalNotes: string | null;
+  notes: string | null;
 }
 
 /**
@@ -116,12 +116,20 @@ Format it exactly according to this schema:
   },
   "weightKg": number or null,
   "otherActivities": "string" or null,
-  "generalNotes": "string" or null
+  "notes": "string" or null
 }
 
-Make sure all fields match the exact format. Use null for missing values. If the date is mentioned in the transcript, use that date. Otherwise, use the current date.
+Follow these specific instructions:
+1. Make sure all fields match the exact format. Use null for missing values.
+2. If the date is mentioned in the transcript, use that date. Otherwise, use the current date.
+3. Only extract information that is explicitly mentioned in the transcript.
+4. For commutes described as "each way" or "to and from", double the distance to represent the total distance traveled.
+6. General notes about the day should go in the "notes" field, not in any other field.
+7. DO NOT add or invent any fields that are not in the schema above.
 
-Only extract information that is explicitly mentioned in the transcript. Do not infer or make up information.
+Example:
+If the transcript says "I commuted 5 kilometers to the office each way", record that as:
+"type": "commute", "distanceKm": 10, "notes": "commuted to and from the office"
 `;
 
 // Define the expected response type from Gemini API
@@ -203,7 +211,7 @@ export async function extractHealthData(
       },
       weightKg: null,
       otherActivities: null,
-      generalNotes: null,
+      notes: null,
     };
   }
 

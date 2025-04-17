@@ -38,6 +38,66 @@ app.use("/api/*", authenticateApiKey);
 // Legacy routes for backwards compatibility
 app.use("/logs", authenticateApiKey);
 
+// Process transcript directly (without audio)
+app.post("/api/process-transcript", async (c) => {
+  try {
+    console.log("Process transcript request received");
+    const body = await c.req.json();
+    const transcript = body.transcript;
+
+    if (!transcript) {
+      console.error("No transcript provided in request");
+      return c.json({ error: "No transcript provided" }, 400);
+    }
+
+    console.log("Transcript received:", transcript.substring(0, 100) + "...");
+
+    try {
+      // Extract structured data using Gemini
+      const healthData = await extractHealthData(c, transcript);
+      console.log("Health data extracted successfully");
+
+      // Skip database saving for now
+      // const logId = await saveHealthLog(c, "", transcript, healthData);
+
+      // For testing, use a mock ID
+      const mockId = Math.floor(Math.random() * 1000);
+
+      console.log("Successfully processed transcript", {
+        id: mockId,
+      });
+
+      // Return the structured data with a mock ID
+      return c.json({
+        success: true,
+        message: "Transcript processed successfully",
+        id: mockId,
+        transcript,
+        data: healthData,
+      });
+    } catch (dataError) {
+      console.error("Error extracting structured data:", dataError);
+      return c.json(
+        {
+          error: "Failed to extract structured data",
+          message:
+            dataError instanceof Error ? dataError.message : String(dataError),
+        },
+        500,
+      );
+    }
+  } catch (error) {
+    console.error("Unexpected error processing transcript:", error);
+    return c.json(
+      {
+        error: "Failed to process transcript",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
+});
+
 // Health log API routes for Phase 2
 app.post("/api/health-log", async (c) => {
   try {

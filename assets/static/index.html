@@ -11,46 +11,81 @@
     <div class="container">
       <header>
         <h1>Daily Health Log</h1>
-        <p>Record your daily health activities by voice</p>
+        <p>Record your daily health activities by voice or text</p>
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+          <button class="tab-btn active" data-tab="recorder-tab">Record</button>
+          <button class="tab-btn" data-tab="transcript-tab">Transcript</button>
+        </div>
       </header>
 
       <main>
-        <section class="recorder-section">
-          <div class="recorder-container">
-            <div class="recorder-status" id="recorderStatus">
-              Ready to record
+        <!-- Record Tab Content -->
+        <div class="active tab-content" id="recorder-tab">
+          <section class="recorder-section">
+            <div class="recorder-container">
+              <div class="recorder-status" id="recorderStatus">
+                Ready to record
+              </div>
+              <div class="recorder-timer" id="recordingTimer">00:00</div>
+              <div class="recorder-controls">
+                <button id="startRecordingBtn" class="btn btn-primary">
+                  Start Recording
+                </button>
+                <button id="stopRecordingBtn" class="btn-danger btn" disabled>
+                  Stop Recording
+                </button>
+              </div>
             </div>
-            <div class="recorder-timer" id="recordingTimer">00:00</div>
-            <div class="recorder-controls">
-              <button id="startRecordingBtn" class="btn btn-primary">
-                Start Recording
+          </section>
+
+          <section
+            class="preview-section"
+            id="previewSection"
+            style="display: none"
+          >
+            <h2>Recording Preview</h2>
+            <div class="audio-player">
+              <audio id="audioPreview" controls></audio>
+            </div>
+            <div class="preview-controls">
+              <button id="uploadRecordingBtn" class="btn btn-success">
+                Upload Recording
               </button>
-              <button id="stopRecordingBtn" class="btn-danger btn" disabled>
-                Stop Recording
+              <button id="discardRecordingBtn" class="btn btn-secondary">
+                Discard & Record Again
               </button>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        <section
-          class="preview-section"
-          id="previewSection"
-          style="display: none"
-        >
-          <h2>Recording Preview</h2>
-          <div class="audio-player">
-            <audio id="audioPreview" controls></audio>
-          </div>
-          <div class="preview-controls">
-            <button id="uploadRecordingBtn" class="btn btn-success">
-              Upload Recording
-            </button>
-            <button id="discardRecordingBtn" class="btn btn-secondary">
-              Discard & Record Again
-            </button>
-          </div>
-        </section>
+        <!-- Transcript Tab Content -->
+        <div class="tab-content" id="transcript-tab">
+          <section class="transcript-entry-section">
+            <h2>Test Transcript Processing</h2>
+            <p class="description">
+              Enter a transcript to process without recording audio
+            </p>
+            <div class="transcript-form">
+              <textarea
+                id="transcriptInput"
+                class="transcript-textarea"
+                rows="8"
+                placeholder="Enter your health transcript here. For example: Today I had overnight oats with berries for breakfast, a quinoa salad for lunch, and grilled vegetables for dinner. I did a 45-minute yoga session and walked for 30 minutes. I drank 2.5 liters of water and slept for 7.5 hours."
+              ></textarea>
+              <div class="transcript-controls">
+                <button id="processTranscriptBtn" class="btn btn-success">
+                  Process Transcript
+                </button>
+                <button id="clearTranscriptBtn" class="btn btn-secondary">
+                  Clear
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
 
+        <!-- Shared Results Section -->
         <section
           class="result-section"
           id="resultSection"
@@ -59,7 +94,7 @@
           <h2>Processing Results</h2>
           <div class="processing-status" id="processingStatus">
             <div class="loader"></div>
-            <p>Processing your recording...</p>
+            <p>Processing your data...</p>
           </div>
           <div class="result-data" id="resultData" style="display: none">
             <div class="transcript-container">

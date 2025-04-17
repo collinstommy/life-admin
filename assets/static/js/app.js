@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize the recorder
   const recorder = new VoiceRecorder();
 
-  // References to DOM elements
+  // References to DOM elements - Voice Recording
   const startRecordingBtn = document.getElementById("startRecordingBtn");
   const stopRecordingBtn = document.getElementById("stopRecordingBtn");
   const uploadRecordingBtn = document.getElementById("uploadRecordingBtn");
@@ -17,22 +17,62 @@ document.addEventListener("DOMContentLoaded", () => {
   const recordingTimer = document.getElementById("recordingTimer");
   const audioPreview = document.getElementById("audioPreview");
   const previewSection = document.getElementById("previewSection");
+
+  // References to DOM elements - Transcript Processing
+  const transcriptInput = document.getElementById("transcriptInput");
+  const processTranscriptBtn = document.getElementById("processTranscriptBtn");
+  const clearTranscriptBtn = document.getElementById("clearTranscriptBtn");
+
+  // References to DOM elements - Shared
   const resultSection = document.getElementById("resultSection");
   const processingStatus = document.getElementById("processingStatus");
   const resultData = document.getElementById("resultData");
   const resultJson = document.getElementById("resultJson");
 
-  // Set up event listeners
+  // References to DOM elements - Navigation
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const tabContents = document.querySelectorAll(".tab-content");
+
+  // Set up event listeners - Recording
   startRecordingBtn.addEventListener("click", handleStartRecording);
   stopRecordingBtn.addEventListener("click", handleStopRecording);
   uploadRecordingBtn.addEventListener("click", handleUploadRecording);
   discardRecordingBtn.addEventListener("click", handleDiscardRecording);
+
+  // Set up event listeners - Transcript
+  processTranscriptBtn.addEventListener("click", handleProcessTranscript);
+  clearTranscriptBtn.addEventListener("click", handleClearTranscript);
+
+  // Set up event listeners - Navigation
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const tabId = button.getAttribute("data-tab");
+      switchTab(tabId);
+    });
+  });
 
   // Listen for recorder events
   document.addEventListener("recordingStart", handleRecordingStarted);
   document.addEventListener("recordingStop", handleRecordingStopped);
   document.addEventListener("recordingComplete", handleRecordingCompleted);
   document.addEventListener("timerUpdate", handleTimerUpdate);
+
+  /**
+   * Switch between tabs
+   * @param {string} tabId - The ID of the tab to switch to
+   */
+  function switchTab(tabId) {
+    // Hide all tabs and remove active class from all buttons
+    tabContents.forEach((tab) => tab.classList.remove("active"));
+    tabButtons.forEach((btn) => btn.classList.remove("active"));
+
+    // Show the selected tab and set the corresponding button as active
+    document.getElementById(tabId).classList.add("active");
+    document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
+
+    // Hide the results section when switching tabs
+    resultSection.style.display = "none";
+  }
 
   /**
    * Initialize the recorder when the page loads
@@ -214,6 +254,97 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
+   * Handle process transcript button click
+   */
+  async function handleProcessTranscript() {
+    try {
+      const transcript = transcriptInput.value.trim();
+
+      if (!transcript) {
+        alert("Please enter a transcript to process");
+        return;
+      }
+
+      // Show processing UI
+      resultSection.style.display = "block";
+      processingStatus.style.display = "block";
+      resultData.style.display = "none";
+
+      // Show processing status
+      processingStatus.innerHTML = `
+        <div class="loader"></div>
+        <p>Processing transcript...</p>
+      `;
+
+      try {
+        // Send to the server
+        const response = await fetch("/api/process-transcript", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ transcript }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Server error (${response.status}): ${errorText}`);
+        }
+
+        const result = await response.json();
+
+        // Safely display the transcript
+        const transcriptTextElement = document.getElementById("transcriptText");
+        if (transcriptTextElement) {
+          if (result.transcript) {
+            transcriptTextElement.textContent = result.transcript;
+          } else {
+            transcriptTextElement.textContent = "No transcript available.";
+          }
+        } else {
+          console.error(
+            "Cannot find transcript element with ID 'transcriptText'",
+          );
+        }
+
+        // Display the result
+        resultJson.textContent = JSON.stringify(result.data || result, null, 2);
+        processingStatus.style.display = "none";
+        resultData.style.display = "block";
+
+        // Add a message about successful processing
+        const successMessage = document.createElement("div");
+        successMessage.className = "success-message";
+        successMessage.innerHTML = `
+          <p>✅ Your transcript has been successfully processed!</p>
+          <p>Log ID: ${result.id}</p>
+        `;
+        resultData.prepend(successMessage);
+      } catch (error) {
+        console.error("Error processing transcript:", error);
+        processingStatus.innerHTML = `
+          <p>⚠️ Error: ${error.message}</p>
+          <p>Please try again or contact support if the problem persists.</p>
+        `;
+      }
+    } catch (error) {
+      console.error("Error processing transcript:", error);
+      processingStatus.innerHTML = `
+        <p>⚠️ Error: ${error.message}</p>
+        <p>Please try again or contact support if the problem persists.</p>
+      `;
+    }
+  }
+
+  /**
+   * Handle clear transcript button click
+   */
+  function handleClearTranscript() {
+    transcriptInput.value = "";
+    resultSection.style.display = "none";
+  }
+
+  /**
    * Handle discard recording button click
    */
   function handleDiscardRecording() {
@@ -230,4 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
     resultData.style.display = "none";
     resultJson.textContent = "";
   }
+
+  // Initialize the recorder when the page loads
+  initializeRecorder();
 });
