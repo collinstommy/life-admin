@@ -3,20 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Health Tracking Voice Recorder</title>
+    <title>Health Tracking App</title>
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/health-tracker.css" />
   </head>
   <body>
     <div class="container">
       <header>
-        <h1>Daily Health Log</h1>
-        <p>Record your daily health activities by voice or text</p>
-        <!-- Navigation Tabs -->
-        <div class="nav-tabs">
-          <button class="tab-btn active" data-tab="recorder-tab">Record</button>
-          <button class="tab-btn" data-tab="transcript-tab">Transcript</button>
+        <div class="logo-container">
+          <h1>Health Logger</h1>
+          <p>Track your daily health activities</p>
         </div>
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+          <button class="tab-btn active" data-tab="recorder-tab">
+            <span class="icon">🎙️</span>Voice Record
+          </button>
+          <button class="tab-btn" data-tab="transcript-tab">
+            <span class="icon">📝</span>Text Input
+          </button>
+        </nav>
       </header>
 
       <main>
@@ -62,20 +68,21 @@
         <!-- Transcript Tab Content -->
         <div class="tab-content" id="transcript-tab">
           <section class="transcript-entry-section">
-            <h2>Test Transcript Processing</h2>
+            <h2>Process Text Input</h2>
             <p class="description">
-              Enter a transcript to process without recording audio
+              Enter your health activities as text to generate a structured
+              summary
             </p>
             <div class="transcript-form">
               <textarea
                 id="transcriptInput"
                 class="transcript-textarea"
                 rows="8"
-                placeholder="Enter your health transcript here. For example: Today I had overnight oats with berries for breakfast, a quinoa salad for lunch, and grilled vegetables for dinner. I did a 45-minute yoga session and walked for 30 minutes. I drank 2.5 liters of water and slept for 7.5 hours."
+                placeholder="Example: Today I had overnight oats with berries for breakfast, a quinoa salad for lunch, and grilled vegetables for dinner. I did a 45-minute yoga session and walked for 30 minutes. I drank 2.5 liters of water and slept for 7.5 hours."
               ></textarea>
               <div class="transcript-controls">
                 <button id="processTranscriptBtn" class="btn btn-success">
-                  Process Transcript
+                  Process Text
                 </button>
                 <button id="clearTranscriptBtn" class="btn btn-secondary">
                   Clear
@@ -97,12 +104,17 @@
             <p>Processing your data...</p>
           </div>
           <div class="result-data" id="resultData" style="display: none">
-            <div class="transcript-container">
+            <!-- For voice recording results only, show transcript -->
+            <div
+              id="voiceTranscriptContainer"
+              class="transcript-container"
+              style="display: none"
+            >
               <h3>Raw Transcript</h3>
               <div id="transcriptText" class="transcript-text"></div>
             </div>
-            <h3>Your Health Log Summary</h3>
-            <pre id="resultJson"></pre>
+            <h3>Your Health Summary</h3>
+            <pre id="resultJson" class="result-json"></pre>
           </div>
         </section>
 
@@ -122,25 +134,11 @@
             </li>
             <li>For sleep, mention hours and quality (1-10)</li>
           </ul>
-          <div class="example">
-            <h3>Example Recording:</h3>
-            <p>
-              "Today, June 15th, I had overnight oats with berries for
-              breakfast, a quinoa salad with chickpeas for lunch, and stir-fried
-              veggies with tofu for dinner. Snacks included an apple and some
-              nuts. I did a 45-minute yoga session with intensity 7, focusing on
-              stretching. I also went for a 30-minute walk. I slept 7.5 hours
-              with quality 8. My mood was good, about 8 out of 10. I drank 2.5
-              liters of water. My screen time was about 3.5 hours. I experienced
-              mild lower back pain, intensity 3, after sitting for long
-              periods."
-            </p>
-          </div>
         </section>
       </main>
 
       <footer>
-        <p>&copy; 2023 Health Tracking App</p>
+        <p>&copy; 2024 Health Logger</p>
       </footer>
     </div>
 

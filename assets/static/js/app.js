@@ -28,10 +28,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const processingStatus = document.getElementById("processingStatus");
   const resultData = document.getElementById("resultData");
   const resultJson = document.getElementById("resultJson");
+  const voiceTranscriptContainer = document.getElementById(
+    "voiceTranscriptContainer",
+  );
+  const transcriptText = document.getElementById("transcriptText");
 
   // References to DOM elements - Navigation
   const tabButtons = document.querySelectorAll(".tab-btn");
   const tabContents = document.querySelectorAll(".tab-content");
+
+  // Track current active tab
+  let activeTab = "recorder-tab";
 
   // Set up event listeners - Recording
   startRecordingBtn.addEventListener("click", handleStartRecording);
@@ -72,6 +79,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Hide the results section when switching tabs
     resultSection.style.display = "none";
+
+    // Track the active tab
+    activeTab = tabId;
   }
 
   /**
@@ -189,7 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Show detailed processing steps
         processingStatus.innerHTML = `
           <div class="loader"></div>
-          <p>Step 1/3: Uploading audio recording...</p>
+          <p>Uploading and processing your recording...</p>
         `;
 
         // Send to the server
@@ -203,25 +213,16 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(`Server error (${response.status}): ${errorText}`);
         }
 
-        processingStatus.innerHTML = `
-          <div class="loader"></div>
-          <p>Step 3/3: Processing completed!</p>
-        `;
-
         const result = await response.json();
 
+        // For voice recordings, show the transcript container and text
+        voiceTranscriptContainer.style.display = "block";
+
         // Safely display the transcript
-        const transcriptTextElement = document.getElementById("transcriptText");
-        if (transcriptTextElement) {
-          if (result.transcript) {
-            transcriptTextElement.textContent = result.transcript;
-          } else {
-            transcriptTextElement.textContent = "No transcript available.";
-          }
+        if (result.transcript) {
+          transcriptText.textContent = result.transcript;
         } else {
-          console.error(
-            "Cannot find transcript element with ID 'transcriptText'",
-          );
+          transcriptText.textContent = "No transcript available.";
         }
 
         // Display the result
@@ -233,8 +234,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const successMessage = document.createElement("div");
         successMessage.className = "success-message";
         successMessage.innerHTML = `
-          <p>✅ Your health log has been successfully processed and saved!</p>
-          <p>Log ID: ${result.id}</p>
+          <p>✅ Your health log has been successfully processed!</p>
+          <p>ID: ${result.id}</p>
         `;
         resultData.prepend(successMessage);
       } catch (error) {
@@ -293,19 +294,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const result = await response.json();
 
-        // Safely display the transcript
-        const transcriptTextElement = document.getElementById("transcriptText");
-        if (transcriptTextElement) {
-          if (result.transcript) {
-            transcriptTextElement.textContent = result.transcript;
-          } else {
-            transcriptTextElement.textContent = "No transcript available.";
-          }
-        } else {
-          console.error(
-            "Cannot find transcript element with ID 'transcriptText'",
-          );
-        }
+        // For transcript tab, hide the transcript container
+        voiceTranscriptContainer.style.display = "none";
 
         // Display the result
         resultJson.textContent = JSON.stringify(result.data || result, null, 2);
@@ -316,8 +306,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const successMessage = document.createElement("div");
         successMessage.className = "success-message";
         successMessage.innerHTML = `
-          <p>✅ Your transcript has been successfully processed!</p>
-          <p>Log ID: ${result.id}</p>
+          <p>✅ Your health data has been successfully processed!</p>
+          <p>ID: ${result.id}</p>
         `;
         resultData.prepend(successMessage);
       } catch (error) {
