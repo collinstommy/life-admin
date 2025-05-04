@@ -56,9 +56,9 @@ export async function transcribeAudio(
       parameters: {
         language: "en", // Explicitly set English as the language
         prompt:
-          "This is a health log recording. It may include information about meals, workouts, sleep, and general health metrics.",
+          "This is a health log recording in English about daily activities, meals, exercise, and wellbeing. Pay special attention to workout and food terms that might be mispronounced or unclear. Common exercise terms include: running, jogging, walking, yoga, pilates, HIIT, weightlifting, swimming, biking, cycling, cardio, strength training, etc. Common food items include: burrito, quiche, curry, sushi, quinoa, granola, chia seeds, kombucha, açaí, kimchi, falafel, couscous, tahini, edamame, etc. Focus on transcribing these terms correctly even if pronounced unclearly. Common measurement terms include: hours, minutes, kilometers, liters, kilograms, grams, etc. If you hear something that sounds like a mispronounced version of common exercise terms (e.g., 'em-run', 'm-ron'), correct it to the most likely exercise type (e.g., 'run').",
         response_format: "text",
-        temperature: 0.2, // Lower temperature for more factual, less creative outputs
+        temperature: 0.1, // Lower temperature for more factual, less creative outputs
       },
     };
 
@@ -146,31 +146,132 @@ Follow these specific instructions:
 2. If the date is mentioned in the transcript, use that date. Otherwise, use the current date.
 3. IMPORTANT: Only extract information that is explicitly mentioned in the transcript. Do not invent or add details.
 4. For commutes described as "each way" or "to and from", double the distance to represent the total distance traveled.
-5. Clean up voice recognition errors and grammar issues to produce concise, accurate data:
+5. CRITICAL: Correct common transcription errors, especially for food items, exercise types, and health terms:
+   - Food items: Correct phonetic approximations to the likely food name
+   - Exercise types: Normalize workout names to common exercise categories
+   - Measurements: Fix units and values that may have been transcribed incorrectly
+   - Numbers: Convert spoken numbers to digits (e.g., "eight" → 8)
+   - Exercise term examples:
+     - "m-ron", "em run", "iron-man", "marathon" → use appropriate type based on context:
+       - If it's a 5K or similar short distance, use "run"
+       - If it's a triathlon-type event, use "triathlon"
+       - If it's a marathon, use "marathon"
+     - "weight lifting", "waited exercise" → "weightlifting"
+     - "high intensity", "high intense", "hit", "h.i.i.t." → "HIIT"
+     - "pit-lattes", "pie-latees" → "pilates"
+     - "yohga", "yogga" → "yoga"
+   - Food item examples:
+     - "breito", "berrito", "burito" → "burrito"
+     - "keish", "keysh", "quich" → "quiche"
+     - "quinua", "keen-wah" → "quinoa"
+     - "masa man", "massman" → "massaman"
+     - "sush", "soosh" → "sushi"
+     - "kimch", "kimchi", "kim chi" → "kimchi"
+     - "yohg", "yoghurt" → "yogurt"
+     - "grow-nola", "grow nuts", "gran-ola" → "granola"
+     - "flex", "flax" → "flaxseed"
+     - "came-cha", "come-bu-ka" → "kombucha"
+     - "ah-sigh", "acai" → "açaí"
+
+6. Clean up voice recognition errors and grammar issues to produce concise, accurate data:
    - Remove filler words (like "um", "uh", "I had", "I ate") where appropriate
    - Fix obvious measurement abbreviations (e.g., "gms" → "g", "kilometers" → "km")
    - Fix grammatical errors while preserving meaning
    - Remove unnecessary articles and prepositions that don't add clarity
-   - For example: "I had homemade massman curry with tofu with a brown rice" → "homemade massman curry with tofu and brown rice"
+   - For example: "I had homemade massman curry with tofu with a brown rice" → "homemade massaman curry with tofu and brown rice"
    - For example: "I 30 gms of chocolate" → "30g chocolate"
-6. CRITICAL: Remove all subjective descriptors and qualitative adjectives. Keep only factual, measurable information:
+
+7. CRITICAL: Remove all subjective descriptors and qualitative adjectives. Keep only factual, measurable information:
    - "2 delicious cups of coffee" → "2 cups of coffee"
    - "fantastic breakfast with eggs" → "breakfast with eggs"
    - "amazing dinner" → "dinner"
-7. For meals, include only objective facts and quantities, not subjective assessments:
+
+8. For meals, include only objective facts and quantities, not subjective assessments:
    - Include: specific foods, preparations, quantities, times
    - Exclude: taste descriptions, personal preferences, emotions about the food
-8. General notes about the day should go in the "notes" field, not in any other field.
-9. DO NOT add or invent any fields that are not in the schema above.
-10. When the voice recognition clearly misinterpreted words, use your best judgment to correct the meaning based on context.
-11. Use abbreviations for standard measurements (g instead of grams, kg instead of kilograms, km instead of kilometers) for consistency.
+
+9. CRITICAL FOR MEALS: Create ONLY ONE entry per meal type (Breakfast, Lunch, Dinner, Snacks, Coffee):
+   - If multiple items are mentioned for a single meal type, combine them into one entry
+   - Example: "For dinner I had sushi and salad" → ONE entry: {"type": "Dinner", "notes": "sushi and salad"}
+   - Example: "For dinner I had sushi. I also had salad for dinner" → ONE entry: {"type": "Dinner", "notes": "sushi and salad"}
+   - Example: "Dinner was sushi rolls and veggie gyoza" → ONE entry: {"type": "Dinner", "notes": "sushi rolls and veggie gyoza"}
+   - Never create multiple entries with the same meal type
+   - For repeated items in the same meal, include them only once: "sushi, sushi rolls" → just "sushi rolls"
+
+10. General notes about the day should go in the "notes" field, not in any other field.
+
+11. DO NOT add or invent any fields that are not in the schema above.
+
+12. Use abbreviations for standard measurements (g instead of grams, kg instead of kilograms, km instead of kilometers) for consistency.
+
+13. When processing "No pain" or similar phrases indicating absence, set the painDiscomfort field to null rather than creating an object with null values.
+
+14. For workout intensity, map descriptive terms to numerical values:
+    - "low" or "light" → 3
+    - "medium" → 5
+    - "moderate" → 6
+    - "high" → 8
+    - "intense" → 9
+    - "very high" or "very intense" → 10
 
 Example 1:
 If the transcript says "I commuted 5 kilometers to the office each way", record that as:
 "type": "commute", "distanceKm": 10, "notes": "commuted to and from the office"
 
 Example 2:
-For this transcript: "For breakfast I had overnight oats with one tablespoon of granola, for lunch, bean burrito, wish, salad. The salad was a root vegetable salad. Dinner was homemade massman curry with tofu with a brown rice. First snacks, I 30 gms of chocolate, I two cups of coffee. No painter to some for today. Sleep was eight hours, seven out of 10 rating. Energy levels and eight out of 10, mood and eight. My weight today was 82 kg."
+For this transcript: "Exercise was a 5K M-RON, as well as a 45-minute yoga class of medium intensity. For breakfast, I had overnight oats with berries. For lunch, I had keish with salad. For dinner, I had black bean breito with a side of roast potato. Sleep was eight hours. No pain or discomfort."
+
+Convert to this format:
+{
+  "date": "2023-06-15", // Current date if not specified
+  "screenTimeHours": null, // Not mentioned
+  "workouts": [
+    {
+      "type": "run",
+      "durationMinutes": null,
+      "distanceKm": 5,
+      "intensity": null,
+      "notes": "5K run"
+    },
+    {
+      "type": "yoga",
+      "durationMinutes": 45,
+      "intensity": 5,
+      "notes": "medium intensity"
+    }
+  ],
+  "meals": [
+    {
+      "type": "Breakfast",
+      "notes": "overnight oats with berries"
+    },
+    {
+      "type": "Lunch",
+      "notes": "quiche with salad"
+    },
+    {
+      "type": "Dinner",
+      "notes": "black bean burrito with roast potato"
+    }
+  ],
+  "waterIntakeLiters": null, // Not mentioned
+  "painDiscomfort": null, // "No pain or discomfort" mentioned
+  "sleep": {
+    "hours": 8,
+    "quality": null
+  },
+  "energyLevel": null,
+  "mood": {
+    "rating": null,
+    "notes": null
+  },
+  "weightKg": null,
+  "otherActivities": null,
+  "notes": null
+}
+
+Example 3:
+For this transcript: "For breakfast, I had overnight oats. For lunch, I had a spiced burrito with wedges and salad. For dinner, I had sushi, sushi rolls and veggie gimbap. I also had a salad with dinner. Dinner was from a takeaway."
 
 Convert to this format:
 {
@@ -179,37 +280,29 @@ Convert to this format:
   "meals": [
     {
       "type": "Breakfast",
-      "notes": "overnight oats with 1 tbsp granola"
+      "notes": "overnight oats"
     },
     {
       "type": "Lunch",
-      "notes": "bean burrito with root vegetable salad"
+      "notes": "spiced burrito with wedges and salad"
     },
     {
       "type": "Dinner",
-      "notes": "massman curry with tofu and brown rice"
-    },
-    {
-      "type": "Snacks",
-      "notes": "30g chocolate"
-    },
-    {
-      "type": "Coffee",
-      "notes": "2 cups"
+      "notes": "sushi rolls, veggie gimbap and salad from takeaway"
     }
   ],
   "waterIntakeLiters": null, // Not mentioned
-  "painDiscomfort": null, // "No painter to some" was likely "No pain or discomfort"
+  "painDiscomfort": null,
   "sleep": {
-    "hours": 8,
-    "quality": 7
+    "hours": null,
+    "quality": null
   },
-  "energyLevel": 8,
+  "energyLevel": null,
   "mood": {
-    "rating": 8,
+    "rating": null,
     "notes": null
   },
-  "weightKg": 82,
+  "weightKg": null,
   "otherActivities": null,
   "notes": null
 }
@@ -320,6 +413,7 @@ export async function extractHealthData(
       ],
       generationConfig: {
         responseMimeType: "text/plain",
+        temperature: 0.1, // Lower temperature for more deterministic corrections
       },
     };
 
