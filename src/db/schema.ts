@@ -4,8 +4,9 @@ import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 export const healthLogs = sqliteTable("health_logs", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   date: text("date").notNull(), // YYYY-MM-DD format
-  audioUrl: text("audio_url").notNull(), // R2 URL to audio file
+  audioUrl: text("audio_url"), // R2 URL to audio file (nullable for transcript-only logs)
   transcript: text("transcript"), // Raw transcript from Whisper
+  structuredData: text("structured_data"), // Complete JSON from AI analysis
   createdAt: integer("created_at").notNull(), // Unix timestamp
   updatedAt: integer("updated_at").notNull(), // Unix timestamp
 });

@@ -52,7 +52,24 @@ export async function transcribeAudio(
 
     const input = {
       audio: Array.from(new Uint8Array(audioData)),
+      // Add specific parameters to improve transcription quality
+      parameters: {
+        language: "en", // Explicitly set English as the language
+        prompt:
+          "This is a health log recording. It may include information about meals, workouts, sleep, and general health metrics.",
+        response_format: "text",
+        temperature: 0.2, // Lower temperature for more factual, less creative outputs
+      },
     };
+
+    console.log(
+      "Sending transcription request with parameters:",
+      JSON.stringify({
+        language: input.parameters.language,
+        prompt_length: input.parameters.prompt.length,
+        temperature: input.parameters.temperature,
+      }),
+    );
 
     // @ts-expect-error - Cloudflare AI API
     const response = await ctx.env.AI.run("@cf/openai/whisper", input);
@@ -62,7 +79,12 @@ export async function transcribeAudio(
       return "Audio transcription failed. Please try recording again with clearer audio.";
     }
 
-    console.log("Transcription successful");
+    console.log("Transcription successful, length:", response.text.length);
+    console.log(
+      "First 100 chars of transcript:",
+      response.text.substring(0, 100),
+    );
+
     return response.text;
   } catch (error) {
     console.error("Error in transcribeAudio:", error);
@@ -122,14 +144,75 @@ Format it exactly according to this schema:
 Follow these specific instructions:
 1. Make sure all fields match the exact format. Use null for missing values.
 2. If the date is mentioned in the transcript, use that date. Otherwise, use the current date.
-3. Only extract information that is explicitly mentioned in the transcript.
+3. IMPORTANT: Only extract information that is explicitly mentioned in the transcript. Do not invent or add details.
 4. For commutes described as "each way" or "to and from", double the distance to represent the total distance traveled.
-6. General notes about the day should go in the "notes" field, not in any other field.
-7. DO NOT add or invent any fields that are not in the schema above.
+5. Clean up voice recognition errors and grammar issues to produce concise, accurate data:
+   - Remove filler words (like "um", "uh", "I had", "I ate") where appropriate
+   - Fix obvious measurement abbreviations (e.g., "gms" → "g", "kilometers" → "km")
+   - Fix grammatical errors while preserving meaning
+   - Remove unnecessary articles and prepositions that don't add clarity
+   - For example: "I had homemade massman curry with tofu with a brown rice" → "homemade massman curry with tofu and brown rice"
+   - For example: "I 30 gms of chocolate" → "30g chocolate"
+6. CRITICAL: Remove all subjective descriptors and qualitative adjectives. Keep only factual, measurable information:
+   - "2 delicious cups of coffee" → "2 cups of coffee"
+   - "fantastic breakfast with eggs" → "breakfast with eggs"
+   - "amazing dinner" → "dinner"
+7. For meals, include only objective facts and quantities, not subjective assessments:
+   - Include: specific foods, preparations, quantities, times
+   - Exclude: taste descriptions, personal preferences, emotions about the food
+8. General notes about the day should go in the "notes" field, not in any other field.
+9. DO NOT add or invent any fields that are not in the schema above.
+10. When the voice recognition clearly misinterpreted words, use your best judgment to correct the meaning based on context.
+11. Use abbreviations for standard measurements (g instead of grams, kg instead of kilograms, km instead of kilometers) for consistency.
 
-Example:
+Example 1:
 If the transcript says "I commuted 5 kilometers to the office each way", record that as:
 "type": "commute", "distanceKm": 10, "notes": "commuted to and from the office"
+
+Example 2:
+For this transcript: "For breakfast I had overnight oats with one tablespoon of granola, for lunch, bean burrito, wish, salad. The salad was a root vegetable salad. Dinner was homemade massman curry with tofu with a brown rice. First snacks, I 30 gms of chocolate, I two cups of coffee. No painter to some for today. Sleep was eight hours, seven out of 10 rating. Energy levels and eight out of 10, mood and eight. My weight today was 82 kg."
+
+Convert to this format:
+{
+  "date": "2023-06-15", // Current date if not specified
+  "screenTimeHours": null, // Not mentioned
+  "meals": [
+    {
+      "type": "Breakfast",
+      "notes": "overnight oats with 1 tbsp granola"
+    },
+    {
+      "type": "Lunch",
+      "notes": "bean burrito with root vegetable salad"
+    },
+    {
+      "type": "Dinner",
+      "notes": "massman curry with tofu and brown rice"
+    },
+    {
+      "type": "Snacks",
+      "notes": "30g chocolate"
+    },
+    {
+      "type": "Coffee",
+      "notes": "2 cups"
+    }
+  ],
+  "waterIntakeLiters": null, // Not mentioned
+  "painDiscomfort": null, // "No painter to some" was likely "No pain or discomfort"
+  "sleep": {
+    "hours": 8,
+    "quality": 7
+  },
+  "energyLevel": 8,
+  "mood": {
+    "rating": 8,
+    "notes": null
+  },
+  "weightKg": 82,
+  "otherActivities": null,
+  "notes": null
+}
 `;
 
 // Define the expected response type from Gemini API

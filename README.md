@@ -12,4 +12,4 @@ https://www.notion.so/profile/integrations
 
 ## ToDo
 - db
-- admin screen to view past logs and reordings
+- admin screen to view past logs and recordings

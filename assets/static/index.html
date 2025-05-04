@@ -22,6 +22,9 @@
           <button class="tab-btn" data-tab="transcript-tab">
             <span class="icon">📝</span>Text Input
           </button>
+          <button class="tab-btn" data-tab="history-tab">
+            <span class="icon">📋</span>History
+          </button>
         </nav>
       </header>
 
@@ -88,6 +91,25 @@
                   Clear
                 </button>
               </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- History Tab Content -->
+        <div class="tab-content" id="history-tab">
+          <section class="history-section">
+            <h2>Recording History</h2>
+            <p class="description">
+              View your past health logs to help refine the AI prompt
+            </p>
+
+            <div class="loading-container" id="historyLoading">
+              <div class="loader"></div>
+              <p>Loading recordings...</p>
+            </div>
+
+            <div class="recordings-list" id="recordingsList">
+              <!-- Recordings will be loaded here dynamically -->
             </div>
           </section>
         </div>

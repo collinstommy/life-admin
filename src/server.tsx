@@ -5,13 +5,34 @@ import manifest from "__STATIC_CONTENT_MANIFEST";
 import { app } from "./app";
 import { NotionApiClient } from "./api/notion";
 import type { MiddlewareHandler } from "hono";
-import { HonoApp } from "./types";
+import { AppContext, HonoApp } from "./types";
 import { storeAudioRecording, getAudioRecording } from "./lib/storage";
 import { transcribeAudio, extractHealthData } from "./lib/ai";
 // We'll use these in Phase 2 with database integration
-// import { getAllHealthLogs, getHealthLogById } from "./lib/db";
-// Temporarily unused while testing without database
-// import { saveHealthLog } from "./lib/db";
+import {
+  getAllHealthLogs,
+  getHealthLogById,
+  initDb,
+  migrateDb,
+} from "./lib/db";
+// Import the saveHealthLog function
+import { saveHealthLog } from "./lib/db";
+
+// Set up database middleware to handle migrations
+const setupDatabase: MiddlewareHandler<HonoApp> = async (c, next) => {
+  console.log("Setting up database and running migrations...");
+  try {
+    // Run migrations to ensure tables exist
+    await migrateDb(c as AppContext);
+    console.log("Database migrations completed successfully in middleware");
+  } catch (error) {
+    console.error("Error during database setup:", error);
+    // We'll continue even if there's an error, as the handlers will attempt migrations again
+  }
+
+  // Continue to the next middleware/route handler
+  await next();
+};
 
 // Middleware to verify API key
 const authenticateApiKey: MiddlewareHandler<HonoApp> = async (c, next) => {
@@ -24,16 +45,20 @@ const authenticateApiKey: MiddlewareHandler<HonoApp> = async (c, next) => {
 };
 
 // Middleware to initialize the database
-// const withDb: MiddlewareHandler<HonoApp> = async (c, next) => {
-//   c.set("db", initDb(c));
-//   await next();
-// };
+const withDb: MiddlewareHandler<HonoApp> = async (c, next) => {
+  c.set("db", initDb(c as AppContext));
+  await next();
+};
 
 // Serve static files
 app.use("/static/*", serveStatic({ root: "./", manifest }));
 
+// Initialize database on app startup
+app.use(setupDatabase);
+
 // API routes require authentication
 app.use("/api/*", authenticateApiKey);
+app.use("/api/*", withDb);
 
 // Legacy routes for backwards compatibility
 app.use("/logs", authenticateApiKey);
@@ -57,21 +82,24 @@ app.post("/api/process-transcript", async (c) => {
       const healthData = await extractHealthData(c, transcript);
       console.log("Health data extracted successfully");
 
-      // Skip database saving for now
-      // const logId = await saveHealthLog(c, "", transcript, healthData);
-
-      // For testing, use a mock ID
-      const mockId = Math.floor(Math.random() * 1000);
+      // Save to database
+      const logId = await saveHealthLog(
+        c as AppContext,
+        "",
+        transcript,
+        healthData,
+      );
+      console.log("Health log saved to database with ID:", logId);
 
       console.log("Successfully processed transcript", {
-        id: mockId,
+        id: logId,
       });
 
-      // Return the structured data with a mock ID
+      // Return the structured data with the log ID
       return c.json({
         success: true,
         message: "Transcript processed successfully",
-        id: mockId,
+        id: logId,
         transcript,
         data: healthData,
       });
@@ -151,25 +179,28 @@ app.post("/api/health-log", async (c) => {
       const healthData = await extractHealthData(c, transcript);
       console.log("Health data extracted successfully");
 
-      // Skip database saving for now
-      // const logId = await saveHealthLog(c, audioUrl, transcript, healthData);
-
-      // For testing, use a mock ID
-      const mockId = Math.floor(Math.random() * 1000);
+      // Save to database
+      const logId = await saveHealthLog(
+        c as AppContext,
+        audioUrl,
+        transcript,
+        healthData,
+      );
+      console.log("Health log saved to database with ID:", logId);
 
       console.log("Successfully processed health log", {
         success: true,
         message: "Health log processed successfully",
-        id: mockId,
+        id: logId,
         transcript,
         data: healthData,
       });
 
-      // Return the structured data with a mock ID
+      // Return the structured data with the log ID
       return c.json({
         success: true,
         message: "Health log processed successfully",
-        id: mockId,
+        id: logId,
         transcript,
         data: healthData,
       });
@@ -199,47 +230,80 @@ app.post("/api/health-log", async (c) => {
 // Get all health logs
 app.get("/api/health-log", async (c) => {
   try {
-    // Skip database query for now
-    // const logs = await getAllHealthLogs(c);
+    console.log("Fetching all health logs from database");
 
-    // Return mock data for testing
-    return c.json([
-      {
-        id: 1,
-        date: new Date().toISOString().split("T")[0],
-        audioUrl: "/recordings/sample-recording.webm",
-        transcript:
-          "Today I had a good day. I did a 45-minute yoga session and drank about 2 liters of water.",
-        healthData: {
-          screenTimeHours: 3.5,
-          waterIntakeLiters: 2,
-          sleepHours: 7.5,
-          sleepQuality: 8,
-          energyLevel: 8,
-        },
-        workouts: [
-          {
-            type: "Yoga",
-            durationMinutes: 45,
-            intensity: 7,
-            notes: "Focused on stretching",
-          },
-        ],
-        meals: [
-          {
-            type: "Breakfast",
-            notes: "Oatmeal with berries",
-          },
-          {
-            type: "Lunch",
-            notes: "Quinoa salad",
-          },
-        ],
-      },
-    ]);
+    try {
+      // Try to run migrations again just in case they failed on startup
+      await migrateDb(c as AppContext);
+    } catch (migrationError) {
+      console.error(
+        "Error running migrations during health log fetch:",
+        migrationError,
+      );
+      // Continue anyway - we'll handle the table existence below
+    }
+
+    try {
+      // Get logs from database
+      const logs = await getAllHealthLogs(c as AppContext);
+      console.log(`Retrieved ${logs.length} health logs from database`);
+
+      // If no logs found, return friendly message
+      if (logs.length === 0) {
+        console.log("No health logs found in database");
+        return c.json({
+          logs: [],
+          message:
+            "No health logs found. Create your first health log by recording or entering a transcript.",
+        });
+      }
+
+      // Transform logs to include structured data directly
+      const formattedLogs = logs.map((log) => {
+        // If we have structured data, use it directly
+        if (log.structuredData) {
+          return {
+            id: log.id,
+            date: log.date,
+            audioUrl: log.audioUrl,
+            transcript: log.transcript,
+            healthData: log.structuredData,
+          };
+        }
+
+        // Fall back to the old format if needed
+        return log;
+      });
+
+      return c.json(formattedLogs);
+    } catch (error: unknown) {
+      console.error("Database error when fetching health logs:", error);
+
+      // Check if it's a "no such table" error
+      const dbError = error as Error;
+      if (dbError.message && dbError.message.includes("no such table")) {
+        console.log(
+          "Health logs table doesn't exist yet, returning empty result",
+        );
+        return c.json({
+          logs: [],
+          message:
+            "The health tracker is being set up for the first time. Create your first health log by recording or entering a transcript.",
+        });
+      }
+
+      // For other database errors, rethrow to be caught by the outer try/catch
+      throw error;
+    }
   } catch (error) {
     console.error("Error fetching health logs:", error);
-    return c.json({ error: "Failed to fetch health logs" }, 500);
+    return c.json(
+      {
+        error: "Failed to fetch health logs",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
+    );
   }
 });
 
@@ -247,48 +311,31 @@ app.get("/api/health-log", async (c) => {
 app.get("/api/health-log/:id", async (c) => {
   try {
     const id = parseInt(c.req.param("id"), 10);
-    if (isNaN(id)) {
-      return c.json({ error: "Invalid ID" }, 400);
+    console.log(`Fetching health log with ID ${id} from database`);
+
+    // Get log from database
+    const log = await getHealthLogById(c as AppContext, id);
+
+    if (!log) {
+      console.log(`Health log with ID ${id} not found in database`);
+      return c.json({ error: "Health log not found" }, 404);
     }
 
-    // Skip database query for now
-    // const log = await getHealthLogById(c, id);
+    console.log(`Retrieved health log with ID ${id} from database`);
 
-    // Return mock data for testing
-    const mockLog = {
-      id,
-      date: new Date().toISOString().split("T")[0],
-      audioUrl: `/recordings/sample-recording-${id}.webm`,
-      transcript:
-        "Today I had a good day. I did a 45-minute yoga session and drank about 2 liters of water. I had overnight oats with berries for breakfast, a quinoa salad with chickpeas for lunch, and stir-fried veggies with tofu for dinner. I slept about 7.5 hours with quality 8 out of 10. My mood was good, about 8 out of 10. I drank 2.5 liters of water and my screen time was about 3.5 hours.",
-      healthData: {
-        screenTimeHours: 3.5,
-        waterIntakeLiters: 2,
-        sleepHours: 7.5,
-        sleepQuality: 8,
-        energyLevel: 8,
-      },
-      workouts: [
-        {
-          type: "Yoga",
-          durationMinutes: 45,
-          intensity: 7,
-          notes: "Focused on stretching",
-        },
-      ],
-      meals: [
-        {
-          type: "Breakfast",
-          notes: "Oatmeal with berries",
-        },
-        {
-          type: "Lunch",
-          notes: "Quinoa salad",
-        },
-      ],
-    };
+    // If we have structured data, use it directly in the response
+    if (log.structuredData) {
+      return c.json({
+        id: log.id,
+        date: log.date,
+        audioUrl: log.audioUrl,
+        transcript: log.transcript,
+        healthData: log.structuredData,
+      });
+    }
 
-    return c.json(mockLog);
+    // Otherwise return the log as is
+    return c.json(log);
   } catch (error) {
     console.error("Error fetching health log:", error);
     return c.json({ error: "Failed to fetch health log" }, 500);
@@ -300,16 +347,6 @@ app.get("/recordings/:filename", async (c) => {
   try {
     const filename = c.req.param("filename");
     console.log("Requesting recording:", filename);
-
-    // Mock response for sample files (useful for testing)
-    if (filename.startsWith("sample-")) {
-      console.log("Serving mock recording for sample file");
-      return new Response("Mock audio file", {
-        headers: {
-          "Content-Type": "audio/webm",
-        },
-      });
-    }
 
     const response = await getAudioRecording(c, filename);
 

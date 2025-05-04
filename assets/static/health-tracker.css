@@ -458,3 +458,183 @@ footer {
     padding: 1rem;
   }
 }
+
+/* History section styles */
+.history-section {
+  background-color: var(--bg-highlight);
+  border-radius: var(--radius);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow);
+}
+
+.history-section h2 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin: 1rem 0;
+  background-color: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.recordings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.recording-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-color);
+}
+
+.recording-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.recording-header {
+  padding: 1rem;
+  background-color: var(--gray-100);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.recording-date {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.recording-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.recording-content {
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.recording-section {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.recording-section:last-child {
+  border-bottom: none;
+}
+
+.recording-section h4 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.recording-transcript {
+  background-color: var(--gray-50);
+  padding: 1rem;
+  border-radius: var(--radius);
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.recording-json {
+  background-color: var(--gray-50);
+  padding: 1rem;
+  border-radius: var(--radius);
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 0.85rem;
+  overflow-x: auto;
+}
+
+.toggle-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+}
+
+.toggle-btn:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.collapsed .recording-content {
+  display: none;
+}
+
+.no-recordings {
+  text-align: center;
+  padding: 2rem;
+  background-color: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+/* Override for recording cards to make them wider on the history page */
+@media (min-width: 768px) {
+  .container {
+    max-width: 900px; /* Increased from 800px */
+  }
+
+  #history-tab .history-section {
+    padding: 2rem;
+  }
+}
+
+/* Add styles for the new play transcript button */
+.play-transcript-btn {
+  background-color: var(--success-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 0.5rem;
+}
+
+.play-transcript-btn:hover {
+  background-color: var(--success-hover);
+}
+
+.play-transcript-btn .icon {
+  font-size: 1.1rem;
+}
+
+/* Add styles for the section header with actions */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
