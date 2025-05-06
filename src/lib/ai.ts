@@ -343,168 +343,175 @@ const HEALTH_DATA_PROMPT = `Convert the following health log transcript into a s
   2. If the date is mentioned in the transcript, use that date. Otherwise, use the current date.
   3. IMPORTANT: Only extract information that is explicitly mentioned in the transcript. Do not invent or add details.
   4. For commutes described as "each way" or "to and from", double the distance to represent the total distance traveled.
-  5. CRITICAL: Correct common transcription errors, especially for food items, exercise types, and health terms:
-    - Food items: Correct phonetic approximations to the likely food name
-    - Exercise types: Normalize workout names to common exercise categories
-    - Measurements: Fix units and values that may have been transcribed incorrectly
-    - Numbers: Convert spoken numbers to digits (e.g., "eight" → 8)
-    - Exercise term examples:
-      - "m-ron", "em run", "iron-man", "marathon" → use appropriate type based on context:
-        - If it's a 5K or similar short distance, use "run"
-        - If it's a triathlon-type event, use "triathlon"
-        - If it's a marathon, use "marathon"
-      - "weight lifting", "waited exercise" → "weightlifting"
-      - "high intensity", "high intense", "hit", "h.i.i.t." → "HIIT"
-      - "pit-lattes", "pie-latees" → "pilates"
-      - "yohga", "yogga" → "yoga"
-    - Food item examples:
-      - "breito", "berrito", "burito" → "burrito"
-      - "keish", "keysh", "quich" → "quiche"
-      - "quinua", "keen-wah" → "quinoa"
-      - "masa man", "massman" → "massaman"
-      - "sush", "soosh" → "sushi"
-      - "kimch", "kimchi", "kim chi" → "kimchi"
-      - "yohg", "yoghurt" → "yogurt"
-      - "grow-nola", "grow nuts", "gran-ola" → "granola"
-      - "flex", "flax" → "flaxseed"
-      - "came-cha", "come-bu-ka" → "kombucha"
-      - "ah-sigh", "acai" → "açaí"
+  5. **Commute Handling**:
+     - Identify mentions of "commute" or "commuting" as a workout.
+     - Place commute activities in the workouts array, NOT in otherActivities.
+     - If specific details (duration, distance, intensity) are mentioned for the commute, use them.
+     - If details are missing, use these defaults: 'type': "bike", 'durationMinutes': 25, 'distanceKm': 6, 'intensity': 5, 'notes': "commute".
+  6. CRITICAL: Correct common transcription errors, especially for food items, exercise types, and health terms:
+     - Food items: Correct phonetic approximations to the likely food name
+     - Exercise types: Normalize workout names to common exercise categories
+     - Measurements: Fix units and values that may have been transcribed incorrectly
+     - Numbers: Convert spoken numbers to digits (e.g., "eight" → 8)
+     - Exercise term examples:
+       - "m-ron", "em run", "iron-man", "marathon" → use appropriate type based on context:
+         - If it's a 5K or similar short distance, use "run"
+         - If it's a triathlon-type event, use "triathlon"
+         - If it's a marathon, use "marathon"
+       - "weight lifting", "waited exercise" → "weightlifting"
+       - "high intensity", "high intense", "hit", "h.i.i.t." → "HIIT"
+       - "pit-lattes", "pie-latees" → "pilates"
+       - "yohga", "yogga" → "yoga"
+     - Food item examples:
+       - "breito", "berrito", "burito" → "burrito"
+       - "keish", "keysh", "quich" → "quiche"
+       - "quinua", "keen-wah" → "quinoa"
+       - "masa man", "massman" → "massaman"
+       - "sush", "soosh" → "sushi"
+       - "kimch", "kimchi", "kim chi" → "kimchi"
+       - "yohg", "yoghurt" → "yogurt"
+       - "grow-nola", "grow nuts", "gran-ola" → "granola"
+       - "flex", "flax" → "flaxseed"
+       - "came-cha", "come-bu-ka" → "kombucha"
+       - "ah-sigh", "acai" → "açaí"
 
-  6. Clean up voice recognition errors and grammar issues to produce concise, accurate data:
-    - Remove filler words (like "um", "uh", "I had", "I ate") where appropriate
-    - Fix obvious measurement abbreviations (e.g., "gms" → "g", "kilometers" → "km")
-    - Fix grammatical errors while preserving meaning
-    - Remove unnecessary articles and prepositions that don't add clarity
-    - For example: "I had homemade massman curry with tofu with a brown rice" → "homemade massaman curry with tofu and brown rice"
-    - For example: "I 30 gms of chocolate" → "30g chocolate"
+    7. Clean up voice recognition errors and grammar issues to produce concise, accurate data:
+      - Remove filler words (like "um", "uh", "I had", "I ate") where appropriate
+      - Fix obvious measurement abbreviations (e.g., "gms" → "g", "kilometers" → "km")
+      - Fix grammatical errors while preserving meaning
+      - Remove unnecessary articles and prepositions that don't add clarity
+      - For example: "I had homemade massman curry with tofu with a brown rice" → "homemade massaman curry with tofu and brown rice"
+      - For example: "I 30 gms of chocolate" → "30g chocolate"
 
-  7. CRITICAL: Remove all subjective descriptors and qualitative adjectives. Keep only factual, measurable information:
-    - "2 delicious cups of coffee" → "2 cups of coffee"
-    - "fantastic breakfast with eggs" → "breakfast with eggs"
-    - "amazing dinner" → "dinner"
+    8. CRITICAL: Remove all subjective descriptors and qualitative adjectives. Keep only factual, measurable information:
+      - "2 delicious cups of coffee" → "2 cups of coffee"
+      - "fantastic breakfast with eggs" → "breakfast with eggs"
+      - "amazing dinner" → "dinner"
 
-  8. For meals, include only objective facts and quantities, not subjective assessments:
-    - Include: specific foods, preparations, quantities, times
-    - Exclude: taste descriptions, personal preferences, emotions about the food
+    9. For meals, include only objective facts and quantities, not subjective assessments:
+      - Include: specific foods, preparations, quantities, times
+      - Exclude: taste descriptions, personal preferences, emotions about the food
 
-  9. CRITICAL FOR MEALS: Create ONLY ONE entry per meal type (Breakfast, Lunch, Dinner, Snacks, Coffee):
-    - If multiple items are mentioned for a single meal type, combine them into one entry
-    - Example: "For dinner I had sushi and salad" → ONE entry: {"type": "Dinner", "notes": "sushi and salad"}
-    - Example: "For dinner I had sushi. I also had salad for dinner" → ONE entry: {"type": "Dinner", "notes": "sushi and salad"}
-    - Example: "Dinner was sushi rolls and veggie gyoza" → ONE entry: {"type": "Dinner", "notes": "sushi rolls and veggie gyoza"}
-    - Never create multiple entries with the same meal type
-    - For repeated items in the same meal, include them only once: "sushi, sushi rolls" → just "sushi rolls"
+    10. CRITICAL FOR MEALS: Create ONLY ONE entry per meal type (Breakfast, Lunch, Dinner, Snacks, Coffee):
+      - If multiple items are mentioned for a single meal type, combine them into one entry
+      - Example: "For dinner I had sushi and salad" → ONE entry: {"type": "Dinner", "notes": "sushi and salad"}
+      - Example: "For dinner I had sushi. I also had salad for dinner" → ONE entry: {"type": "Dinner", "notes": "sushi and salad"}
+      - Example: "Dinner was sushi rolls and veggie gyoza" → ONE entry: {"type": "Dinner", "notes": "sushi rolls and veggie gyoza"}
+      - Never create multiple entries with the same meal type
+      - For repeated items in the same meal, include them only once: "sushi, sushi rolls" → just "sushi rolls"
 
-  10. General notes about the day should go in the "notes" field, not in any other field.
+    11. General notes about the day should go in the main \`notes\` field, not in any other field.
 
-  11. DO NOT add or invent any fields that are not in the schema above.
+    12. Activities identified as workouts (including commutes) should ONLY appear in the workouts array. Do not list them in otherActivities.
 
-  12. Use abbreviations for standard measurements (g instead of grams, kg instead of kilograms, km instead of kilometers) for consistency.
+    13. DO NOT add or invent any fields that are not in the schema above.
 
-  13. When processing "No pain" or similar phrases indicating absence, set the painDiscomfort field to null rather than creating an object with null values.
+    14. Use abbreviations for standard measurements (g instead of grams, kg instead of kilograms, km instead of kilometers) for consistency.
 
-  14. For workout intensity, map descriptive terms to numerical values:
-      - "low" or "light" → 3
-      - "medium" → 5
-      - "moderate" → 6
-      - "high" → 8
-      - "intense" → 9
-      - "very high" or "very intense" → 10
+    15. When processing "No pain" or similar phrases indicating absence, set the painDiscomfort field to null rather than creating an object with null values.
 
-  15. CRITICAL: Respond ONLY with the valid JSON object representing the extracted data. Do not include any introductory text, explanations, or conversational elements before or after the JSON object.
+    16. For workout intensity, map descriptive terms to numerical values:
+        - "low" or "light" → 3
+        - "medium" → 5
+        - "moderate" → 6
+        - "high" → 8
+        - "intense" → 9
+        - "very high" or "very intense" → 10
 
-  Example 1:
-  If the transcript says "I commuted 5 kilometers to the office each way", record that as:
-  "type": "commute", "distanceKm": 10, "notes": "commuted to and from the office"
+    17. CRITICAL: Respond ONLY with the valid JSON object representing the extracted data. Do not include any introductory text, explanations, or conversational elements before or after the JSON object.
 
-  Example 2:
-  For this transcript: "Exercise was a 5K M-RON, as well as a 45-minute yoga class of medium intensity. For breakfast, I had overnight oats with berries. For lunch, I had keish with salad. For dinner, I had black bean burito with a side of roast potato. Sleep was eight hours. No pain or discomfort."
+    Example 1:
+    If the transcript says "I commuted 5 kilometers to the office each way", record that as:
+    "type": "commute", "distanceKm": 10, "notes": "commuted to and from the office"
 
-  Convert to this format:
-  {
-    "date": "2023-06-15", // Current date if not specified
-    "screenTimeHours": null, // Not mentioned
-    "workouts": [
-      {
-        "type": "run",
-        "durationMinutes": null,
-        "distanceKm": 5,
-        "intensity": null,
-        "notes": "5K run"
+    Example 2:
+    For this transcript: "Exercise was a 5K M-RON, as well as a 45-minute yoga class of medium intensity. For breakfast, I had overnight oats with berries. For lunch, I had keish with salad. For dinner, I had black bean burito with a side of roast potato. Sleep was eight hours. No pain or discomfort."
+
+    Convert to this format:
+    {
+      "date": "2023-06-15", // Current date if not specified
+      "screenTimeHours": null, // Not mentioned
+      "workouts": [
+        {
+          "type": "run",
+          "durationMinutes": null,
+          "distanceKm": 5,
+          "intensity": null,
+          "notes": "5K run"
+        },
+        {
+          "type": "yoga",
+          "durationMinutes": 45,
+          "intensity": 5,
+          "notes": "medium intensity"
+        }
+      ],
+      "meals": [
+        {
+          "type": "Breakfast",
+          "notes": "overnight oats with berries"
+        },
+        {
+          "type": "Lunch",
+          "notes": "quiche with salad"
+        },
+        {
+          "type": "Dinner",
+          "notes": "black bean burrito with roast potato"
+        }
+      ],
+      "waterIntakeLiters": null, // Not mentioned
+      "painDiscomfort": null, // "No pain or discomfort" mentioned
+      "sleep": {
+        "hours": 8,
+        "quality": null
       },
-      {
-        "type": "yoga",
-        "durationMinutes": 45,
-        "intensity": 5,
-        "notes": "medium intensity"
-      }
-    ],
-    "meals": [
-      {
-        "type": "Breakfast",
-        "notes": "overnight oats with berries"
+      "energyLevel": null,
+      "mood": {
+        "rating": null,
+        "notes": null
       },
-      {
-        "type": "Lunch",
-        "notes": "quiche with salad"
-      },
-      {
-        "type": "Dinner",
-        "notes": "black bean burrito with roast potato"
-      }
-    ],
-    "waterIntakeLiters": null, // Not mentioned
-    "painDiscomfort": null, // "No pain or discomfort" mentioned
-    "sleep": {
-      "hours": 8,
-      "quality": null
-    },
-    "energyLevel": null,
-    "mood": {
-      "rating": null,
+      "weightKg": null,
+      "otherActivities": null,
       "notes": null
-    },
-    "weightKg": null,
-    "otherActivities": null,
-    "notes": null
-  }
+    }
 
-  Example 3:
-  For this transcript: "For breakfast, I had overnight oats. For lunch, I had a spiced burrito with wedges and salad. For dinner, I had sushi, sushi rolls and veggie gimbap. I also had a salad with dinner. Dinner was from a takeaway."
+    Example 3:
+    For this transcript: "For breakfast, I had overnight oats. For lunch, I had a spiced burrito with wedges and salad. For dinner, I had sushi, sushi rolls and veggie gimbap. I also had a salad with dinner. Dinner was from a takeaway."
 
-  Convert to this format:
-  {
-    "date": "2023-06-15", // Current date if not specified
-    "screenTimeHours": null, // Not mentioned
-    "meals": [
-      {
-        "type": "Breakfast",
-        "notes": "overnight oats"
+    Convert to this format:
+    {
+      "date": "2023-06-15", // Current date if not specified
+      "screenTimeHours": null, // Not mentioned
+      "meals": [
+        {
+          "type": "Breakfast",
+          "notes": "overnight oats"
+        },
+        {
+          "type": "Lunch",
+          "notes": "spiced burrito with wedges and salad"
+        },
+        {
+          "type": "Dinner",
+          "notes": "sushi rolls, veggie gimbap and salad from takeaway"
+        }
+      ],
+      "waterIntakeLiters": null, // Not mentioned
+      "painDiscomfort": null,
+      "sleep": {
+        "hours": null,
+        "quality": null
       },
-      {
-        "type": "Lunch",
-        "notes": "spiced burrito with wedges and salad"
+      "energyLevel": null,
+      "mood": {
+        "rating": null,
+        "notes": null
       },
-      {
-        "type": "Dinner",
-        "notes": "sushi rolls, veggie gimbap and salad from takeaway"
-      }
-    ],
-    "waterIntakeLiters": null, // Not mentioned
-    "painDiscomfort": null,
-    "sleep": {
-      "hours": null,
-      "quality": null
-    },
-    "energyLevel": null,
-    "mood": {
-      "rating": null,
+      "weightKg": null,
+      "otherActivities": null,
       "notes": null
-    },
-    "weightKg": null,
-    "otherActivities": null,
-    "notes": null
-  }
+    }
 `;
 
 // Define the expected response type from Gemini API
