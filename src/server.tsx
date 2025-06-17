@@ -9,30 +9,9 @@ import { AppContext, HonoApp } from "./types";
 import { storeAudioRecording, getAudioRecording } from "./lib/storage";
 import { transcribeAudio, extractHealthData } from "./lib/ai";
 // We'll use these in Phase 2 with database integration
-import {
-  getAllHealthLogs,
-  getHealthLogById,
-  initDb,
-  migrateDb,
-} from "./lib/db";
+import { getAllHealthLogs, getHealthLogById, initDb } from "./lib/db";
 // Import the saveHealthLog function
 import { saveHealthLog } from "./lib/db";
-
-// Set up database middleware to handle migrations
-const setupDatabase: MiddlewareHandler<HonoApp> = async (c, next) => {
-  console.log("Setting up database and running migrations...");
-  try {
-    // Run migrations to ensure tables exist
-    await migrateDb(c as AppContext);
-    console.log("Database migrations completed successfully in middleware");
-  } catch (error) {
-    console.error("Error during database setup:", error);
-    // We'll continue even if there's an error, as the handlers will attempt migrations again
-  }
-
-  // Continue to the next middleware/route handler
-  await next();
-};
 
 // Middleware to verify API key
 const authenticateApiKey: MiddlewareHandler<HonoApp> = async (c, next) => {
@@ -52,9 +31,6 @@ const withDb: MiddlewareHandler<HonoApp> = async (c, next) => {
 
 // Serve static files
 app.use("/static/*", serveStatic({ root: "./", manifest }));
-
-// Initialize database on app startup
-app.use(setupDatabase);
 
 // API routes require authentication
 app.use("/api/*", authenticateApiKey);
@@ -126,11 +102,9 @@ app.post("/api/process-transcript", async (c) => {
   }
 });
 
-// Health log API routes for Phase 2
 app.post("/api/health-log", async (c) => {
   try {
     console.log("Health log upload request received");
-    // Get audio data from request
     const formData = await c.req.formData();
     const audioFile = formData.get("audio") as File;
 
@@ -175,11 +149,9 @@ app.post("/api/health-log", async (c) => {
     }
 
     try {
-      // Extract structured data using Gemini
       const healthData = await extractHealthData(c, transcript);
       console.log("Health data extracted successfully");
 
-      // Save to database
       const logId = await saveHealthLog(
         c as AppContext,
         audioUrl,
@@ -227,21 +199,9 @@ app.post("/api/health-log", async (c) => {
   }
 });
 
-// Get all health logs
 app.get("/api/health-log", async (c) => {
   try {
     console.log("Fetching all health logs from database");
-
-    try {
-      // Try to run migrations again just in case they failed on startup
-      await migrateDb(c as AppContext);
-    } catch (migrationError) {
-      console.error(
-        "Error running migrations during health log fetch:",
-        migrationError,
-      );
-      // Continue anyway - we'll handle the table existence below
-    }
 
     try {
       // Get logs from database

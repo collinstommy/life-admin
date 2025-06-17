@@ -3,7 +3,10 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
-    "db:introspect": "drizzle-kit introspect:sqlite",
+    "db:introspect": "drizzle-kit introspect",
+    "db:apply": "wrangler d1 migrations apply DB",
+    "db:apply:remote": "wrangler d1 migrations apply DB --remote",
+    "db:migrate": "npm run db:migrate:generate && npm run db:migrate:apply",
     "deploy": "tailwind && wrangler deploy",
     "dev": "wrangler dev --live-reload",
     "start": "concurrently \"npm:tailwind:watch\" \"npm:dev\" \"npm:client:watch\"",
@@ -35,6 +38,6 @@
     "prettier-plugin-tailwindcss": "^0.5.4",
     "tailwindcss": "^3.3.3",
     "typescript": "^5.0.4",
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.16.1"
   }
 }

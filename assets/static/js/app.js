@@ -348,9 +348,6 @@ document.addEventListener("DOMContentLoaded", () => {
     resultSection.style.display = "none";
   }
 
-  /**
-   * Handle discard recording button click
-   */
   function handleDiscardRecording() {
     // Reset the recorder
     recorder.reset();
@@ -366,16 +363,11 @@ document.addEventListener("DOMContentLoaded", () => {
     resultJson.textContent = "";
   }
 
-  /**
-   * Load recording history from API
-   */
   async function loadRecordingHistory() {
     try {
-      // Show loading state
       historyLoading.style.display = "flex";
       recordingsList.innerHTML = "";
 
-      // Fetch recordings from API
       const response = await fetch("/api/health-log");
 
       if (!response.ok) {
@@ -386,13 +378,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const recordings = Array.isArray(data) ? data : data.logs || [];
       const message = data.message || null;
 
-      // Mark recordings as loaded
       recordingsLoaded = true;
 
-      // Hide loading state
       historyLoading.style.display = "none";
 
-      // Display recordings or "no recordings" message
       if (recordings.length === 0) {
         recordingsList.innerHTML = `
           <div class="no-recordings">
@@ -402,14 +391,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Sort recordings by date, newest first
       recordings.sort((a, b) => {
         const dateA = new Date(a.date);
         const dateB = new Date(b.date);
         return dateB - dateA;
       });
 
-      // Create a card for each recording
       recordings.forEach((recording) => {
         const card = createRecordingCard(recording);
         recordingsList.appendChild(card);
@@ -441,7 +428,6 @@ document.addEventListener("DOMContentLoaded", () => {
     card.className = "recording-card collapsed";
     card.id = `recording-${recording.id}`;
 
-    // Format date for display
     const recordingDate = new Date(recording.date);
     const formattedDate = recordingDate.toLocaleDateString("en-US", {
       weekday: "long",
@@ -450,11 +436,9 @@ document.addEventListener("DOMContentLoaded", () => {
       day: "numeric",
     });
 
-    // Get the transcript and healthData, ensuring we have valid values
     const transcript = recording.transcript || "No transcript available";
     const healthData = recording.healthData || {};
 
-    // Format the healthData for display
     const formattedHealthData = JSON.stringify(healthData, null, 2);
 
     card.innerHTML = `
@@ -470,9 +454,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="recording-section">
           <div class="section-header">
             <h4>Raw Transcript</h4>
-            <button class="play-transcript-btn" aria-label="Play transcript using text-to-speech">
-              <span class="icon">🔊</span> Play Transcript
-            </button>
           </div>
           <div class="recording-transcript">${transcript}</div>
         </div>
@@ -483,7 +464,6 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    // Add event listener to toggle button
     const toggleBtn = card.querySelector(".toggle-btn");
     toggleBtn.addEventListener("click", () => {
       card.classList.toggle("collapsed");
@@ -493,82 +473,7 @@ document.addEventListener("DOMContentLoaded", () => {
         : "Hide Details";
     });
 
-    // Add event listener to play transcript button
-    const playBtn = card.querySelector(".play-transcript-btn");
-    playBtn.addEventListener("click", () => {
-      playTranscriptAudio(transcript);
-    });
-
     return card;
-  }
-
-  /**
-   * Play transcript using the browser's Speech Synthesis API
-   * @param {string} text - The transcript text to play
-   */
-  function playTranscriptAudio(text) {
-    // Check if text is empty or if speech synthesis is not supported
-    if (!text || !window.speechSynthesis) {
-      alert(
-        "Unable to play transcript. Your browser may not support speech synthesis.",
-      );
-      return;
-    }
-
-    // Stop any ongoing speech
-    window.speechSynthesis.cancel();
-
-    // Create a new speech synthesis utterance
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    // Set properties
-    utterance.lang = "en-US";
-    utterance.rate = 1.0; // Normal speed
-    utterance.pitch = 1.0; // Normal pitch
-    utterance.volume = 1.0; // Full volume
-
-    // Get available voices (this is async in some browsers)
-    let voices = window.speechSynthesis.getVoices();
-
-    // If voices aren't immediately available, wait for them to load
-    if (voices.length === 0) {
-      window.speechSynthesis.addEventListener("voiceschanged", () => {
-        voices = window.speechSynthesis.getVoices();
-        setVoice();
-      });
-    } else {
-      setVoice();
-    }
-
-    // Set a preferred voice if available
-    function setVoice() {
-      // Try to find a nice sounding voice
-      const preferredVoices = [
-        "Google UK English Female",
-        "Microsoft Libby Online (Natural)",
-        "Samantha",
-        "Daniel",
-      ];
-
-      for (const name of preferredVoices) {
-        const voice = voices.find((v) => v.name === name);
-        if (voice) {
-          utterance.voice = voice;
-          break;
-        }
-      }
-
-      // Fall back to the first English voice if none of the preferred voices are available
-      if (!utterance.voice) {
-        const englishVoice = voices.find((v) => v.lang.startsWith("en-"));
-        if (englishVoice) {
-          utterance.voice = englishVoice;
-        }
-      }
-
-      // Start speaking
-      window.speechSynthesis.speak(utterance);
-    }
   }
 
   // Initialize the recorder when the page loads
