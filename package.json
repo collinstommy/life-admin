@@ -18,7 +18,7 @@
     "@hono/zod-validator": "^0.1.8",
     "@notionhq/client": "^2.2.15",
     "clsx": "^2.0.0",
-    "drizzle-orm": "^0.31.0",
+    "drizzle-orm": "^0.44.2",
     "hono": "^4.2.7",
     "notion-to-md": "^3.1.4"
   },
@@ -32,7 +32,7 @@
     "@typescript-eslint/parser": "^6.7.3",
     "concurrently": "^8.2.2",
     "daisyui": "^4.7.2",
-    "drizzle-kit": "^0.21.1",
+    "drizzle-kit": "^0.31.2",
     "eslint": "^8.50.0",
     "prettier": "^3.0.3",
     "prettier-plugin-tailwindcss": "^0.5.4",
