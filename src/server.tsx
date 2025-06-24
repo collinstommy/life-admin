@@ -15,11 +15,10 @@ import { saveHealthLog } from "./lib/db";
 
 // Middleware to verify API key
 const authenticateApiKey: MiddlewareHandler<HonoApp> = async (c, next) => {
-  // TODO: Uncomment this when API key verification is needed
-  // const apiKey = c.req.header("X-API-Key");
-  // if (!apiKey || apiKey !== c.env.DAILY_LOG_API_KEY) {
-  //   return c.json({ error: "Unauthorized" }, 401);
-  // }
+  const apiKey = c.req.header("X-API-Key");
+  if (!apiKey || apiKey !== c.env.DAILY_LOG_API_KEY) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
   await next();
 };
 

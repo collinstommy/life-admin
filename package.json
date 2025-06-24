@@ -7,7 +7,7 @@
     "db:apply": "wrangler d1 migrations apply DB",
     "db:apply:remote": "wrangler d1 migrations apply DB --remote",
     "db:migrate": "npm run db:migrate:generate && npm run db:migrate:apply",
-    "deploy": "tailwind && wrangler deploy",
+    "deploy": "npm run tailwind && wrangler deploy",
     "dev": "wrangler dev --live-reload",
     "start": "concurrently \"npm:tailwind:watch\" \"npm:dev\" \"npm:client:watch\"",
     "tailwind": "tailwindcss -i ./src/styles.css -o ./assets/static/styles.css",
