@@ -8,6 +8,12 @@ type Bindings = {
   NOTION_DATABASE_ID: string;
   DAILY_LOG_CACHE: KVNamespace;
   DAILY_LOG_API_KEY: string;
+  // New bindings for health tracker
+  HEALTH_RECORDINGS: R2Bucket;
+  AI: unknown; // For Cloudflare AI (Whisper, etc.)
+  DB: D1Database; // For Cloudflare D1
+  // Gemini API
+  GEMINI_API_KEY: string;
 };
 
 export type HonoApp = {

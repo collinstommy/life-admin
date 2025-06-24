@@ -3,7 +3,10 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
-    "db:introspect": "drizzle-kit introspect:sqlite",
+    "db:introspect": "drizzle-kit introspect",
+    "db:apply": "wrangler d1 migrations apply DB",
+    "db:apply:remote": "wrangler d1 migrations apply DB --remote",
+    "db:migrate": "npm run db:migrate:generate && npm run db:migrate:apply",
     "deploy": "tailwind && wrangler deploy",
     "dev": "wrangler dev --live-reload",
     "start": "concurrently \"npm:tailwind:watch\" \"npm:dev\" \"npm:client:watch\"",
@@ -15,7 +18,7 @@
     "@hono/zod-validator": "^0.1.8",
     "@notionhq/client": "^2.2.15",
     "clsx": "^2.0.0",
-    "drizzle-orm": "^0.31.0",
+    "drizzle-orm": "^0.44.2",
     "hono": "^4.2.7",
     "notion-to-md": "^3.1.4"
   },
@@ -29,12 +32,12 @@
     "@typescript-eslint/parser": "^6.7.3",
     "concurrently": "^8.2.2",
     "daisyui": "^4.7.2",
-    "drizzle-kit": "^0.21.1",
+    "drizzle-kit": "^0.31.2",
     "eslint": "^8.50.0",
     "prettier": "^3.0.3",
     "prettier-plugin-tailwindcss": "^0.5.4",
     "tailwindcss": "^3.3.3",
     "typescript": "^5.0.4",
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.16.1"
   }
 }

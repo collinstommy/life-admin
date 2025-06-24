@@ -1,11 +1,13 @@
-import type { Config } from "drizzle-kit";
+import { defineConfig } from "drizzle-kit";
 
-export default {
+export default defineConfig({
   schema: "./src/db/schema.ts",
-  out: "./drizzle",
+  out: "./drizzle/migrations",
   dialect: "sqlite",
-  driver: "d1",
-  // dbCredentials: {
-  //   url: ".wrangler/state/v3/d1/miniflare-D1DatabaseObject/d5f8fb30bfe22d7146763158fc29bdfab52d77fa6a7be952a019fde33d8be3e3.sqlite",
-  // },
-} satisfies Config;
+  dbCredentials: {
+    url: ".wrangler/state/v3/d1/miniflare-D1DatabaseObject/305e3eb4-8b4d-4f2b-8719-c942196b1f04.sqlite",
+  },
+  breakpoints: true,
+  verbose: true,
+  strict: true,
+});
