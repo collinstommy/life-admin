@@ -335,7 +335,7 @@ app.get("/api/health-log/:id", async (c) => {
 });
 
 // Get an audio recording by filename
-app.get("/recordings/:filename", async (c) => {
+app.get("/recordings/:filename", authenticateJwt, async (c) => {
   try {
     const filename = c.req.param("filename");
     console.log("Requesting recording:", filename);
