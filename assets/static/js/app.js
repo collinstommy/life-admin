@@ -300,7 +300,6 @@ document.addEventListener("DOMContentLoaded", () => {
           },
           body: JSON.stringify({ transcript }),
         });
-
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Server error (${response.status}): ${errorText}`);
@@ -369,6 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
       recordingsList.innerHTML = "";
 
       const response = await fetch("/api/health-log");
+
 
       if (!response.ok) {
         throw new Error(`Failed to fetch recordings: ${response.status}`);
@@ -478,4 +478,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize the recorder when the page loads
   initializeRecorder();
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) {
+    loginBtn.addEventListener("click", handleLogin);
+  }
 });
+
+/**
+ * Handle login button click
+ */
+async function handleLogin() {
+  console.log("handleLogin");
+
+  const password = passwordInput.value;
+  if (!password) {
+    alert("Please enter a password.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password }),
+    });
+
+    if (response.ok) {
+      alert("Logged in successfully!");
+      // Optionally, hide the login section or redirect
+    } else {
+      const errorData = await response.json();
+      alert(`Login failed: ${errorData.error}`);
+    }
+  } catch (error) {
+    console.error("Error during login:", error);
+    alert("An error occurred during login.");
+  }
+}

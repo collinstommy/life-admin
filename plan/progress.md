@@ -40,11 +40,8 @@
 
 ## Next Steps
 
-1. Complete the database integration to replace mock data
-2. Develop the frontend UI for health log recording and viewing
-3. Implement user authentication and security measures
-4. Add data visualization for health trends
-5. Deploy the application to production
+- [ ] add data visualization for health trends
+- [ ] delete entry
 
 ## Technical Achievements
 
@@ -53,3 +50,5 @@
 - Set up a serverless architecture with Cloudflare Workers, R2, and D1
 - Created a flexible database schema for comprehensive health tracking
 - Built a client-side interface that displays both raw transcripts and structured data
+
+
