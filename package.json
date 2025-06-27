@@ -7,12 +7,12 @@
     "db:apply": "wrangler d1 migrations apply DB",
     "db:apply:remote": "wrangler d1 migrations apply DB --remote",
     "db:migrate": "npm run db:migrate:generate && npm run db:migrate:apply",
-    "deploy": "npm run tailwind && wrangler deploy",
+    "deploy": "npm run build && wrangler deploy",
     "dev": "wrangler dev --live-reload",
-    "start": "concurrently \"npm:tailwind:watch\" \"npm:dev\" \"npm:client:watch\"",
-    "tailwind": "tailwindcss -i ./src/styles.css -o ./assets/static/styles.css",
-    "tailwind:watch": "tailwindcss -i ./src/styles.css -o ./assets/static/styles.css --watch",
-    "client:watch": "bun build ./src/client/index.js --outdir ./assets/static --watch"
+    "start": "concurrently \"npm:build:client -- --watch\" \"npm:dev\"",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd server/frontend && vite build",
+    "build:server": "# Add your server build command here if needed"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.1.8",

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { AppContext } from "../types";
+import { AppContext } from "../../types";
 import { StructuredHealthData } from "./ai";
 import * as schema from "../db/schema";
 

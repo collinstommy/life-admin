@@ -1,4 +1,4 @@
-import { AppContext } from "../types";
+import { AppContext } from "../../types";
 
 /**
  * Generates a random file name for audio recordings

@@ -1,4 +1,4 @@
-import { AppContext } from "../types";
+import { AppContext } from "../../types";
 
 interface StructuredHealthData {
   date: string;

@@ -1,6 +1,6 @@
 import { DrizzleD1Database } from "drizzle-orm/d1";
 import { Context } from "hono";
-import * as schema from "./db/schema";
+import * as schema from "./src/db/schema";
 
 // secrets
 type Bindings = {
