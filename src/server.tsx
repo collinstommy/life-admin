@@ -14,6 +14,8 @@ import { transcribeAudio, extractHealthData } from "./lib/ai";
 import { getAllHealthLogs, getHealthLogById, initDb, deleteHealthLog } from "./lib/db";
 // Import the saveHealthLog function
 import { saveHealthLog } from "./lib/db";
+// Import types from schema
+import { HealthLog } from "./db/schema";
 
 // Middleware to verify API key
 const authenticateApiKey: MiddlewareHandler<HonoApp> = async (c, next) => {
@@ -253,7 +255,7 @@ app.get("/api/health-log", async (c) => {
       }
 
       // Transform logs to include structured data directly
-      const formattedLogs = logs.map((log) => {
+      const formattedLogs = logs.map((log: HealthLog & { structuredData?: any; healthData?: any; workouts?: any; meals?: any; painDiscomfort?: any }) => {
         // If we have structured data, use it directly
         if (log.structuredData) {
           return {
@@ -417,18 +419,23 @@ app.get("/logs", async (c) => {
 
 // Serve the Health Tracking Voice Recorder app as the main page
 app.get("/", async (c) => {
-  return c.html(
-    await fetch(`${c.req.url}static/index.html`).then((res) => res.text()),
-  );
+  return c.html(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Tracking App</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- React App Root -->
+    <div id="app"></div>
+    
+    <!-- React Application Bundle -->
+    <script src="/static/index.js"></script>
+  </body>
+</html>`);
 });
 
-// For direct access to the health tracker
-app.get("/health-tracker", async (c) => {
-  return c.html(
-    await fetch(
-      `${c.req.url.replace("/health-tracker", "")}/static/index.html`,
-    ).then((res) => res.text()),
-  );
-});
 
 export default app;

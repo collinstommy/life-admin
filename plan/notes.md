@@ -43,13 +43,50 @@ This is a JavaScript/TypeScript project primarily built for Cloudflare Workers, 
 *   **`.eslintrc.js`, `.prettierrc`, `.gitignore`**: Development and code quality configuration.
 
 ## Project Purpose (from `plan/summary.md` and other plan files):
+The "Health Tracking Voice Recording Application" is a streamlined personal health journal designed to minimize friction in logging daily health activities. It allows users to record voice logs, which are then processed using AI to extract structured health data. This structured data, along with the raw recordings, is stored for later retrieval, enabling users to review and analyze their health trends over time. The application aims to transform casual spoken reflections into organized, AI-analyzable data.
 
-The application's core purpose is to provide a low-friction way for users to log daily health activities via voice recordings. These recordings are then automatically transcribed and processed by AI to extract structured health data (e.g., meals, exercise, sleep, mood, weight). This structured data is stored and can be used for tracking health patterns and potentially for further AI analysis.
+**Key Features and Breakdown:**
 
-## Development Status (from `plan/complete/plan.md`):
+1.  **Voice Recording & Frontend:**
+    *   **Web Interface:** Provides a responsive web application for recording voice logs.
+    *   **UI Controls:** Includes controls for starting, stopping, and previewing recordings, along with a timer display.
+    *   **Data Display:** Shows raw transcripts and extracted structured health data.
+    *   **Daily Entries:** Displays entries for each day.
 
-*   **Phase 1 (Basic Recording & Storage):** Completed. This includes setting up the project, basic HTML/CSS UI, and client-side audio recording with mock upload functionality.
-*   **Phase 2 (Backend Integration):** In progress. This involves setting up the Hono server, R2 storage, Cloudflare Whisper for transcription, and Gemini for structured data extraction, and returning this data to the frontend.
-*   **Phase 3 (UI Refinement and Testing):** Planned. This includes database integration (saving structured data to D1), UI improvements, error handling, and full workflow testing.
-*   **Phase 4 (Review and Editing):** Planned.
-*   **Phase 5 (Deployment and Optimization):** Planned.
+2.  **Backend API & Data Flow:**
+    *   **RESTful Endpoints:** Handles recordings, transcripts, and structured data.
+    *   **Audio Upload:** Users record voice, and the audio is sent to the backend API.
+    *   **R2 Storage:** Raw audio recordings are stored in Cloudflare R2 object storage.
+    *   **Transcription:** Audio is processed using Cloudflare Whisper for speech-to-text transcription.
+    *   **Structured Data Extraction:** Transcripts are analyzed by Gemini (a large language model) to extract structured health data in a predefined JSON format.
+    *   **D1 Database Storage:** Structured health data and metadata are stored in a Cloudflare D1 database.
+    *   **Confirmation & View:** Users receive confirmation and a view of the structured data after processing.
+    *   **API for Health Logs:** Provides an API to list and retrieve health logs, including filtering options and access to specific details.
+    *   **Manual Data Management:** Allows for manual updates and removal of health log data.
+
+3.  **Structured Health Data Categories:**
+    The application extracts and stores detailed health metrics, including:
+    *   Screen time
+    *   Water intake
+    *   Sleep duration and quality
+    *   Energy and mood ratings
+    *   Weight tracking
+    *   Workout sessions (type, duration, intensity, notes)
+    *   Meals and nutrition (type, notes)
+    *   Pain and discomfort (location, intensity, notes)
+    *   Other activities and general notes
+
+4.  **AI Processing Pipeline:**
+    *   **Speech-to-Text:** Utilizes Cloudflare Whisper for accurate transcription of voice recordings.
+    *   **Structured Data Extraction:** Employs Gemini with a specific prompt engineering strategy to convert raw transcripts into a structured JSON format, ensuring only explicitly mentioned information is extracted.
+
+5.  **Technical Stack:**
+    *   **Frontend:** HTML, CSS, JavaScript.
+    *   **Backend:** Cloudflare Workers with Hono (web framework).
+    *   **Storage:** Cloudflare R2 (for audio), Cloudflare D1 (for structured data).
+    *   **AI:** Cloudflare Whisper (transcription), Gemini (structured data extraction).
+
+6.  **Development Roadmap (Planned Future Features):**
+    *   **UI Enhancement & Data Visualization:** Improve user experience, add historical data viewing, and implement basic data visualization.
+    *   **Analytics & Insights:** Introduce trend analysis features, AI-powered health insights, and data export capabilities.
+    *   **Review and Editing:** Add functionality for reviewing and editing data.
