@@ -59,6 +59,8 @@ app.use("/api/*", withDb);
 
 app.post("/auth/login", async (c) => {
   const { password } = await c.req.json();
+  console.log("Password:", password);
+  console.log("Environment password:", c.env.PASSWORD);
   if (password === c.env.PASSWORD) {
     const token = await sign({ user: "admin", exp: Math.floor(Date.now() / 1000) + (60 * 60) }, c.env.JWT_SECRET);
     setCookie(c, "jwt", token, { httpOnly: true, secure: true, sameSite: "Strict", maxAge: 60 * 60 });
