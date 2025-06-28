@@ -29,4 +29,3 @@ binding = "DB"
 database_name = "health-tracker"
 database_id = "305e3eb4-8b4d-4f2b-8719-c942196b1f04"
 migrations_dir = "drizzle/migrations"
-

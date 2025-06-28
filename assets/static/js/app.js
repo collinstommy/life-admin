@@ -369,7 +369,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const response = await fetch("/api/health-log");
 
-
       if (!response.ok) {
         throw new Error(`Failed to fetch recordings: ${response.status}`);
       }
