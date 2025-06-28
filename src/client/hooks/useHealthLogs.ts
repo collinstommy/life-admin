@@ -69,6 +69,19 @@ const api = {
     const data = await response.json();
     return Array.isArray(data) ? data : data.logs || [];
   },
+
+  async deleteHealthLog(id: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`/api/health-log/${id}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Delete failed (${response.status}): ${errorText}`);
+    }
+    
+    return response.json();
+  },
 };
 
 // React Query hooks
@@ -98,6 +111,18 @@ export function useProcessTranscript() {
     mutationFn: api.processTranscript,
     onSuccess: () => {
       // Invalidate and refetch health logs
+      queryClient.invalidateQueries({ queryKey: ['health-logs'] });
+    },
+  });
+}
+
+export function useDeleteHealthLog() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: api.deleteHealthLog,
+    onSuccess: () => {
+      // Invalidate and refetch health logs to update the list
       queryClient.invalidateQueries({ queryKey: ['health-logs'] });
     },
   });

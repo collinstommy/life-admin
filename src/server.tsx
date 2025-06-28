@@ -11,7 +11,7 @@ import { getCookie, setCookie } from "hono/cookie";
 import { storeAudioRecording, getAudioRecording } from "./lib/storage";
 import { transcribeAudio, extractHealthData } from "./lib/ai";
 // We'll use these in Phase 2 with database integration
-import { getAllHealthLogs, getHealthLogById, initDb } from "./lib/db";
+import { getAllHealthLogs, getHealthLogById, initDb, deleteHealthLog } from "./lib/db";
 // Import the saveHealthLog function
 import { saveHealthLog } from "./lib/db";
 
@@ -333,6 +333,42 @@ app.get("/api/health-log/:id", async (c) => {
   } catch (error) {
     console.error("Error fetching health log:", error);
     return c.json({ error: "Failed to fetch health log" }, 500);
+  }
+});
+
+// Delete a specific health log by ID
+app.delete("/api/health-log/:id", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"), 10);
+    
+    if (isNaN(id)) {
+      return c.json({ error: "Invalid health log ID" }, 400);
+    }
+
+    console.log(`Attempting to delete health log with ID ${id}`);
+
+    // Delete the health log
+    const success = await deleteHealthLog(c as AppContext, id);
+
+    if (!success) {
+      console.log(`Health log with ID ${id} not found or could not be deleted`);
+      return c.json({ error: "Health log not found" }, 404);
+    }
+
+    console.log(`Successfully deleted health log with ID ${id}`);
+    return c.json({ 
+      success: true, 
+      message: `Health log ${id} deleted successfully` 
+    });
+  } catch (error) {
+    console.error("Error deleting health log:", error);
+    return c.json(
+      {
+        error: "Failed to delete health log",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
   }
 });
 

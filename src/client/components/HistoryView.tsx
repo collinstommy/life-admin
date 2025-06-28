@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useHealthLogs } from '../hooks/useHealthLogs';
+import { useHealthLogs, useDeleteHealthLog } from '../hooks/useHealthLogs';
 import { format, parseISO } from 'date-fns';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface HealthLog {
   id: string;
@@ -16,7 +17,17 @@ interface ExpandedCards {
 
 export function HistoryView() {
   const { data: logs, isLoading, isError, error, refetch } = useHealthLogs();
+  const deleteMutation = useDeleteHealthLog();
   const [expandedCards, setExpandedCards] = useState<ExpandedCards>({});
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    logId: string | null;
+    logDate: string | null;
+  }>({
+    isOpen: false,
+    logId: null,
+    logDate: null,
+  });
 
   const toggleCard = (id: string) => {
     setExpandedCards(prev => ({
@@ -41,6 +52,32 @@ export function HistoryView() {
     } catch {
       return '';
     }
+  };
+
+  const handleDeleteClick = (log: HealthLog) => {
+    setDeleteDialog({
+      isOpen: true,
+      logId: log.id,
+      logDate: formatDate(log.date),
+    });
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteDialog.logId) {
+      deleteMutation.mutate(deleteDialog.logId, {
+        onSuccess: () => {
+          setDeleteDialog({ isOpen: false, logId: null, logDate: null });
+        },
+        onError: (error) => {
+          console.error('Delete failed:', error);
+          // Keep the dialog open to show the error
+        },
+      });
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog({ isOpen: false, logId: null, logDate: null });
   };
 
   if (isLoading) {
@@ -120,6 +157,31 @@ export function HistoryView() {
                 </p>
               </div>
               <div className="flex items-center space-x-2">
+                {/* Delete Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(log);
+                  }}
+                  disabled={deleteMutation.isPending}
+                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                  title="Delete this health log"
+                >
+                  <svg 
+                    className="w-4 h-4" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                    />
+                  </svg>
+                </button>
+                
                 <span className="text-sm text-gray-500">
                   {expandedCards[log.id] ? 'Hide Details' : 'Show Details'}
                 </span>
@@ -197,6 +259,31 @@ export function HistoryView() {
           Refresh History
         </button>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        title="Delete Health Log"
+        message={`Are you use you want to delete?`}
+        confirmText={deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+        cancelText="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
+
+      {/* Delete Error Display */}
+      {deleteMutation.isError && (
+        <div className="fixed bottom-4 right-4 bg-red-50 border border-red-200 rounded-md p-4 shadow-lg">
+          <p className="text-red-700 font-medium">Failed to delete health log</p>
+          <p className="text-red-600 text-sm">{deleteMutation.error?.message}</p>
+          <button
+            onClick={() => deleteMutation.reset()}
+            className="mt-2 text-sm text-red-600 underline hover:text-red-800"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
     </div>
   );
 } 

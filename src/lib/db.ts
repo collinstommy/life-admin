@@ -149,7 +149,7 @@ export async function saveHealthLog(
 }
 
 /**
- * Get a specific health log by ID with fallback to raw SQL if ORM fails
+ * Get a specific health log by ID
  * @param ctx Hono context with D1 binding
  * @param id ID of the health log to retrieve
  * @returns Health log or null if not found
@@ -158,7 +158,6 @@ export async function getHealthLogById(ctx: AppContext, id: number) {
   const db = initDb(ctx);
 
   try {
-    // Try using the ORM first
     const healthLog = await db.query.healthLogs.findFirst({
       where: eq(schema.healthLogs.id, id),
       with: {
@@ -169,73 +168,10 @@ export async function getHealthLogById(ctx: AppContext, id: number) {
       },
     });
 
-    return healthLog;
+    return healthLog || null;
   } catch (error) {
-    console.error(
-      `ORM query failed for ID ${id}, falling back to raw SQL:`,
-      error,
-    );
-
-    // If ORM fails, fallback to a simple SQL query as a last resort
-    try {
-      // Check if the health_logs table exists before attempting to query it
-      const tableExists = await ctx.env.DB.prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='health_logs'",
-      ).all();
-
-      if (tableExists.results.length === 0) {
-        console.log("health_logs table doesn't exist yet, returning null");
-        return null;
-      }
-
-      // Perform a simple query to fetch just the health log
-      const rawResult = await ctx.env.DB.prepare(
-        "SELECT * FROM health_logs WHERE id = ?",
-      )
-        .bind(id)
-        .first<RawHealthLogRow>();
-
-      if (!rawResult) {
-        return null;
-      }
-
-      // Parse the structured data JSON if it exists
-      let structuredData = null;
-      if (rawResult.structured_data) {
-        try {
-          structuredData = JSON.parse(rawResult.structured_data);
-        } catch (parseError) {
-          console.error("Error parsing structured data JSON:", parseError);
-        }
-      }
-
-      // Map the row to our expected structure
-      return {
-        id: rawResult.id,
-        date: rawResult.date,
-        audioUrl: rawResult.audio_url,
-        transcript: rawResult.transcript,
-        structuredData,
-        createdAt: rawResult.created_at,
-        updatedAt: rawResult.updated_at,
-        // If we have structured data, use it instead of providing empty values
-        healthData: structuredData ? structuredData.healthData : null,
-        workouts:
-          structuredData && structuredData.workouts
-            ? structuredData.workouts
-            : [],
-        meals:
-          structuredData && structuredData.meals ? structuredData.meals : [],
-        painDiscomfort: structuredData ? structuredData.painDiscomfort : null,
-      };
-    } catch (fallbackError) {
-      console.error(
-        `Fallback SQL query also failed for ID ${id}:`,
-        fallbackError,
-      );
-      // If even the fallback fails, return null
-      return null;
-    }
+    console.error(`Failed to get health log with ID ${id}:`, error);
+    throw new Error(`Failed to get health log: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -248,6 +184,43 @@ interface RawHealthLogRow {
   structured_data: string | null;
   created_at: number;
   updated_at: number;
+}
+
+/**
+ * Delete a health log and all related data by ID
+ * @param ctx Hono context with D1 binding
+ * @param id ID of the health log to delete
+ * @returns boolean indicating success
+ */
+export async function deleteHealthLog(ctx: AppContext, id: number): Promise<boolean> {
+  const db = initDb(ctx);
+
+  try {
+    // First check if the health log exists
+    const existingLog = await db.query.healthLogs.findFirst({
+      where: eq(schema.healthLogs.id, id),
+    });
+
+    if (!existingLog) {
+      console.log(`Health log with ID ${id} not found`);
+      return false;
+    }
+
+    // Delete related data first (order matters due to foreign key constraints)
+    await db.delete(schema.workouts).where(eq(schema.workouts.logId, id));
+    await db.delete(schema.meals).where(eq(schema.meals.logId, id));
+    await db.delete(schema.painDiscomfort).where(eq(schema.painDiscomfort.logId, id));
+    await db.delete(schema.healthData).where(eq(schema.healthData.logId, id));
+    
+    // Finally delete the main health log
+    const result = await db.delete(schema.healthLogs).where(eq(schema.healthLogs.id, id));
+
+    console.log(`Successfully deleted health log with ID: ${id}`);
+    return true;
+  } catch (error) {
+    console.error(`Failed to delete health log with ID ${id}:`, error);
+    throw new Error(`Failed to delete health log: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 /**
