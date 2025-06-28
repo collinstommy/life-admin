@@ -6,6 +6,8 @@ import { app } from "./app";
 import { NotionApiClient } from "./api/notion";
 import type { MiddlewareHandler } from "hono";
 import { AppContext, HonoApp } from "./types";
+import { sign, verify } from "hono/jwt";
+import { getCookie, setCookie } from "hono/cookie";
 import { storeAudioRecording, getAudioRecording } from "./lib/storage";
 import { transcribeAudio, extractHealthData } from "./lib/ai";
 // We'll use these in Phase 2 with database integration
@@ -15,11 +17,30 @@ import { saveHealthLog } from "./lib/db";
 
 // Middleware to verify API key
 const authenticateApiKey: MiddlewareHandler<HonoApp> = async (c, next) => {
-  // TODO: Uncomment this when API key verification is needed
-  // const apiKey = c.req.header("X-API-Key");
-  // if (!apiKey || apiKey !== c.env.DAILY_LOG_API_KEY) {
-  //   return c.json({ error: "Unauthorized" }, 401);
-  // }
+  const apiKey = c.req.header("X-API-Key");
+  if (!apiKey || apiKey !== c.env.DAILY_LOG_API_KEY) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  await next();
+};
+
+// Middleware to verify basic password
+const authenticateJwt: MiddlewareHandler<HonoApp> = async (c, next) => {
+  const token = getCookie(c, "jwt");
+
+  if (!token) {
+    return c.json({ error: "Unauthorized", message: "No token provided" }, 401);
+  }
+
+  try {
+    const decodedPayload = await verify(token, c.env.JWT_SECRET);
+    if (!decodedPayload || decodedPayload.user !== 'admin') {
+      return c.json({ error: "Unauthorized", message: "Invalid token payload" }, 401);
+    }
+  } catch (e) {
+    return c.json({ error: "Unauthorized", message: "Invalid token" }, 401);
+  }
+
   await next();
 };
 
@@ -33,8 +54,21 @@ const withDb: MiddlewareHandler<HonoApp> = async (c, next) => {
 app.use("/static/*", serveStatic({ root: "./", manifest }));
 
 // API routes require authentication
-app.use("/api/*", authenticateApiKey);
+app.use("/api/*", authenticateJwt);
 app.use("/api/*", withDb);
+
+app.post("/auth/login", async (c) => {
+  const { password } = await c.req.json();
+  console.log("Password:", password);
+  console.log("Environment password:", c.env.PASSWORD);
+  if (password === c.env.PASSWORD) {
+    const token = await sign({ user: "admin", exp: Math.floor(Date.now() / 1000) + (60 * 60) }, c.env.JWT_SECRET);
+    setCookie(c, "jwt", token, { httpOnly: true, secure: true, sameSite: "Strict", maxAge: 60 * 60 });
+    return c.json({ message: "Logged in successfully" });
+  } else {
+    return c.json({ error: "Invalid credentials" }, 401);
+  }
+});
 
 // Legacy routes for backwards compatibility
 app.use("/logs", authenticateApiKey);
@@ -303,7 +337,7 @@ app.get("/api/health-log/:id", async (c) => {
 });
 
 // Get an audio recording by filename
-app.get("/recordings/:filename", async (c) => {
+app.get("/recordings/:filename", authenticateJwt, async (c) => {
   try {
     const filename = c.req.param("filename");
     console.log("Requesting recording:", filename);

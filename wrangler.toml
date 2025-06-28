@@ -2,6 +2,9 @@ name = "life-admin"
 main = "src/server.tsx"
 compatibility_date = "2023-09-18"
 
+# Enable logging
+logpush = true
+
 [site]
 bucket = "./assets"
 

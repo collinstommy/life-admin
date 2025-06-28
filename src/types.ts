@@ -14,6 +14,8 @@ type Bindings = {
   DB: D1Database; // For Cloudflare D1
   // Gemini API
   GEMINI_API_KEY: string;
+  PASSWORD: string;
+  JWT_SECRET: string;
 };
 
 export type HonoApp = {
