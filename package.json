@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "scripts": {
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
@@ -7,14 +8,11 @@
     "db:apply": "wrangler d1 migrations apply DB",
     "db:apply:remote": "wrangler d1 migrations apply DB --remote",
     "db:migrate": "npm run db:migrate:generate && npm run db:migrate:apply",
-    "deploy": "npm run tailwind && npm run client:build && wrangler deploy",
+    "deploy": "npm run build && wrangler deploy",
     "dev": "wrangler dev --live-reload",
-    "start": "concurrently \"npm:tailwind:watch\" \"npm:client:watch\" \"npm:dev\"",
-    "tailwind": "tailwindcss -i ./src/styles.css -o ./assets/static/styles.css",
-    "tailwind:watch": "tailwindcss -i ./src/styles.css -o ./assets/static/styles.css --watch",
-    "client:build": "esbuild ./src/client/index.tsx --bundle --outfile=./assets/static/index.js --target=es2020 --minify --jsx=automatic --jsx-import-source=react --tsconfig=./src/client/tsconfig.json",
-    "client:build:dev": "esbuild ./src/client/index.tsx --bundle --outfile=./assets/static/index.js --target=es2020 --jsx=automatic --jsx-import-source=react --tsconfig=./src/client/tsconfig.json --sourcemap",
-    "client:watch": "esbuild ./src/client/index.tsx --bundle --outfile=./assets/static/index.js --target=es2020 --watch --jsx=automatic --jsx-import-source=react --tsconfig=./src/client/tsconfig.json --sourcemap"
+    "start": "concurrently \"npm:client:watch\" \"npm:dev\"",
+    "build": "vite build",
+    "client:watch": "vite build --watch"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.1.8",
@@ -36,20 +34,22 @@
     "@iconify/json": "^2.2.190",
     "@iconify/tailwind": "^0.1.4",
     "@tailwindcss/forms": "^0.5.6",
+    "@tailwindcss/vite": "^4.1.11",
     "@types/node": "^24.0.6",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^6.7.3",
+    "@vitejs/plugin-react": "^4.6.0",
     "concurrently": "^8.2.2",
     "daisyui": "^4.7.2",
     "drizzle-kit": "^0.31.2",
-    "esbuild": "^0.25.5",
     "eslint": "^8.50.0",
     "prettier": "^3.0.3",
     "prettier-plugin-tailwindcss": "^0.5.4",
-    "tailwindcss": "^3.3.3",
+    "tailwindcss": "^4.1.11",
     "typescript": "^5.0.4",
+    "vite": "^7.0.0",
     "wrangler": "^4.16.1"
   }
 }
