@@ -11,6 +11,8 @@ export function HealthTrackerApp() {
   const [activeTab, setActiveTab] = useState<Tab>('recorder');
   const { isAuthenticated, isLoading, logout } = useAuth();
 
+  console.log('HealthTrackerApp render - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
+
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (

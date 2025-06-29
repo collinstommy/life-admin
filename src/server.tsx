@@ -72,6 +72,37 @@ app.post("/auth/login", async (c) => {
   }
 });
 
+// Check authentication status
+app.get("/auth/status", async (c) => {
+  const token = getCookie(c, "jwt");
+
+  if (!token) {
+    return c.json({ isAuthenticated: false });
+  }
+
+  try {
+    const decodedPayload = await verify(token, c.env.JWT_SECRET);
+    if (!decodedPayload || decodedPayload.user !== 'admin') {
+      return c.json({ isAuthenticated: false });
+    }
+    return c.json({ isAuthenticated: true });
+  } catch (e) {
+    return c.json({ isAuthenticated: false });
+  }
+});
+
+// Logout endpoint - clears the JWT cookie
+app.post("/auth/logout", async (c) => {
+  // Clear the JWT cookie by setting it to expire immediately
+  setCookie(c, "jwt", "", { 
+    httpOnly: true, 
+    secure: true, 
+    sameSite: "Strict", 
+    maxAge: 0 // This expires the cookie immediately
+  });
+  return c.json({ message: "Logged out successfully" });
+});
+
 // Legacy routes for backwards compatibility
 app.use("/logs", authenticateApiKey);
 

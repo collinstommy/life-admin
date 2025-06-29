@@ -1,18 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-interface LoginRequest {
-  password: string;
-}
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface LoginResponse {
   message: string;
 }
 
-interface AuthState {
+interface AuthResponse {
   isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
 }
 
 // API function for login
@@ -33,75 +26,61 @@ const loginApi = async (password: string): Promise<LoginResponse> => {
   return response.json();
 };
 
-// Check if user is authenticated by making a test API call
-const checkAuthApi = async (): Promise<boolean> => {
-  try {
-    const response = await fetch('/api/health-log');
-    return response.ok;
-  } catch {
-    return false;
+// Check authentication status
+const checkAuthApi = async (): Promise<AuthResponse> => {
+  const response = await fetch('/auth/status');
+  if (!response.ok) {
+    throw new Error('Failed to check auth status');
   }
+  return response.json();
 };
 
 export function useAuth() {
-  const [authState, setAuthState] = useState<AuthState>({
-    isAuthenticated: false,
-    isLoading: true,
-    error: null,
-  });
-
   const queryClient = useQueryClient();
 
-  // Check authentication status on mount
-  useEffect(() => {
-    checkAuthApi().then(isAuthenticated => {
-      setAuthState({
-        isAuthenticated,
-        isLoading: false,
-        error: null,
-      });
-    });
-  }, []);
+  // Query for auth state
+  const authQuery = useQuery({
+    queryKey: ['auth'],
+    queryFn: checkAuthApi,
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
+  });
 
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: loginApi,
     onSuccess: () => {
-      setAuthState({
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-      // Clear any cached queries since auth state changed
-      queryClient.clear();
-    },
-    onError: (error: Error) => {
-      setAuthState(prev => ({
-        ...prev,
-        error: error.message,
-        isLoading: false,
-      }));
+      queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
   });
 
   const login = (password: string) => {
-    setAuthState(prev => ({ ...prev, error: null, isLoading: true }));
     loginMutation.mutate(password);
   };
 
-  const logout = () => {
-    // Since we're using HTTP-only cookies, we can't directly clear them
-    // We'll just update the local state and clear the cache
-    setAuthState({
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-    });
+  const logout = async () => {
+    try {
+      // Call logout endpoint to clear server-side cookie
+      await fetch('/auth/logout', { method: 'POST' });
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+      // Continue with local logout even if server call fails
+    }
+    
+    // Update auth query to show logged out state immediately
+    queryClient.setQueryData(['auth'], { isAuthenticated: false });
+    // Clear all other cached queries
     queryClient.clear();
   };
 
   return {
-    ...authState,
+    isAuthenticated: authQuery.data?.isAuthenticated ?? false,
+    isLoading: authQuery.isLoading,
+    error: loginMutation.error?.message || null,
     login,
     logout,
     isLoggingIn: loginMutation.isPending,
