@@ -37,14 +37,14 @@ interface StructuredHealthData {
 // Define response type for Gemini File API upload
 interface GeminiFileUploadResponse {
   file: {
-    name: string; // e.g., "files/rf0cy6f9171t"
-    uri: string; // e.g., "https://generativelanguage.googleapis.com/v1beta/files/rf0cy6f9171t"
+    name: string;
+    uri: string;
     mimeType: string;
-    createTime: string; // ISO 8601 format
-    updateTime: string; // ISO 8601 format
-    expirationTime: string; // ISO 8601 format
-    sha256Hash: string; // Base64 encoded hash
-    sizeBytes: string; // String representation of number
+    createTime: string;
+    updateTime: string;
+    expirationTime: string;
+    sha256Hash: string;
+    sizeBytes: string;
     displayName: string;
   };
 }
@@ -83,7 +83,7 @@ interface GeminiGenerateContentResponse {
 export async function transcribeAudio(
   ctx: AppContext,
   audioData: ArrayBuffer,
-  mimeType: string = "audio/mpeg", // Default to MP3, make sure this matches your input
+  mimeType: string = "audio/mpeg",
 ): Promise<string> {
   const apiKey = ctx.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -175,7 +175,6 @@ export async function transcribeAudio(
     // Detailed transcription prompt, similar to the previous Whisper one
     const transcriptionPrompt =
       "This is a health log recording in English about daily activities, meals, exercise, and wellbeing. Pay special attention to workout and food terms that might be mispronounced or unclear. Common exercise terms include: running, jogging, walking, yoga, pilates, HIIT, weightlifting, swimming, biking, cycling, cardio, strength training, etc. Common food items include: burrito, quiche, curry, sushi, quinoa, granola, chia seeds, kombucha, açaí, kimchi, falafel, couscous, tahini, edamame, etc. Focus on transcribing these terms correctly even if pronounced unclearly. Common measurement terms include: hours, minutes, kilometers, liters, kilograms, grams, etc. If you hear something that sounds like a mispronounced version of common exercise terms (e.g., 'em-run', 'm-ron'), correct it to the most likely exercise type (e.g., 'run').";
-    // TODO: Consider adding more specific prompting if needed, similar to the previous Whisper prompt.
 
     const requestBody = {
       contents: [
@@ -293,15 +292,26 @@ async function deleteGeminiFile(
 }
 
 /**
- * The prompt template for extracting structured data from transcript
+ * Interface for prompt options
  */
-const HEALTH_DATA_PROMPT = `Convert the following health log transcript into a structured JSON format:
+interface PromptOptions {
+  currentDate: string;
+  transcript: string;
+}
 
-[TRANSCRIPT]
+/**
+ * Generate the health data extraction prompt
+ */
+function generateHealthDataPrompt(options: PromptOptions): string {
+  return `Today's date is ${options.currentDate}.
+
+Convert the following health log transcript into a structured JSON format:
+
+${options.transcript}
 
   Format it exactly according to this schema:
   {
-    "date": "YYYY-MM-DD",
+    "date": "YYYY-MM-DD" or null,
     "screenTimeHours": number or null,
     "workouts": [
       {
@@ -340,7 +350,7 @@ const HEALTH_DATA_PROMPT = `Convert the following health log transcript into a s
 
   Follow these specific instructions:
   1. Make sure all fields match the exact format. Use null for missing values.
-  2. If the date is mentioned in the transcript, use that date. Otherwise, use the current date.
+  2. If the date is mentioned in the transcript (including relative dates like "today", "yesterday", "this morning"), calculate and use that date in YYYY-MM-DD format. If no date is mentioned, set date to null.
   3. IMPORTANT: Only extract information that is explicitly mentioned in the transcript. Do not invent or add details.
   4. For commutes described as "each way" or "to and from", double the distance to represent the total distance traveled.
   5. **Commute Handling**:
@@ -424,12 +434,32 @@ const HEALTH_DATA_PROMPT = `Convert the following health log transcript into a s
     If the transcript says "I commuted 5 kilometers to the office each way", record that as:
     "type": "commute", "distanceKm": 10, "notes": "commuted to and from the office"
 
-    Example 2:
+    Example 2 (Relative dates):
+    For this transcript: "Yesterday I did a 30-minute run and had a great breakfast" (when today is 2024-01-15):
+    {
+      "date": "2024-01-14", // Yesterday relative to current date
+      "workouts": [
+        {
+          "type": "run",
+          "durationMinutes": 30,
+          "intensity": null,
+          "notes": null
+        }
+      ],
+      "meals": [
+        {
+          "type": "Breakfast",
+          "notes": "great breakfast"
+        }
+      ]
+    }
+
+    Example 3:
     For this transcript: "Exercise was a 5K M-RON, as well as a 45-minute yoga class of medium intensity. For breakfast, I had overnight oats with berries. For lunch, I had keish with salad. For dinner, I had black bean burito with a side of roast potato. Sleep was eight hours. No pain or discomfort."
 
     Convert to this format:
     {
-      "date": "2023-06-15", // Current date if not specified
+      "date": null, // Not specified in transcript
       "screenTimeHours": null, // Not mentioned
       "workouts": [
         {
@@ -476,12 +506,12 @@ const HEALTH_DATA_PROMPT = `Convert the following health log transcript into a s
       "notes": null
     }
 
-    Example 3:
+    Example 4:
     For this transcript: "For breakfast, I had overnight oats. For lunch, I had a spiced burrito with wedges and salad. For dinner, I had sushi, sushi rolls and veggie gimbap. I also had a salad with dinner. Dinner was from a takeaway."
 
     Convert to this format:
     {
-      "date": "2023-06-15", // Current date if not specified
+      "date": null, // Not specified in transcript
       "screenTimeHours": null, // Not mentioned
       "meals": [
         {
@@ -513,8 +543,8 @@ const HEALTH_DATA_PROMPT = `Convert the following health log transcript into a s
       "notes": null
     }
 `;
+}
 
-// Define the expected response type from Gemini API
 interface GeminiResponse {
   candidates: Array<{
     content: {
@@ -545,7 +575,7 @@ export async function extractHealthData(
 
     // Return a mock response based on the transcript
     return {
-      date: new Date().toISOString().split("T")[0],
+      date: null, // Let the system set the current date
       screenTimeHours: 3.5,
       workouts: [
         {
@@ -606,13 +636,19 @@ export async function extractHealthData(
     const modelId = "gemini-2.0-flash";
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
+    // Get current date for the prompt
+    const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
     const requestBody = {
       contents: [
         {
           role: "user",
           parts: [
             {
-              text: HEALTH_DATA_PROMPT.replace("[TRANSCRIPT]", transcript),
+              text: generateHealthDataPrompt({
+                currentDate,
+                transcript
+              }),
             },
           ],
         },

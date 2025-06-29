@@ -34,7 +34,7 @@ export async function saveHealthLog(
     const [healthLogResult] = await db
       .insert(schema.healthLogs)
       .values({
-        date: healthData.date,
+        date: healthData.date || new Date().toISOString().split('T')[0],
         audioUrl,
         transcript,
         structuredData: JSON.stringify(healthData), // Store the complete structured data
