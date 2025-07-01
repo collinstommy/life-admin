@@ -2,3 +2,16 @@
 - [x] use vite for frontend and tailwind build 
 - [ ] set up hono client for types safety @https://hono.dev/docs/concepts/stacks#with-react
 - [ ] add icons from iconify - use tailwind plugin
+
+
+## UI
+- [x] Improve the home screen
+   - create a home screen with large buttons in a grid
+   - buttons: Add Entry (goes to record health screen), View Entries (placeholder screen for now), Debug (shows two links, 1 to the existing transcript screen, 1 to the existing history screen)
+   - implemented with TanStack Router for proper type-safe routing
+- [x] Create a view entries screen
+    - show a list of entries that can be expanded
+    - the expanded version should show the entry details in a clear manner, not json. Look at the `StructuredHealthData` in @ai.ts. We want to show this data in a nice format so the user can skip it and see how that day went. 
+    - we want to have a delete button for each entry
+    - implemented with beautiful UI showing key metrics, workouts, meals, sleep, mood, etc. in a user-friendly format
+- [ ] Add delete all button
