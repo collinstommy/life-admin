@@ -27,7 +27,17 @@ export function DebugScreen() {
         </div>
 
         {/* Debug options */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          {/* Manual Entry */}
+          <Link
+            to="/debug/manual-entry"
+            className="bg-green-500 hover:bg-green-600 text-white p-6 rounded-lg shadow transition-all duration-200 hover:shadow-lg block text-center"
+          >
+            <div className="text-2xl mb-2">✍️</div>
+            <h4 className="font-semibold mb-1">Manual Entry</h4>
+            <p className="text-green-100 text-sm">Create entry from text</p>
+          </Link>
+
           {/* Transcript Processor */}
           <Link
             to="/debug/transcript"

@@ -5,6 +5,7 @@ import { DebugScreen } from './components/DebugScreen'
 import { VoiceRecorder } from './components/VoiceRecorder'
 import { TranscriptProcessor } from './components/TranscriptProcessor'
 import { HistoryView } from './components/HistoryView'
+import { ManualEntryScreen } from './components/ManualEntryScreen'
 import { useAuth } from './hooks/useAuth'
 
 // Root layout component
@@ -78,6 +79,12 @@ const debugHistoryRoute = createRoute({
   component: HistoryView,
 })
 
+const debugManualEntryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/debug/manual-entry',
+  component: ManualEntryScreen,
+})
+
 // Create the route tree
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -86,6 +93,7 @@ const routeTree = rootRoute.addChildren([
   debugRoute,
   debugTranscriptRoute,
   debugHistoryRoute,
+  debugManualEntryRoute,
 ])
 
 // Create the router
