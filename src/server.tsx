@@ -11,11 +11,12 @@ import { getCookie, setCookie } from "hono/cookie";
 import { storeAudioRecording, getAudioRecording } from "./lib/storage";
 import { transcribeAudio, extractHealthData } from "./lib/ai";
 // We'll use these in Phase 2 with database integration
-import { getAllHealthLogs, getHealthLogById, initDb, deleteHealthLog } from "./lib/db";
+import { getAllHealthLogs, getHealthLogById, initDb, deleteHealthLog, deleteAllHealthLogs } from "./lib/db";
 // Import the saveHealthLog function
 import { saveHealthLog } from "./lib/db";
 // Import types from schema
 import { HealthLog } from "./db/schema";
+import { seedDatabase } from "./seed";
 
 // Middleware to verify API key
 const authenticateApiKey: MiddlewareHandler<HonoApp> = async (c, next) => {
@@ -101,6 +102,22 @@ app.post("/auth/logout", async (c) => {
     maxAge: 0 // This expires the cookie immediately
   });
   return c.json({ message: "Logged out successfully" });
+  });
+
+app.post("/api/seed", async (c) => {
+  try {
+    const result = await seedDatabase(c as AppContext);
+    return c.json(result);
+  } catch (error) {
+    console.error("Error seeding database:", error);
+    return c.json(
+      {
+        error: "Failed to seed database",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
 });
 
 // Legacy routes for backwards compatibility
@@ -398,6 +415,32 @@ app.delete("/api/health-log/:id", async (c) => {
     return c.json(
       {
         error: "Failed to delete health log",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
+});
+
+// Delete all health logs
+app.delete("/api/health-logs", async (c) => {
+  try {
+    console.log("Attempting to delete all health logs");
+
+    // Delete all health logs
+    const deletedCount = await deleteAllHealthLogs(c as AppContext);
+
+    console.log(`Successfully deleted ${deletedCount} health logs`);
+    return c.json({ 
+      success: true, 
+      message: `${deletedCount} health logs deleted successfully`,
+      deletedCount 
+    });
+  } catch (error) {
+    console.error("Error deleting all health logs:", error);
+    return c.json(
+      {
+        error: "Failed to delete all health logs",
         message: error instanceof Error ? error.message : String(error),
       },
       500,

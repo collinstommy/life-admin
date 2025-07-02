@@ -82,9 +82,21 @@ const api = {
     
     return response.json();
   },
+
+  async deleteAllHealthLogs(): Promise<{ success: boolean; message: string; deletedCount: number }> {
+    const response = await fetch('/api/health-logs', {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Delete all failed (${response.status}): ${errorText}`);
+    }
+    
+    return response.json();
+  },
 };
 
-// React Query hooks
 export function useHealthLogs() {
   return useQuery({
     queryKey: ['health-logs'],
@@ -98,7 +110,6 @@ export function useUploadRecording() {
   return useMutation({
     mutationFn: api.uploadRecording,
     onSuccess: () => {
-      // Invalidate and refetch health logs
       queryClient.invalidateQueries({ queryKey: ['health-logs'] });
     },
   });
@@ -110,7 +121,6 @@ export function useProcessTranscript() {
   return useMutation({
     mutationFn: api.processTranscript,
     onSuccess: () => {
-      // Invalidate and refetch health logs
       queryClient.invalidateQueries({ queryKey: ['health-logs'] });
     },
   });
@@ -122,7 +132,17 @@ export function useDeleteHealthLog() {
   return useMutation({
     mutationFn: api.deleteHealthLog,
     onSuccess: () => {
-      // Invalidate and refetch health logs to update the list
+      queryClient.invalidateQueries({ queryKey: ['health-logs'] });
+    },
+  });
+}
+
+export function useDeleteAllHealthLogs() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: api.deleteAllHealthLogs,
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['health-logs'] });
     },
   });

@@ -224,6 +224,37 @@ export async function deleteHealthLog(ctx: AppContext, id: number): Promise<bool
 }
 
 /**
+ * Delete all health logs and related data
+ * @param ctx Hono context with D1 binding
+ * @returns number of health logs deleted
+ */
+export async function deleteAllHealthLogs(ctx: AppContext): Promise<number> {
+  const db = initDb(ctx);
+
+  try {
+    const existingLogs = await db.query.healthLogs.findMany();
+    const logCount = existingLogs.length;
+
+    if (logCount === 0) {
+      console.log("No health logs found to delete");
+      return 0;
+    }
+
+    await db.delete(schema.workouts);
+    await db.delete(schema.meals);
+    await db.delete(schema.painDiscomfort);
+    await db.delete(schema.healthData);
+    await db.delete(schema.healthLogs);
+
+    console.log(`Successfully deleted ${logCount} health logs and all related data`);
+    return logCount;
+  } catch (error) {
+    console.error("Failed to delete all health logs:", error);
+    throw new Error(`Failed to delete all health logs: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
  * Get all health logs with a fallback to raw SQL if ORM fails
  * @param ctx Hono context with D1 binding
  * @returns Array of health logs

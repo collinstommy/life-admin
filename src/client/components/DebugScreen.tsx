@@ -1,7 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from '@tanstack/react-router';
+import { useMutation } from '@tanstack/react-query';
+import { ConfirmDialog } from './ConfirmDialog';
+import { useDeleteAllHealthLogs } from '../hooks/useHealthLogs';
+
+async function seedDatabase() {
+  const res = await fetch('/api/seed', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!res.ok) {
+    throw new Error('Failed to seed database');
+  }
+  return res.json();
+}
 
 export function DebugScreen() {
+  const seedMutation = useMutation({ mutationFn: seedDatabase });
+  const deleteAllMutation = useDeleteAllHealthLogs();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header with back button */}
@@ -57,7 +76,56 @@ export function DebugScreen() {
             <h4 className="font-semibold mb-1">Raw History</h4>
             <p className="text-indigo-100 text-sm">View raw health logs</p>
           </Link>
+
+          {/* Seed Database */}
+          <button
+            onClick={() => seedMutation.mutate()}
+            className="bg-blue-500 hover:bg-blue-600 text-white p-6 rounded-lg shadow transition-all duration-200 hover:shadow-lg block text-center"
+            disabled={seedMutation.isPending}
+          >
+            <div className="text-2xl mb-2">🌱</div>
+            <h4 className="font-semibold mb-1">Seed Database</h4>
+            <p className="text-blue-100 text-sm">Create sample data</p>
+          </button>
+
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="bg-red-500 hover:bg-red-600 text-white p-6 rounded-lg shadow transition-all duration-200 hover:shadow-lg block text-center"
+            disabled={deleteAllMutation.isPending}
+          >
+            <div className="text-2xl mb-2">🗑️</div>
+            <h4 className="font-semibold mb-1">Delete All Data</h4>
+            <p className="text-red-100 text-sm">Remove all health logs</p>
+          </button>
         </div>
+
+        {seedMutation.isPending && (
+          <div className="mt-4 text-center text-gray-600">Seeding...</div>
+        )}
+        {seedMutation.isError && (
+          <div className="mt-4 text-center text-red-600">
+            Error: {seedMutation.error.message}
+          </div>
+        )}
+        {seedMutation.isSuccess && (
+          <div className="mt-4 text-center text-green-600">
+            {seedMutation.data.message}
+          </div>
+        )}
+
+        {deleteAllMutation.isPending && (
+          <div className="mt-4 text-center text-gray-600">Deleting all data...</div>
+        )}
+        {deleteAllMutation.isError && (
+          <div className="mt-4 text-center text-red-600">
+            Error: {deleteAllMutation.error.message}
+          </div>
+        )}
+        {deleteAllMutation.isSuccess && (
+          <div className="mt-4 text-center text-green-600">
+            {deleteAllMutation.data.message}
+          </div>
+        )}
 
         <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-start">
@@ -71,6 +139,21 @@ export function DebugScreen() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete All Health Data"
+        message="Are you sure you want to delete all health logs and related data? This action cannot be undone."
+        confirmText="Delete All"
+        cancelText="Cancel"
+        confirmButtonClass="bg-red-500 hover:bg-red-600"
+        isLoading={deleteAllMutation.isPending}
+        onConfirm={() => {
+          deleteAllMutation.mutate();
+          setShowDeleteConfirm(false);
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 } 
