@@ -38,7 +38,15 @@ interface HealthData {
   notes: string | null;
 }
 
-
+interface HealthLogWithData {
+  id: number;
+  date: string;
+  audioUrl: string | null;
+  transcript: string | null;
+  healthData: HealthData;
+  createdAt: number;
+  updatedAt: number;
+}
 
 function HealthDataDisplay({ data }: { data: HealthData }) {
   const formatDate = (dateStr: string) => {
@@ -58,148 +66,222 @@ function HealthDataDisplay({ data }: { data: HealthData }) {
 
   return (
     <div className="space-y-6">
-      {/* Key Metrics Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Key Metrics Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {data.energyLevel !== null && (
-          <div className="bg-blue-50 p-3 rounded-lg text-center">
-            <div className="text-2xl font-bold text-blue-600">{data.energyLevel}/10</div>
-            <div className="text-sm text-blue-800">Energy Level</div>
+          <div className="bg-gradient-to-br from-emerald-400 to-emerald-600 p-4 rounded-xl shadow-sm text-white transform hover:scale-105 transition-transform">
+            <div className="text-2xl font-bold mb-1">{data.energyLevel}<span className="text-lg text-emerald-100">/10</span></div>
+            <div className="text-emerald-100 text-xs font-medium">Energy Level</div>
           </div>
         )}
         {data.mood.rating !== null && (
-          <div className="bg-green-50 p-3 rounded-lg text-center">
-            <div className="text-2xl font-bold text-green-600">{data.mood.rating}/10</div>
-            <div className="text-sm text-green-800">Mood</div>
+          <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-4 rounded-xl shadow-sm text-white transform hover:scale-105 transition-transform">
+            <div className="text-2xl font-bold mb-1">{data.mood.rating}<span className="text-lg text-amber-100">/10</span></div>
+            <div className="text-amber-100 text-xs font-medium">Mood</div>
           </div>
         )}
         {data.sleep.hours !== null && (
-          <div className="bg-purple-50 p-3 rounded-lg text-center">
-            <div className="text-2xl font-bold text-purple-600">{data.sleep.hours}h</div>
-            <div className="text-sm text-purple-800">Sleep</div>
+          <div className="bg-gradient-to-br from-purple-400 to-purple-600 p-4 rounded-xl shadow-sm text-white transform hover:scale-105 transition-transform">
+            <div className="text-2xl font-bold mb-1">{data.sleep.hours}<span className="text-lg text-purple-100">h</span></div>
+            <div className="text-purple-100 text-xs font-medium">Sleep</div>
           </div>
         )}
         {data.weightKg !== null && (
-          <div className="bg-orange-50 p-3 rounded-lg text-center">
-            <div className="text-2xl font-bold text-orange-600">{data.weightKg}kg</div>
-            <div className="text-sm text-orange-800">Weight</div>
+          <div className="bg-gradient-to-br from-blue-400 to-blue-600 p-4 rounded-xl shadow-sm text-white transform hover:scale-105 transition-transform">
+            <div className="text-2xl font-bold mb-1">{data.weightKg}<span className="text-lg text-blue-100">kg</span></div>
+            <div className="text-blue-100 text-xs font-medium">Weight</div>
           </div>
         )}
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-4">
         {/* Workouts */}
         {data.workouts && data.workouts.length > 0 && (
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-              🏋️ Workouts
-            </h4>
-            <div className="space-y-2">
-              {data.workouts.map((workout, idx) => (
-                <div key={idx} className="bg-white p-3 rounded border">
-                  <div className="font-medium text-gray-800">{workout.type}</div>
-                  <div className="text-sm text-gray-600">
-                    {workout.durationMinutes} min
-                    {workout.distanceKm && ` • ${workout.distanceKm} km`}
-                    {` • Intensity: ${workout.intensity}/10`}
-                  </div>
-                  {workout.notes && (
-                    <div className="text-sm text-gray-500 mt-1">{workout.notes}</div>
-                  )}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 pb-3">
+              <div className="flex items-center mb-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                  <span className="text-blue-600 text-sm">🏋️</span>
                 </div>
-              ))}
+                <h3 className="font-semibold text-gray-900">Workouts</h3>
+              </div>
+              
+              <div className="space-y-2">
+                {data.workouts.map((workout, idx) => (
+                  <div key={idx} className="bg-gray-50 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-900 text-sm">{workout.type}</h4>
+                      <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-1 rounded-md">
+                        {workout.intensity}/10
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <div>
+                        {workout.durationMinutes} min
+                        {workout.distanceKm && ` • ${workout.distanceKm} km`}
+                        {` • Intensity ${workout.intensity}/10`}
+                      </div>
+                      {workout.notes && (
+                        <p className="text-gray-500">{workout.notes}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
         {/* Meals */}
         {data.meals && data.meals.length > 0 && (
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-              🍽️ Meals
-            </h4>
-            <div className="space-y-2">
-              {data.meals.map((meal, idx) => (
-                <div key={idx} className="bg-white p-3 rounded border">
-                  <div className="font-medium text-gray-800">{meal.type}</div>
-                  <div className="text-sm text-gray-600">{meal.notes}</div>
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 pb-3">
+              <div className="flex items-center mb-3">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                  <span className="text-green-600 text-sm">🍽️</span>
                 </div>
-              ))}
+                <h3 className="font-semibold text-gray-900">Meals</h3>
+              </div>
+              
+              <div className="space-y-2">
+                {data.meals.map((meal, idx) => (
+                  <div key={idx} className="bg-gray-50 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium text-gray-900 text-sm">{meal.type}</span>
+                    </div>
+                    <p className="text-xs text-gray-600">{meal.notes}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
         {/* Sleep & Recovery */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-            😴 Sleep & Recovery
-          </h4>
-          <div className="space-y-2">
-            {data.sleep.hours !== null && (
-              <div className="text-sm">
-                <span className="font-medium">Hours:</span> {data.sleep.hours}h
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="p-4 pb-3">
+            <div className="flex items-center mb-3">
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                <span className="text-purple-600 text-sm">😴</span>
               </div>
-            )}
-            {data.sleep.quality !== null && (
-              <div className="text-sm">
-                <span className="font-medium">Quality:</span> {formatRating(data.sleep.quality)}
+              <h3 className="font-semibold text-gray-900">Sleep & Recovery</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {(data.sleep.hours !== null || data.sleep.quality !== null) && (
+                <div className="grid grid-cols-2 gap-3">
+                  {data.sleep.hours !== null && (
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="text-lg font-bold text-gray-900">{data.sleep.hours}h</div>
+                      <div className="text-xs text-gray-600">Duration</div>
+                    </div>
+                  )}
+                  {data.sleep.quality !== null && (
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="text-lg font-bold text-gray-900">{data.sleep.quality}/10</div>
+                      <div className="text-xs text-gray-600">Quality</div>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="space-y-2">
+                {data.waterIntakeLiters !== null && (
+                  <div className="flex justify-between py-1">
+                    <span className="text-xs font-medium text-gray-700">Water Intake</span>
+                    <span className="text-xs text-gray-900">{data.waterIntakeLiters}L</span>
+                  </div>
+                )}
+                {data.screenTimeHours !== null && (
+                  <div className="flex justify-between py-1">
+                    <span className="text-xs font-medium text-gray-700">Screen Time</span>
+                    <span className="text-xs text-gray-900">{data.screenTimeHours}h</span>
+                  </div>
+                )}
               </div>
-            )}
-            {data.waterIntakeLiters !== null && (
-              <div className="text-sm">
-                <span className="font-medium">Water intake:</span> {data.waterIntakeLiters}L
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* Health & Wellness */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-            💊 Health & Wellness
-          </h4>
-          <div className="space-y-2">
-            {data.screenTimeHours !== null && (
-              <div className="text-sm">
-                <span className="font-medium">Screen time:</span> {data.screenTimeHours}h
+        {/* Health Notes */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="p-4 pb-3">
+            <div className="flex items-center mb-3">
+              <div className="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center mr-3">
+                <span className="text-cyan-600 text-sm">💊</span>
               </div>
-            )}
-            {data.painDiscomfort && (data.painDiscomfort.location || data.painDiscomfort.intensity) && (
-              <div className="text-sm">
-                <span className="font-medium">Pain/Discomfort:</span>
-                {data.painDiscomfort.location && ` ${data.painDiscomfort.location}`}
-                {data.painDiscomfort.intensity && ` (${data.painDiscomfort.intensity}/10)`}
-                {data.painDiscomfort.notes && (
-                  <div className="text-gray-500 mt-1">{data.painDiscomfort.notes}</div>
-                )}
-              </div>
-            )}
-            {data.mood.notes && (
-              <div className="text-sm">
-                <span className="font-medium">Mood notes:</span>
-                <div className="text-gray-600 mt-1">{data.mood.notes}</div>
-              </div>
-            )}
+              <h3 className="font-semibold text-gray-900">Health Notes</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {data.mood.notes && (
+                <div className="bg-cyan-50 rounded-lg p-3">
+                  <div className="flex items-center mb-2">
+                    <span className="w-2 h-2 bg-cyan-500 rounded-full mr-2"></span>
+                    <span className="text-xs font-medium text-cyan-800">Mood</span>
+                  </div>
+                  <p className="text-xs text-cyan-700">{data.mood.notes}</p>
+                </div>
+              )}
+              
+              {data.painDiscomfort && (data.painDiscomfort.location || data.painDiscomfort.intensity) && (
+                <div className="bg-red-50 rounded-lg p-3">
+                  <div className="flex items-center mb-2">
+                    <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                    <span className="text-xs font-medium text-red-800">Pain/Discomfort</span>
+                  </div>
+                  <p className="text-xs text-red-700">
+                    {data.painDiscomfort.location && `${data.painDiscomfort.location}`}
+                    {data.painDiscomfort.intensity && ` (${data.painDiscomfort.intensity}/10)`}
+                  </p>
+                  {data.painDiscomfort.notes && (
+                    <p className="text-xs text-red-600 mt-1">{data.painDiscomfort.notes}</p>
+                  )}
+                </div>
+              )}
+              
+              {data.energyLevel !== null && (
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-xs font-medium text-gray-700">Energy Level</span>
+                  <div className="flex items-center">
+                    <div className="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
+                      <div className="bg-emerald-500 h-1.5 rounded-full" style={{width: `${(data.energyLevel / 10) * 100}%`}}></div>
+                    </div>
+                    <span className="text-xs text-gray-900">{data.energyLevel}/10</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Additional Notes */}
       {(data.otherActivities || data.notes) && (
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-            📝 Additional Notes
-          </h4>
-          {data.otherActivities && (
-            <div className="text-sm mb-2">
-              <span className="font-medium">Other activities:</span> {data.otherActivities}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="p-4 pb-3">
+            <div className="flex items-center mb-3">
+              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                <span className="text-gray-600 text-sm">📝</span>
+              </div>
+              <h3 className="font-semibold text-gray-900">Additional Notes</h3>
             </div>
-          )}
-          {data.notes && (
-            <div className="text-sm">
-              <span className="font-medium">General notes:</span> {data.notes}
+            
+            <div className="space-y-3">
+              {data.otherActivities && (
+                <div>
+                  <h4 className="text-xs font-medium text-gray-700 mb-1">Other Activities</h4>
+                  <p className="text-xs text-gray-600">{data.otherActivities}</p>
+                </div>
+              )}
+              {data.notes && (
+                <div>
+                  <h4 className="text-xs font-medium text-gray-700 mb-1">General Notes</h4>
+                  <p className="text-xs text-gray-600">{data.notes}</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>
@@ -218,7 +300,8 @@ export function SingleEntryScreen() {
 
   console.log('logs', logs);
 
-  const log = logs?.find((log: HealthLog) => log.id === Number(id));
+  // Cast as any because the server transforms structuredData to healthData in the API response
+  const log = logs?.find((log: any) => log.id === Number(id));
 
   console.log('log', log);
   console.log('id', id);
@@ -234,18 +317,40 @@ export function SingleEntryScreen() {
     }
   };
 
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center mb-8">
-          <Link to="/view-entries" className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mr-4">
-            ← Back to Entries
-          </Link>
-          <h2 className="text-2xl font-semibold text-gray-800">Health Entry</h2>
+      <div className="bg-gray-50 min-h-screen">
+        {/* Navigation Header */}
+        <div className="bg-white shadow-sm sticky top-0 z-10">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-14">
+              <Link to="/view-entries" className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                <span className="hidden sm:inline">Back to Entries</span>
+                <span className="sm:hidden">Back</span>
+              </Link>
+            </div>
+          </div>
         </div>
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading entry...</span>
+
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading entry...</span>
+          </div>
         </div>
       </div>
     );
@@ -253,17 +358,29 @@ export function SingleEntryScreen() {
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center mb-8">
-          <Link to="/view-entries" className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mr-4">
-            ← Back to Entries
-          </Link>
-          <h2 className="text-2xl font-semibold text-gray-800">Health Entry</h2>
+      <div className="bg-gray-50 min-h-screen">
+        {/* Navigation Header */}
+        <div className="bg-white shadow-sm sticky top-0 z-10">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-14">
+              <Link to="/view-entries" className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                <span className="hidden sm:inline">Back to Entries</span>
+                <span className="sm:hidden">Back</span>
+              </Link>
+            </div>
+          </div>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <div className="text-red-600 text-xl mb-2">⚠️</div>
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Entry</h3>
-          <p className="text-red-700">{error instanceof Error ? error.message : 'Failed to load health entry'}</p>
+
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="bg-red-50 rounded-xl shadow-sm p-6 text-center">
+            <div className="text-red-600 text-xl mb-2">⚠️</div>
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Entry</h3>
+            <p className="text-red-700">{error instanceof Error ? error.message : 'Failed to load health entry'}</p>
+          </div>
         </div>
       </div>
     );
@@ -271,87 +388,107 @@ export function SingleEntryScreen() {
 
   if (!log) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center mb-8">
-          <Link to="/view-entries" className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mr-4">
-            ← Back to Entries
-          </Link>
-          <h2 className="text-2xl font-semibold text-gray-800">Health Entry</h2>
+      <div className="bg-gray-50 min-h-screen">
+        {/* Navigation Header */}
+        <div className="bg-white shadow-sm sticky top-0 z-10">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-14">
+              <Link to="/view-entries" className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                <span className="hidden sm:inline">Back to Entries</span>
+                <span className="sm:hidden">Back</span>
+              </Link>
+            </div>
+          </div>
         </div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-          <div className="text-yellow-600 text-xl mb-2">🔍</div>
-          <h3 className="text-lg font-semibold text-yellow-800 mb-2">Entry Not Found</h3>
-          <p className="text-yellow-700">The requested health entry could not be found. It may have been deleted or the link is incorrect.</p>
-          <Link 
-            to="/view-entries" 
-            className="inline-block mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-          >
-            View All Entries
-          </Link>
+
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="bg-yellow-50 rounded-xl shadow-sm p-6 text-center">
+            <div className="text-yellow-600 text-xl mb-2">🔍</div>
+            <h3 className="text-lg font-semibold text-yellow-800 mb-2">Entry Not Found</h3>
+            <p className="text-yellow-700">The requested health entry could not be found. It may have been deleted or the link is incorrect.</p>
+            <Link 
+              to="/view-entries" 
+              className="inline-block mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              View All Entries
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
-  const logDate = new Date(log.date).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const logDate = formatDate(log.date);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        {/* Back button row */}
-        <div className="flex items-center justify-between mb-4">
-          <Link to="/view-entries" className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-            <span className="hidden sm:inline">← Back to Entries</span>
-            <span className="sm:hidden">← Back</span>
-          </Link>
-          <button
-            onClick={() => setDeleteConfirm({ show: true, logId: log.id.toString(), logDate })}
-            className="text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors p-2 rounded-md cursor-pointer"
-            title="Delete entry"
-          >
-            <svg 
-              className="w-5 h-5" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
-              xmlns="http://www.w3.org/2000/svg"
+    <div className="bg-gray-50 min-h-screen">
+      {/* Navigation Header */}
+      <div className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14">
+            {/* Back Button */}
+            <Link to="/view-entries" className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              <span className="hidden sm:inline">Back to Entries</span>
+              <span className="sm:hidden">Back</span>
+            </Link>
+            
+            {/* Delete Button */}
+            <button
+              onClick={() => setDeleteConfirm({ show: true, logId: log.id.toString(), logDate })}
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
-              />
-            </svg>
-          </button>
-        </div>
-        
-        {/* Title row */}
-        <div>
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 leading-tight">{logDate}</h2>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Entry Content */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <HealthDataDisplay data={log.healthData} />
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Header Section */}
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{logDate}</h1>
+          <p className="text-gray-600 text-sm">Health & Wellness Summary</p>
+        </div>
+
+        {/* Health Data */}
+        <HealthDataDisplay data={(log as any).healthData} />
         
-        {/* Raw Transcript (collapsible) */}
+        {/* Original Transcript */}
         {log.transcript && (
-          <details className="mt-6">
-            <summary className="cursor-pointer text-sm font-medium text-gray-600 hover:text-gray-800">
-              View Original Transcript
-            </summary>
-            <div className="mt-2 p-3 bg-gray-50 rounded text-sm text-gray-700">
-              {log.transcript}
-            </div>
-          </details>
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-6">
+            <details className="group">
+              <summary className="p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                      <span className="text-blue-600 text-sm">🎤</span>
+                    </div>
+                    <h3 className="font-semibold text-gray-900">Original Voice Recording</h3>
+                  </div>
+                  <svg className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </summary>
+              <div className="px-4 pb-4">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-700 leading-relaxed">
+                    {log.transcript}
+                  </p>
+                </div>
+              </div>
+            </details>
+          </div>
         )}
       </div>
 
@@ -366,4 +503,4 @@ export function SingleEntryScreen() {
       />
     </div>
   );
-} 
+}

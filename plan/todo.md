@@ -14,4 +14,4 @@
     - the expanded version should show the entry details in a clear manner, not json. Look at the `StructuredHealthData` in @ai.ts. We want to show this data in a nice format so the user can skip it and see how that day went. 
     - we want to have a delete button for each entry
     - implemented with beautiful UI showing key metrics, workouts, meals, sleep, mood, etc. in a user-friendly format
-- [ ] Add delete all button
+- [x] Add delete all button

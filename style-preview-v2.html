@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Entry - Minimal Design Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        accent: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-primary-50 min-h-screen">
+    <!-- Navigation Header -->
+    <div class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <!-- Back Button -->
+                <button class="inline-flex items-center px-3 py-2 text-sm font-medium text-primary-600 hover:text-primary-900 hover:bg-primary-100 rounded-lg transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    <span class="hidden sm:inline">Back to Entries</span>
+                    <span class="sm:hidden">Back</span>
+                </button>
+                
+                <!-- Delete Button -->
+                <button class="p-2 text-primary-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Header Section -->
+        <div class="mb-6">
+            <h1 class="text-2xl sm:text-3xl font-bold text-primary-900 mb-1">Monday, January 15, 2024</h1>
+            <p class="text-primary-600 text-sm">Health & Wellness Summary</p>
+        </div>
+
+        <!-- Key Metrics Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            <!-- Energy Level -->
+            <div class="bg-white p-4 rounded-xl shadow-sm">
+                <div class="text-2xl font-bold text-primary-900 mb-1">8<span class="text-lg text-primary-500">/10</span></div>
+                <div class="text-primary-600 text-xs font-medium">Energy Level</div>
+            </div>
+
+            <!-- Mood -->
+            <div class="bg-white p-4 rounded-xl shadow-sm">
+                <div class="text-2xl font-bold text-primary-900 mb-1">9<span class="text-lg text-primary-500">/10</span></div>
+                <div class="text-primary-600 text-xs font-medium">Mood</div>
+            </div>
+
+            <!-- Sleep -->
+            <div class="bg-white p-4 rounded-xl shadow-sm">
+                <div class="text-2xl font-bold text-primary-900 mb-1">7.5<span class="text-lg text-primary-500">h</span></div>
+                <div class="text-primary-600 text-xs font-medium">Sleep</div>
+            </div>
+
+            <!-- Weight -->
+            <div class="bg-white p-4 rounded-xl shadow-sm">
+                <div class="text-2xl font-bold text-primary-900 mb-1">72.5<span class="text-lg text-primary-500">kg</span></div>
+                <div class="text-primary-600 text-xs font-medium">Weight</div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid lg:grid-cols-2 gap-4 mb-6">
+            <!-- Workouts -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 pb-3">
+                    <div class="flex items-center mb-3">
+                        <div class="w-8 h-8 bg-accent-100 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-accent-600 text-sm">🏋️</span>
+                        </div>
+                        <h3 class="font-semibold text-primary-900">Workouts</h3>
+                    </div>
+                    
+                    <div class="bg-primary-50 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-medium text-primary-900 text-sm">Morning Run</h4>
+                            <span class="bg-accent-100 text-accent-700 text-xs font-medium px-2 py-1 rounded-md">High</span>
+                        </div>
+                        <div class="text-xs text-primary-600 space-y-1">
+                            <div>35 min • 5.2 km • Intensity 8/10</div>
+                            <p class="text-primary-500">Beautiful morning weather, felt strong throughout</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meals -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 pb-3">
+                    <div class="flex items-center mb-3">
+                        <div class="w-8 h-8 bg-accent-100 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-accent-600 text-sm">🍽️</span>
+                        </div>
+                        <h3 class="font-semibold text-primary-900">Meals</h3>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div class="bg-primary-50 rounded-lg p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-medium text-primary-900 text-sm">Breakfast</span>
+                                <span class="text-xs text-primary-500">8:00 AM</span>
+                            </div>
+                            <p class="text-xs text-primary-600">Overnight oats with berries and almond butter</p>
+                        </div>
+                        <div class="bg-primary-50 rounded-lg p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-medium text-primary-900 text-sm">Lunch</span>
+                                <span class="text-xs text-primary-500">12:30 PM</span>
+                            </div>
+                            <p class="text-xs text-primary-600">Quinoa bowl with grilled chicken</p>
+                        </div>
+                        <div class="bg-primary-50 rounded-lg p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-medium text-primary-900 text-sm">Dinner</span>
+                                <span class="text-xs text-primary-500">7:00 PM</span>
+                            </div>
+                            <p class="text-xs text-primary-600">Salmon with sweet potato and broccoli</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sleep & Recovery -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 pb-3">
+                    <div class="flex items-center mb-3">
+                        <div class="w-8 h-8 bg-accent-100 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-accent-600 text-sm">😴</span>
+                        </div>
+                        <h3 class="font-semibold text-primary-900">Sleep & Recovery</h3>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="text-center p-3 bg-primary-50 rounded-lg">
+                                <div class="text-lg font-bold text-primary-900">7.5h</div>
+                                <div class="text-xs text-primary-600">Duration</div>
+                            </div>
+                            <div class="text-center p-3 bg-primary-50 rounded-lg">
+                                <div class="text-lg font-bold text-primary-900">8/10</div>
+                                <div class="text-xs text-primary-600">Quality</div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between py-1">
+                                <span class="text-xs font-medium text-primary-700">Water Intake</span>
+                                <span class="text-xs text-primary-900">2.8L</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-xs font-medium text-primary-700">Screen Time</span>
+                                <span class="text-xs text-primary-900">4.2h</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Notes -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 pb-3">
+                    <div class="flex items-center mb-3">
+                        <div class="w-8 h-8 bg-accent-100 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-accent-600 text-sm">💊</span>
+                        </div>
+                        <h3 class="font-semibold text-primary-900">Health Notes</h3>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="bg-accent-50 rounded-lg p-3">
+                            <div class="flex items-center mb-2">
+                                <span class="w-2 h-2 bg-accent-500 rounded-full mr-2"></span>
+                                <span class="text-xs font-medium text-accent-800">Mood</span>
+                            </div>
+                            <p class="text-xs text-accent-700">Feeling very positive and energetic today. Great start to the week!</p>
+                        </div>
+                        
+                        <div class="flex items-center justify-between py-1">
+                            <span class="text-xs font-medium text-primary-700">Energy Level</span>
+                            <div class="flex items-center">
+                                <div class="w-16 bg-primary-200 rounded-full h-1.5 mr-2">
+                                    <div class="bg-accent-500 h-1.5 rounded-full" style="width: 80%"></div>
+                                </div>
+                                <span class="text-xs text-primary-900">8/10</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Notes -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            <div class="p-4 pb-3">
+                <div class="flex items-center mb-3">
+                    <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-primary-600 text-sm">📝</span>
+                    </div>
+                    <h3 class="font-semibold text-primary-900">Additional Notes</h3>
+                </div>
+                
+                <div class="space-y-3">
+                    <div>
+                        <h4 class="text-xs font-medium text-primary-700 mb-1">Other Activities</h4>
+                        <p class="text-xs text-primary-600">20-minute meditation session, took stairs instead of elevator, walked to coffee shop</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-medium text-primary-700 mb-1">General Notes</h4>
+                        <p class="text-xs text-primary-600">Overall feeling great today. The morning run set a positive tone. Planning to maintain this routine.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Original Transcript -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <details class="group">
+                <summary class="p-4 cursor-pointer hover:bg-primary-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-accent-100 rounded-lg flex items-center justify-center mr-3">
+                                <span class="text-accent-600 text-sm">🎤</span>
+                            </div>
+                            <h3 class="font-semibold text-primary-900">Original Voice Recording</h3>
+                        </div>
+                        <svg class="w-4 h-4 text-primary-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </summary>
+                <div class="px-4 pb-4">
+                    <div class="bg-primary-50 rounded-lg p-3">
+                        <p class="text-xs text-primary-700 leading-relaxed">
+                            "Hey, checking in for Monday January 15th. Had a great morning run today, about 35 minutes and covered around 5.2 kilometers. Felt really strong throughout the run, energy level is definitely an 8 out of 10 today. Sleep was good last night, got about 7 and a half hours, quality was around 8 out of 10. For breakfast I had my usual overnight oats with berries and almond butter. Lunch was a quinoa bowl with grilled chicken and lots of vegetables. Dinner was salmon with sweet potato and broccoli. Mood is really positive today, feeling very energetic and motivated. Did a 20-minute meditation session this morning which really helped set the tone. Weight is stable around 72.5 kilograms. Water intake has been good, probably around 2.8 liters so far. Screen time was better today, kept it under 4.5 hours. Overall just feeling really great and want to maintain this momentum throughout the week."
+                        </p>
+                    </div>
+                </div>
+            </details>
+        </div>
+    </div>
+</body>
+</html> 

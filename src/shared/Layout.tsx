@@ -28,7 +28,7 @@ export const Layout = ({
   return (
     <html>
       <Head title="" />
-      <body hx-boost="true" class="bg-white">
+      <body hx-boost="true" class="bg-gray-50">
         {children}
       </body>
     </html>

@@ -312,6 +312,8 @@ app.get("/api/health-log", async (c) => {
             audioUrl: log.audioUrl,
             transcript: log.transcript,
             healthData: log.structuredData,
+            createdAt: log.createdAt,
+            updatedAt: log.updatedAt,
           };
         }
 
