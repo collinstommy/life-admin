@@ -6,16 +6,6 @@ export function HomeScreen() {
     <div className="bg-gray-50 min-h-screen">
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-            Health Tracker
-          </h1>
-          <p className="text-gray-600">
-            Choose an option to get started
-          </p>
-        </div>
-
         {/* Grid of navigation cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
           {/* Add Entry Button */}

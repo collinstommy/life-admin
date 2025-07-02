@@ -188,25 +188,10 @@ export function ViewEntriesScreen() {
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold text-gray-900">{logDate}</h3>
                         <span className="text-xs text-gray-500">
-                          {(() => {
-                            // Handle different timestamp formats
-                            let timestamp;
-                            if (log.createdAt && typeof log.createdAt === 'number') {
-                              // If it's already a number, check if it needs conversion
-                              timestamp = log.createdAt > 1000000000000 ? log.createdAt : log.createdAt * 1000;
-                            } else if (log.createdAt && typeof log.createdAt === 'string') {
-                              timestamp = new Date(log.createdAt).getTime();
-                            } else {
-                              // Fallback to date field if createdAt is not available
-                              timestamp = new Date(log.date).getTime();
-                            }
-                            
-                            const date = new Date(timestamp);
-                            return isNaN(date.getTime()) ? '' : date.toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            });
-                          })()}
+                          {new Date(log.createdAt * 1000).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
                         </span>
                       </div>
 
