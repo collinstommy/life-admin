@@ -60,9 +60,7 @@ export function DebugScreen() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <Link to="/" className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
-              </svg>
+              <span className="icon-[mdi-light--chevron-left] w-4 h-4 mr-2"></span>
               Back
             </Link>
           </div>
@@ -198,7 +196,7 @@ export function DebugScreen() {
             <div>
               <p className="text-sm text-yellow-800">
                 <strong>Note:</strong> These are developer tools for testing and debugging. 
-                Use with caution as some operations cannot be undone.
+                Use caution when deleting data as this action cannot be undone.
               </p>
             </div>
           </div>
@@ -209,8 +207,7 @@ export function DebugScreen() {
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         title="Delete All Health Data"
-        message="Are you sure you want to delete all health entries? This action cannot be undone and will permanently remove all your health logs, workouts, meals, and related data."
-        confirmText="Delete All"
+        message="Are you sure you want to delete ALL health log entries? This action cannot be undone and will permanently remove all your health tracking data."
         onConfirm={() => {
           deleteAllMutation.mutate();
           setShowDeleteConfirm(false);
