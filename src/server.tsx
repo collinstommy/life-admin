@@ -491,9 +491,8 @@ app.get("/logs", async (c) => {
   }
 });
 
-// Serve the Health Tracking Voice Recorder app as the main page
-app.get("/", async (c) => {
-  return c.html(`<!doctype html>
+// HTML template for the SPA
+const htmlTemplate = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -508,8 +507,25 @@ app.get("/", async (c) => {
     <!-- React Application Bundle -->
     <script src="/static/index.js"></script>
   </body>
-</html>`);
+</html>`;
+
+// Serve the Health Tracking Voice Recorder app as the main page
+app.get("/", async (c) => {
+  return c.html(htmlTemplate);
 });
 
+// Catch-all route for client-side routing (SPA support)
+// This must be LAST to avoid interfering with API routes
+app.get("*", async (c) => {
+  const path = c.req.path;
+  
+  // Don't serve SPA for API routes, static files, or recordings
+  if (path.startsWith("/api/") || path.startsWith("/static/") || path.startsWith("/recordings/") || path.startsWith("/logs")) {
+    return c.notFound();
+  }
+  
+  // Serve the SPA for all other routes (client-side routing)
+  return c.html(htmlTemplate);
+});
 
 export default app;
