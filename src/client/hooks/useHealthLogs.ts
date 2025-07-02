@@ -1,13 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { HealthLog } from '../../db/schema';
 
-// Types (you can import these from your shared types later)
-interface HealthLog {
-  id: string;
-  date: string;
-  transcript: string;
-  healthData: any;
-  audioUrl?: string;
-}
 
 interface UploadResponse {
   success: boolean;

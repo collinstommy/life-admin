@@ -1,6 +1,7 @@
 import { createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router'
 import { HomeScreen } from './components/HomeScreen'
 import { ViewEntriesScreen } from './components/ViewEntriesScreen'
+import { SingleEntryScreen } from './components/SingleEntryScreen'
 import { DebugScreen } from './components/DebugScreen'
 import { VoiceRecorder } from './components/VoiceRecorder'
 import { TranscriptProcessor } from './components/TranscriptProcessor'
@@ -59,6 +60,13 @@ const viewEntriesRoute = createRoute({
   component: ViewEntriesScreen,
 })
 
+// Single Entry route
+const singleEntryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/view-entry/$id',
+  component: SingleEntryScreen,
+})
+
 // Debug route
 const debugRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -90,6 +98,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   addEntryRoute,
   viewEntriesRoute,
+  singleEntryRoute,
   debugRoute,
   debugTranscriptRoute,
   debugHistoryRoute,

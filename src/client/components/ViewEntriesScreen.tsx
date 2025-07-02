@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useHealthLogs, useDeleteHealthLog } from '../hooks/useHealthLogs';
 import { ConfirmDialog } from './ConfirmDialog';
 
@@ -45,176 +45,12 @@ interface HealthLog {
   audioUrl?: string;
 }
 
-function HealthDataDisplay({ data }: { data: HealthData }) {
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
 
-  const formatRating = (rating: number | null, max: number = 10) => {
-    if (rating === null) return 'Not recorded';
-    return `${rating}/${max}`;
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Key Metrics Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {data.energyLevel !== null && (
-          <div className="bg-blue-50 p-3 rounded-lg text-center">
-            <div className="text-2xl font-bold text-blue-600">{data.energyLevel}/10</div>
-            <div className="text-sm text-blue-800">Energy Level</div>
-          </div>
-        )}
-        {data.mood.rating !== null && (
-          <div className="bg-green-50 p-3 rounded-lg text-center">
-            <div className="text-2xl font-bold text-green-600">{data.mood.rating}/10</div>
-            <div className="text-sm text-green-800">Mood</div>
-          </div>
-        )}
-        {data.sleep.hours !== null && (
-          <div className="bg-purple-50 p-3 rounded-lg text-center">
-            <div className="text-2xl font-bold text-purple-600">{data.sleep.hours}h</div>
-            <div className="text-sm text-purple-800">Sleep</div>
-          </div>
-        )}
-        {data.weightKg !== null && (
-          <div className="bg-orange-50 p-3 rounded-lg text-center">
-            <div className="text-2xl font-bold text-orange-600">{data.weightKg}kg</div>
-            <div className="text-sm text-orange-800">Weight</div>
-          </div>
-        )}
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Workouts */}
-        {data.workouts && data.workouts.length > 0 && (
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-              🏋️ Workouts
-            </h4>
-            <div className="space-y-2">
-              {data.workouts.map((workout, idx) => (
-                <div key={idx} className="bg-white p-3 rounded border">
-                  <div className="font-medium text-gray-800">{workout.type}</div>
-                  <div className="text-sm text-gray-600">
-                    {workout.durationMinutes} min
-                    {workout.distanceKm && ` • ${workout.distanceKm} km`}
-                    {` • Intensity: ${workout.intensity}/10`}
-                  </div>
-                  {workout.notes && (
-                    <div className="text-sm text-gray-500 mt-1">{workout.notes}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Meals */}
-        {data.meals && data.meals.length > 0 && (
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-              🍽️ Meals
-            </h4>
-            <div className="space-y-2">
-              {data.meals.map((meal, idx) => (
-                <div key={idx} className="bg-white p-3 rounded border">
-                  <div className="font-medium text-gray-800">{meal.type}</div>
-                  <div className="text-sm text-gray-600">{meal.notes}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Sleep & Recovery */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-            😴 Sleep & Recovery
-          </h4>
-          <div className="space-y-2">
-            {data.sleep.hours !== null && (
-              <div className="text-sm">
-                <span className="font-medium">Hours:</span> {data.sleep.hours}h
-              </div>
-            )}
-            {data.sleep.quality !== null && (
-              <div className="text-sm">
-                <span className="font-medium">Quality:</span> {formatRating(data.sleep.quality)}
-              </div>
-            )}
-            {data.waterIntakeLiters !== null && (
-              <div className="text-sm">
-                <span className="font-medium">Water intake:</span> {data.waterIntakeLiters}L
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Health & Wellness */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-            💊 Health & Wellness
-          </h4>
-          <div className="space-y-2">
-            {data.screenTimeHours !== null && (
-              <div className="text-sm">
-                <span className="font-medium">Screen time:</span> {data.screenTimeHours}h
-              </div>
-            )}
-            {data.painDiscomfort && (data.painDiscomfort.location || data.painDiscomfort.intensity) && (
-              <div className="text-sm">
-                <span className="font-medium">Pain/Discomfort:</span>
-                {data.painDiscomfort.location && ` ${data.painDiscomfort.location}`}
-                {data.painDiscomfort.intensity && ` (${data.painDiscomfort.intensity}/10)`}
-                {data.painDiscomfort.notes && (
-                  <div className="text-gray-500 mt-1">{data.painDiscomfort.notes}</div>
-                )}
-              </div>
-            )}
-            {data.mood.notes && (
-              <div className="text-sm">
-                <span className="font-medium">Mood notes:</span>
-                <div className="text-gray-600 mt-1">{data.mood.notes}</div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Notes */}
-      {(data.otherActivities || data.notes) && (
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-            📝 Additional Notes
-          </h4>
-          {data.otherActivities && (
-            <div className="text-sm mb-2">
-              <span className="font-medium">Other activities:</span> {data.otherActivities}
-            </div>
-          )}
-          {data.notes && (
-            <div className="text-sm">
-              <span className="font-medium">General notes:</span> {data.notes}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export function ViewEntriesScreen() {
   const { data: logs, isLoading, error } = useHealthLogs();
   const deleteHealthLog = useDeleteHealthLog();
-  const [expandedEntry, setExpandedEntry] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; logId: string; logDate: string }>({
     show: false,
     logId: '',
@@ -295,9 +131,8 @@ export function ViewEntriesScreen() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
+                <div className="space-y-4">
           {sortedLogs.map((log: HealthLog) => {
-            const isExpanded = expandedEntry === log.id;
             const logDate = new Date(log.date).toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
@@ -308,58 +143,53 @@ export function ViewEntriesScreen() {
             return (
               <div key={log.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                 {/* Entry Header */}
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-800">{logDate}</h3>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {log.healthData.workouts?.length > 0 && (
-                          <span className="mr-4">🏋️ {log.healthData.workouts.length} workout{log.healthData.workouts.length !== 1 ? 's' : ''}</span>
-                        )}
-                        {log.healthData.meals?.length > 0 && (
-                          <span className="mr-4">🍽️ {log.healthData.meals.length} meal{log.healthData.meals.length !== 1 ? 's' : ''}</span>
-                        )}
-                        {log.healthData.sleep.hours && (
-                          <span className="mr-4">😴 {log.healthData.sleep.hours}h sleep</span>
-                        )}
-                      </div>
+                <div className="flex">
+                  {/* Main clickable area */}
+                  <div 
+                    className="flex-1 p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => navigate({ to: '/view-entry/$id', params: { id: log.id } })}
+                  >
+                    <h3 className="text-lg font-semibold text-gray-800">{logDate}</h3>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {log.healthData.workouts?.length > 0 && (
+                        <span className="mr-4">🏋️ {log.healthData.workouts.length} workout{log.healthData.workouts.length !== 1 ? 's' : ''}</span>
+                      )}
+                      {log.healthData.meals?.length > 0 && (
+                        <span className="mr-4">🍽️ {log.healthData.meals.length} meal{log.healthData.meals.length !== 1 ? 's' : ''}</span>
+                      )}
+                      {log.healthData.sleep.hours && (
+                        <span className="mr-4">😴 {log.healthData.sleep.hours}h sleep</span>
+                      )}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => setDeleteConfirm({ show: true, logId: log.id, logDate })}
-                        className="text-red-500 hover:text-red-700 transition-colors p-1"
-                        title="Delete entry"
+                  </div>
+                  
+                  {/* Delete button area */}
+                  <div className="flex items-center justify-center p-4 border-l border-gray-200">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirm({ show: true, logId: log.id, logDate });
+                      }}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors p-2 rounded-md cursor-pointer"
+                      title="Delete entry"
+                    >
+                      <svg 
+                        className="w-5 h-5" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24" 
+                        xmlns="http://www.w3.org/2000/svg"
                       >
-                        🗑️
-                      </button>
-                      <button
-                        onClick={() => setExpandedEntry(isExpanded ? null : log.id)}
-                        className="text-blue-500 hover:text-blue-700 transition-colors text-sm font-medium"
-                      >
-                        {isExpanded ? 'Hide Details' : 'Show Details'}
-                      </button>
-                    </div>
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                        />
+                      </svg>
+                    </button>
                   </div>
                 </div>
-
-                {/* Expanded Content */}
-                {isExpanded && (
-                  <div className="p-4">
-                    <HealthDataDisplay data={log.healthData} />
-                    
-                    {/* Raw Transcript (collapsible) */}
-                    {log.transcript && (
-                      <details className="mt-6">
-                        <summary className="cursor-pointer text-sm font-medium text-gray-600 hover:text-gray-800">
-                          View Original Transcript
-                        </summary>
-                        <div className="mt-2 p-3 bg-gray-50 rounded text-sm text-gray-700">
-                          {log.transcript}
-                        </div>
-                      </details>
-                    )}
-                  </div>
-                )}
               </div>
             );
           })}
