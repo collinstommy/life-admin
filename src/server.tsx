@@ -9,7 +9,7 @@ import { AppContext, HonoApp } from "./types";
 import { sign, verify } from "hono/jwt";
 import { getCookie, setCookie } from "hono/cookie";
 import { storeAudioRecording, getAudioRecording } from "./lib/storage";
-import { transcribeAudio, extractHealthData } from "./lib/ai";
+import { transcribeAudio, extractHealthData, mergeHealthDataWithUpdate } from "./lib/ai";
 // We'll use these in Phase 2 with database integration
 import { getAllHealthLogs, getHealthLogById, initDb, deleteHealthLog, deleteAllHealthLogs } from "./lib/db";
 // Import the saveHealthLog function
@@ -179,6 +179,210 @@ app.post("/api/process-transcript", async (c) => {
     return c.json(
       {
         error: "Failed to process transcript",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
+});
+
+// Extract health data from transcript (without saving to database)
+app.post("/api/extract-health-data", async (c) => {
+  try {
+    console.log("Extract health data request received");
+    const body = await c.req.json();
+    const transcript = body.transcript;
+
+    if (!transcript) {
+      console.error("No transcript provided in request");
+      return c.json({ error: "No transcript provided" }, 400);
+    }
+
+    console.log("Transcript received for extraction:", transcript.substring(0, 100) + "...");
+
+    try {
+      // Extract structured data using Gemini
+      const healthData = await extractHealthData(c, transcript);
+      console.log("Health data extracted successfully");
+
+      // Return the structured data without saving
+      return c.json({
+        success: true,
+        message: "Health data extracted successfully",
+        transcript,
+        data: healthData,
+      });
+    } catch (dataError) {
+      console.error("Error extracting structured data:", dataError);
+      return c.json(
+        {
+          error: "Failed to extract structured data",
+          message:
+            dataError instanceof Error ? dataError.message : String(dataError),
+        },
+        500,
+      );
+    }
+  } catch (error) {
+    console.error("Unexpected error extracting health data:", error);
+    return c.json(
+      {
+        error: "Failed to extract health data",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
+});
+
+// Update existing health data with a new transcript
+app.post("/api/update-health-data", async (c) => {
+  try {
+    console.log("Update health data request received");
+    const body = await c.req.json();
+    const { originalData, updateTranscript } = body;
+
+    if (!originalData || !updateTranscript) {
+      console.error("Missing originalData or updateTranscript");
+      return c.json({ error: "Original data and update transcript are required" }, 400);
+    }
+
+    console.log("Update transcript received:", updateTranscript.substring(0, 100) + "...");
+
+    try {
+      // Merge the update with existing data using Gemini
+      const updatedHealthData = await mergeHealthDataWithUpdate(c, originalData, updateTranscript);
+      console.log("Health data merged successfully");
+
+      // Return the updated structured data without saving
+      return c.json({
+        success: true,
+        message: "Health data updated successfully",
+        updateTranscript,
+        data: updatedHealthData,
+      });
+    } catch (dataError) {
+      console.error("Error merging health data:", dataError);
+      return c.json(
+        {
+          error: "Failed to merge health data",
+          message:
+            dataError instanceof Error ? dataError.message : String(dataError),
+        },
+        500,
+      );
+    }
+  } catch (error) {
+    console.error("Unexpected error updating health data:", error);
+    return c.json(
+      {
+        error: "Failed to update health data",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
+});
+
+// Transcribe audio only (for voice updates)
+app.post("/api/transcribe-audio", async (c) => {
+  try {
+    console.log("Audio transcription request received");
+    const formData = await c.req.formData();
+    const audioFile = formData.get("audio") as File;
+
+    if (!audioFile) {
+      console.error("No audio file provided in request");
+      return c.json({ error: "No audio file provided" }, 400);
+    }
+
+    console.log("Audio file received for transcription:", {
+      name: audioFile.name,
+      type: audioFile.type,
+      size: audioFile.size,
+    });
+
+    try {
+      // Transcribe audio using Gemini API
+      const audioBuffer = await audioFile.arrayBuffer();
+      const transcript = await transcribeAudio(c, audioBuffer);
+      console.log("Transcription completed:", transcript);
+
+      return c.json({
+        success: true,
+        transcript,
+      });
+    } catch (transcriptError) {
+      console.error("Error transcribing audio:", transcriptError);
+      return c.json(
+        {
+          error: "Failed to transcribe audio",
+          message:
+            transcriptError instanceof Error
+              ? transcriptError.message
+              : String(transcriptError),
+        },
+        500,
+      );
+    }
+  } catch (error) {
+    console.error("Unexpected error in audio transcription:", error);
+    return c.json(
+      {
+        error: "Failed to process audio transcription",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
+});
+
+// Save final health data to database
+app.post("/api/save-health-log", async (c) => {
+  try {
+    console.log("Save health log request received");
+    const body = await c.req.json();
+    const { healthData, transcript, audioUrl } = body;
+
+    if (!healthData) {
+      console.error("No health data provided in request");
+      return c.json({ error: "Health data is required" }, 400);
+    }
+
+    console.log("Saving health data to database");
+
+    try {
+      // Save to database
+      const logId = await saveHealthLog(
+        c as AppContext,
+        audioUrl || "",
+        transcript || "",
+        healthData,
+      );
+      console.log("Health log saved to database with ID:", logId);
+
+      return c.json({
+        success: true,
+        message: "Health log saved successfully",
+        id: logId,
+        data: healthData,
+      });
+    } catch (dataError) {
+      console.error("Error saving health log:", dataError);
+      return c.json(
+        {
+          error: "Failed to save health log",
+          message:
+            dataError instanceof Error ? dataError.message : String(dataError),
+        },
+        500,
+      );
+    }
+  } catch (error) {
+    console.error("Unexpected error saving health log:", error);
+    return c.json(
+      {
+        error: "Failed to save health log",
         message: error instanceof Error ? error.message : String(error),
       },
       500,

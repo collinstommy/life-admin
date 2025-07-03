@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from '@tanstack/react-router';
-import { useUploadRecording } from '../hooks/useHealthLogs';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { useExtractHealthData, useTranscribeAudio } from '../hooks/useHealthLogs';
+import { EditEntryModal } from './EditEntryModal';
 
 export function VoiceRecorder() {
   const [isRecording, setIsRecording] = useState(false);
@@ -8,13 +9,21 @@ export function VoiceRecorder() {
   const [recordingTime, setRecordingTime] = useState('00:00');
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcript, setTranscript] = useState<string>('');
+  const [audioUrl, setAudioUrl] = useState<string>('');
+  const [extractedData, setExtractedData] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
   
-  const uploadMutation = useUploadRecording();
+  const extractHealthData = useExtractHealthData();
+  const transcribeAudio = useTranscribeAudio();
+  const navigate = useNavigate();
 
   // Initialize recorder on component mount
   useEffect(() => {
@@ -102,26 +111,63 @@ export function VoiceRecorder() {
     }
   };
 
-  const uploadRecording = () => {
-    if (recordedBlob) {
-      uploadMutation.mutate(recordedBlob, {
-        onSuccess: (data) => {
-          console.log('Upload successful:', data);
-          // Reset the recorder state
-          resetRecorder();
-        },
-        onError: (error) => {
-          console.error('Upload failed:', error);
-          setError(error.message);
-        }
-      });
+  const processRecording = async () => {
+    if (!recordedBlob) return;
+
+    setIsProcessing(true);
+    setIsTranscribing(true);
+    setError(null);
+
+    try {
+      // First, transcribe the audio
+      console.log('Transcribing audio recording...');
+      const transcriptionResponse = await transcribeAudio.mutateAsync(recordedBlob);
+      const transcribedText = transcriptionResponse.transcript;
+      console.log('Transcription result:', transcribedText);
+      setTranscript(transcribedText);
+      setIsTranscribing(false);
+
+      // Create audio URL for storage
+      const audioURL = URL.createObjectURL(recordedBlob);
+      setAudioUrl(audioURL);
+
+      // Extract health data from transcript
+      console.log('Extracting health data from transcript...');
+      const response = await extractHealthData.mutateAsync(transcribedText);
+      setExtractedData(response.data);
+      console.log('Health data extracted successfully');
+
+      // Show the edit modal
+      setShowEditModal(true);
+      
+    } catch (error) {
+      console.error('Processing failed:', error);
+      setError(error instanceof Error ? error.message : 'Failed to process recording');
+      setIsTranscribing(false);
+    } finally {
+      setIsProcessing(false);
     }
+  };
+
+  const handleSaveEntry = (id: string) => {
+    setShowEditModal(false);
+    // Navigate back to home or show success message
+    navigate({ to: '/' });
+  };
+
+  const handleCancelEntry = () => {
+    setShowEditModal(false);
+    resetRecorder();
   };
 
   const resetRecorder = () => {
     setRecordedBlob(null);
     setRecordingTime('00:00');
     setError(null);
+    setTranscript('');
+    setAudioUrl('');
+    setExtractedData(null);
+    setIsTranscribing(false);
     if (recordedBlob) {
       URL.revokeObjectURL(URL.createObjectURL(recordedBlob));
     }
@@ -131,150 +177,161 @@ export function VoiceRecorder() {
     resetRecorder();
   };
 
+  const isLoadingOrProcessing = isProcessing || isTranscribing;
+
   return (
-    <div className="bg-gray-50 min-h-screen">
-      {/* Navigation Header */}
-      <div className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
-            <Link to="/" className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-              <span className="icon-[mdi-light--chevron-left] w-4 h-4 mr-2"></span>
-              Back
-            </Link>
+    <>
+      <div className="bg-gray-50 min-h-screen">
+        {/* Navigation Header */}
+        <div className="bg-white shadow-sm sticky top-0 z-10">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-14">
+              <Link to="/" className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <span className="icon-[mdi-light--chevron-left] w-4 h-4 mr-2"></span>
+                Back
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Voice Recorder</h2>
-          
-          {/* Error Display */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-              <p className="text-red-700">{error}</p>
-              <button 
-                onClick={initializeRecorder}
-                className="mt-2 text-sm text-red-600 underline hover:text-red-800"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
-
-          {/* Recording Controls */}
-          <div className="text-center mb-6">
-            <div className="text-4xl font-mono mb-4 text-gray-700">
-              {recordingTime}
-            </div>
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Voice Recorder</h2>
             
-            <div className="space-x-4">
-              {!isRecording ? (
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+                <p className="text-red-700">{error}</p>
                 <button 
-                  onClick={startRecording}
-                  disabled={!isInitialized || uploadMutation.isPending}
-                  className="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white px-6 py-3 rounded-full text-lg font-semibold transition-colors"
+                  onClick={initializeRecorder}
+                  className="mt-2 text-sm text-red-600 underline hover:text-red-800"
                 >
-                  {!isInitialized ? 'Initializing...' : 'Start Recording'}
+                  Try Again
                 </button>
-              ) : (
-                <button 
-                  onClick={stopRecording}
-                  className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-full text-lg font-semibold transition-colors"
-                >
-                  Stop Recording
-                </button>
+              </div>
+            )}
+
+            {/* Recording Controls */}
+            <div className="text-center mb-6">
+              <div className="text-4xl font-mono mb-4 text-gray-700">
+                {recordingTime}
+              </div>
+              
+              <div className="space-x-4">
+                {!isRecording ? (
+                  <button 
+                    onClick={startRecording}
+                    disabled={!isInitialized || isLoadingOrProcessing}
+                    className="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white px-6 py-3 rounded-full text-lg font-semibold transition-colors"
+                  >
+                    {!isInitialized ? 'Initializing...' : 'Start Recording'}
+                  </button>
+                ) : (
+                  <button 
+                    onClick={stopRecording}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-full text-lg font-semibold transition-colors"
+                  >
+                    Stop Recording
+                  </button>
+                )}
+              </div>
+
+              {isRecording && (
+                <div className="mt-4">
+                  <div className="inline-flex items-center space-x-2 text-red-600">
+                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium">Recording...</span>
+                  </div>
+                </div>
               )}
             </div>
 
-            {isRecording && (
-              <div className="mt-4">
-                <div className="inline-flex items-center space-x-2 text-red-600">
-                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium">Recording...</span>
+            {/* Recording Preview */}
+            {recordedBlob && (
+              <div className="border border-gray-200 rounded-lg p-4 mb-4">
+                <h3 className="text-lg font-medium mb-3">Recording Preview</h3>
+                
+                <audio 
+                  controls 
+                  src={URL.createObjectURL(recordedBlob)} 
+                  className="w-full mb-4"
+                />
+                
+                <div className="flex justify-center space-x-4">
+                  <button 
+                    onClick={processRecording}
+                    disabled={isLoadingOrProcessing}
+                    className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-6 py-2 rounded-md font-semibold transition-colors"
+                  >
+                    {isLoadingOrProcessing ? 'Processing...' : 'Process & Review'}
+                  </button>
+                  
+                  <button 
+                    onClick={discardRecording}
+                    disabled={isLoadingOrProcessing}
+                    className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white px-6 py-2 rounded-md font-semibold transition-colors"
+                  >
+                    Discard
+                  </button>
                 </div>
               </div>
             )}
+
+            {/* Processing Status */}
+            {isTranscribing && (
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <div>
+                    <p className="text-blue-800 font-medium">Transcribing your recording...</p>
+                    <p className="text-blue-600 text-sm">Converting speech to text using AI.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isProcessing && !isTranscribing && (
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <div>
+                    <p className="text-blue-800 font-medium">Extracting health data...</p>
+                    <p className="text-blue-600 text-sm">Analyzing your transcript for health information.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error States */}
+            {transcribeAudio.isError && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+                <p className="text-red-700 font-medium">Transcription Failed</p>
+                <p className="text-red-600 text-sm">{transcribeAudio.error?.message}</p>
+              </div>
+            )}
+
+            {extractHealthData.isError && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+                <p className="text-red-700 font-medium">Health Data Extraction Failed</p>
+                <p className="text-red-600 text-sm">{extractHealthData.error?.message}</p>
+              </div>
+            )}
           </div>
-
-          {/* Recording Preview */}
-          {recordedBlob && (
-            <div className="border border-gray-200 rounded-lg p-4 mb-4">
-              <h3 className="text-lg font-medium mb-3">Recording Preview</h3>
-              
-              <audio 
-                controls 
-                src={URL.createObjectURL(recordedBlob)} 
-                className="w-full mb-4"
-              />
-              
-              <div className="flex justify-center space-x-4">
-                <button 
-                  onClick={uploadRecording}
-                  disabled={uploadMutation.isPending}
-                  className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-6 py-2 rounded-md font-semibold transition-colors"
-                >
-                  {uploadMutation.isPending ? 'Uploading...' : 'Upload & Process'}
-                </button>
-                
-                <button 
-                  onClick={discardRecording}
-                  disabled={uploadMutation.isPending}
-                  className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white px-6 py-2 rounded-md font-semibold transition-colors"
-                >
-                  Discard
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Upload Status */}
-          {uploadMutation.isPending && (
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-              <div className="flex items-center space-x-3">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <div>
-                  <p className="text-blue-800 font-medium">Processing your recording...</p>
-                  <p className="text-blue-600 text-sm">This may take a few moments.</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {uploadMutation.isError && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <p className="text-red-700 font-medium">Upload Failed</p>
-              <p className="text-red-600 text-sm">{uploadMutation.error?.message}</p>
-            </div>
-          )}
-
-          {uploadMutation.isSuccess && (
-            <div className="bg-green-50 border border-green-200 rounded-md p-4">
-              <p className="text-green-800 font-medium">✅ Recording processed successfully!</p>
-              <p className="text-green-700 text-sm">ID: {uploadMutation.data.id}</p>
-              
-              {uploadMutation.data.transcript && (
-                <div className="mt-3">
-                  <p className="text-sm font-medium text-green-800 mb-1">Transcript:</p>
-                  <p className="text-sm text-green-700 bg-green-100 p-2 rounded">
-                    {uploadMutation.data.transcript}
-                  </p>
-                </div>
-              )}
-              
-              {uploadMutation.data.data && (
-                <div className="mt-3">
-                  <p className="text-sm font-medium text-green-800 mb-1">Health Data:</p>
-                  <pre className="text-xs text-green-700 bg-green-100 p-2 rounded overflow-auto max-h-32">
-                    {JSON.stringify(uploadMutation.data.data, null, 2)}
-                  </pre>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
-    </div>
+
+      {/* Edit Modal */}
+      {showEditModal && extractedData && (
+        <EditEntryModal
+          isOpen={showEditModal}
+          initialData={extractedData}
+          transcript={transcript}
+          audioUrl={audioUrl}
+          onSave={handleSaveEntry}
+          onCancel={handleCancelEntry}
+        />
+      )}
+    </>
   );
 } 

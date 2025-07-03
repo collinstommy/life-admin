@@ -18,6 +18,32 @@ interface ProcessTranscriptResponse {
   data: any;
 }
 
+interface ExtractHealthDataResponse {
+  success: boolean;
+  message: string;
+  transcript: string;
+  data: any;
+}
+
+interface UpdateHealthDataResponse {
+  success: boolean;
+  message: string;
+  updateTranscript: string;
+  data: any;
+}
+
+interface SaveHealthLogResponse {
+  success: boolean;
+  message: string;
+  id: string;
+  data: any;
+}
+
+interface TranscribeAudioResponse {
+  success: boolean;
+  transcript: string;
+}
+
 // API functions
 const api = {
   async uploadRecording(audioBlob: Blob): Promise<UploadResponse> {
@@ -47,6 +73,68 @@ const api = {
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Processing failed (${response.status}): ${errorText}`);
+    }
+    
+    return response.json();
+  },
+
+  async extractHealthData(transcript: string): Promise<ExtractHealthDataResponse> {
+    const response = await fetch('/api/extract-health-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transcript }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Extraction failed (${response.status}): ${errorText}`);
+    }
+    
+    return response.json();
+  },
+
+  async updateHealthData(originalData: any, updateTranscript: string): Promise<UpdateHealthDataResponse> {
+    const response = await fetch('/api/update-health-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ originalData, updateTranscript }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Update failed (${response.status}): ${errorText}`);
+    }
+    
+    return response.json();
+  },
+
+  async saveHealthLog(healthData: any, transcript?: string, audioUrl?: string): Promise<SaveHealthLogResponse> {
+    const response = await fetch('/api/save-health-log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ healthData, transcript, audioUrl }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Save failed (${response.status}): ${errorText}`);
+    }
+    
+    return response.json();
+  },
+
+  async transcribeAudio(audioBlob: Blob): Promise<TranscribeAudioResponse> {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'update.webm');
+    
+    const response = await fetch('/api/transcribe-audio', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Transcription failed (${response.status}): ${errorText}`);
     }
     
     return response.json();
@@ -116,6 +204,40 @@ export function useProcessTranscript() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['health-logs'] });
     },
+  });
+}
+
+export function useExtractHealthData() {
+  return useMutation({
+    mutationFn: api.extractHealthData,
+    // Don't invalidate queries since we're not saving to DB yet
+  });
+}
+
+export function useUpdateHealthData() {
+  return useMutation({
+    mutationFn: ({ originalData, updateTranscript }: { originalData: any; updateTranscript: string }) =>
+      api.updateHealthData(originalData, updateTranscript),
+    // Don't invalidate queries since we're not saving to DB yet
+  });
+}
+
+export function useSaveHealthLog() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ healthData, transcript, audioUrl }: { healthData: any; transcript?: string; audioUrl?: string }) =>
+      api.saveHealthLog(healthData, transcript, audioUrl),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-logs'] });
+    },
+  });
+}
+
+export function useTranscribeAudio() {
+  return useMutation({
+    mutationFn: api.transcribeAudio,
+    // Don't invalidate queries since we're just transcribing
   });
 }
 

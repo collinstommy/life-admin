@@ -1,7 +1,7 @@
 import { AppContext } from "../types";
 
 interface StructuredHealthData {
-  date: string;
+  date: string | null;
   screenTimeHours: number | null;
   workouts: Array<{
     type: string;
@@ -709,3 +709,147 @@ export async function extractHealthData(
 }
 
 export { StructuredHealthData };
+
+/**
+ * Merges existing health data with an update transcript using Gemini AI
+ * @param ctx Hono context with API key in environment variables
+ * @param originalData The existing structured health data
+ * @param updateTranscript New transcript to merge with existing data
+ * @returns Updated structured health data
+ */
+export async function mergeHealthDataWithUpdate(
+  ctx: AppContext,
+  originalData: StructuredHealthData,
+  updateTranscript: string,
+): Promise<StructuredHealthData> {
+  const apiKey = ctx.env.GEMINI_API_KEY;
+
+  // If API key is missing, return original data with a simple mock update
+  if (!apiKey) {
+    console.warn(
+      "GEMINI_API_KEY environment variable is not set, returning original data",
+    );
+    return originalData;
+  }
+
+  try {
+    console.log(
+      "Making request to Gemini API to merge data with update:",
+      updateTranscript.substring(0, 100) + "...",
+    );
+
+    const modelId = "gemini-2.0-flash";
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
+
+    // Get current date for the prompt
+    const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    const requestBody = {
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: generateMergePrompt({
+                currentDate,
+                originalData,
+                updateTranscript
+              }),
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.1,
+      },
+    };
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Gemini API error response:", errorText);
+      throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+    }
+
+    const data = (await response.json()) as GeminiResponse;
+    console.log("Gemini API merge response received");
+
+    // Extract the text from the response
+    const text = data.candidates[0]?.content?.parts[0]?.text;
+    if (!text) {
+      throw new Error("Empty or invalid response from Gemini API");
+    }
+
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error("Could not extract JSON from response:", text);
+      throw new Error("Could not extract JSON from AI response");
+    }
+
+    const jsonString = jsonMatch[0];
+
+    try {
+      const cleanedJsonString = jsonString.replace(/^```json\n?|\n?```$/g, "");
+      return JSON.parse(cleanedJsonString) as StructuredHealthData;
+    } catch (parseError) {
+      console.error("Error parsing JSON:", jsonString);
+      throw new Error(
+        `Failed to parse JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+      );
+    }
+  } catch (error: unknown) {
+    console.error("Error merging with Gemini API:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to merge health data: ${errorMessage}`);
+  }
+}
+
+/**
+ * Generates the prompt for merging existing health data with an update
+ */
+function generateMergePrompt(options: {
+  currentDate: string;
+  originalData: StructuredHealthData;
+  updateTranscript: string;
+}): string {
+  return `Today's date is ${options.currentDate}.
+
+You have existing health data:
+${JSON.stringify(options.originalData, null, 2)}
+
+The user recorded this update:
+"${options.updateTranscript}"
+
+Merge the update into the existing data following these rules:
+
+1. **Additive phrases** ("I also had...", "I forgot to mention...", "Additionally...", "And...", "Plus...") → ADD to existing data
+2. **Override phrases** ("Actually...", "Change my...", "Correction...", "Instead of...", "Replace...") → REPLACE existing data  
+3. **Specific corrections** ("My mood was 8, not 7", "Sleep was actually 6 hours") → UPDATE specific fields
+4. **New categories** → ADD to appropriate arrays (meals, workouts, etc.)
+5. **Duplicate detection** → If the same item is mentioned again, merge details rather than duplicate
+
+Examples of merging logic:
+- "I also had a snack" + existing meals → ADD new snack meal
+- "Actually, my workout was 45 minutes, not 30" → UPDATE workout duration
+- "I forgot I also went for a walk" → ADD new workout
+- "Change my mood to 9" → REPLACE mood rating
+- "My sleep quality was better than I said, maybe 8/10" → UPDATE sleep quality
+
+CRITICAL: 
+- Follow all the same data extraction rules from the original health data extraction
+- Correct transcription errors in the update transcript
+- Remove subjective descriptors, keep only factual information
+- For meals, maintain the one-entry-per-meal-type rule
+- Return the COMPLETE updated structured data with all fields
+
+Return ONLY the valid JSON object representing the merged data.`;
+}
