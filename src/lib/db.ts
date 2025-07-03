@@ -149,16 +149,16 @@ export async function saveHealthLog(
 }
 
 /**
- * Get a specific health log by ID
+ * Get a specific health log by ID with properly structured related data
  * @param ctx Hono context with D1 binding
  * @param id ID of the health log to retrieve
- * @returns Health log or null if not found
+ * @returns Health log with structured data or null if not found
  */
 export async function getHealthLogById(ctx: AppContext, id: number) {
   const db = initDb(ctx);
 
   try {
-    // Use a simple query without complex relationships to avoid "referencedTable" errors
+    // Get the main health log
     const healthLog = await db.query.healthLogs.findFirst({
       where: eq(schema.healthLogs.id, id),
     });
@@ -167,20 +167,94 @@ export async function getHealthLogById(ctx: AppContext, id: number) {
       return null;
     }
 
-    // Parse structured data if it exists
-    let structuredData = null;
-    if (healthLog.structuredData) {
-      try {
-        structuredData = JSON.parse(healthLog.structuredData);
-      } catch (parseError) {
-        console.error("Error parsing structured data JSON:", parseError);
-      }
-    }
+    try {
+      // Fetch related data
+      const [healthDataRecord] = await db.query.healthData.findMany({
+        where: eq(schema.healthData.logId, id),
+        limit: 1,
+      });
 
-    return {
-      ...healthLog,
-      structuredData,
-    };
+      const workoutsData = await db.query.workouts.findMany({
+        where: eq(schema.workouts.logId, id),
+      });
+
+      const mealsData = await db.query.meals.findMany({
+        where: eq(schema.meals.logId, id),
+      });
+
+      const [painData] = await db.query.painDiscomfort.findMany({
+        where: eq(schema.painDiscomfort.logId, id),
+        limit: 1,
+      });
+
+      // Build the structured health data object that the frontend expects
+      const structuredHealthData = {
+        date: healthLog.date,
+        screenTimeHours: healthDataRecord?.screenTimeHours || null,
+        waterIntakeLiters: healthDataRecord?.waterIntakeLiters || null,
+        energyLevel: healthDataRecord?.energyLevel || null,
+        weightKg: healthDataRecord?.weightKg || null,
+        otherActivities: healthDataRecord?.otherActivities || null,
+        notes: healthDataRecord?.generalNotes || null,
+        sleep: healthDataRecord?.sleepHours || healthDataRecord?.sleepQuality
+          ? {
+              hours: healthDataRecord.sleepHours,
+              quality: healthDataRecord.sleepQuality,
+            }
+          : null,
+        mood: healthDataRecord?.moodRating || healthDataRecord?.moodNotes
+          ? {
+              rating: healthDataRecord.moodRating,
+              notes: healthDataRecord.moodNotes,
+            }
+          : null,
+        workouts: workoutsData.map((workout) => ({
+          type: workout.type,
+          durationMinutes: workout.durationMinutes,
+          distanceKm: workout.distanceKm,
+          intensity: workout.intensity,
+          notes: workout.notes,
+        })),
+        meals: mealsData.map((meal) => ({
+          type: meal.type,
+          notes: meal.notes,
+        })),
+        painDiscomfort: painData
+          ? {
+              location: painData.location,
+              intensity: painData.intensity,
+              notes: painData.notes,
+            }
+          : null,
+      };
+
+      return {
+        id: healthLog.id,
+        date: healthLog.date,
+        audioUrl: healthLog.audioUrl,
+        transcript: healthLog.transcript,
+        structuredData: structuredHealthData,
+        createdAt: healthLog.createdAt,
+        updatedAt: healthLog.updatedAt,
+      };
+    } catch (relationError) {
+      console.error(`Error fetching related data for log ${id}:`, relationError);
+      
+      // Fallback to structured data JSON if relations fail
+      let structuredData = null;
+      if (healthLog.structuredData) {
+        try {
+          structuredData = JSON.parse(healthLog.structuredData);
+        } catch (parseError) {
+          console.error("Error parsing structured data JSON:", parseError);
+        }
+      }
+
+      return {
+        ...healthLog,
+        structuredData,
+      };
+    }
   } catch (error) {
     console.error(`Failed to get health log with ID ${id}:`, error);
     throw new Error(`Failed to get health log: ${error instanceof Error ? error.message : String(error)}`);
@@ -267,42 +341,137 @@ export async function deleteAllHealthLogs(ctx: AppContext): Promise<number> {
 }
 
 /**
- * Get all health logs with a fallback to raw SQL if ORM fails
+ * Get all health logs with properly structured related data
  * @param ctx Hono context with D1 binding
- * @returns Array of health logs
+ * @returns Array of health logs with related data
  */
 export async function getAllHealthLogs(ctx: AppContext) {
   const db = initDb(ctx);
 
   try {
-    // Try using the ORM first
-    return await db.query.healthLogs.findMany({
-      with: {
-        healthData: true,
-        workouts: true,
-        meals: true,
-        painDiscomfort: true,
-      },
+    // First get all health logs
+    const healthLogs = await db.query.healthLogs.findMany({
       orderBy: (healthLogs, { desc }) => [desc(healthLogs.date)],
     });
-  } catch (error) {
-    console.error("ORM query failed, falling back to raw SQL:", error);
 
-    // If ORM fails, fallback to a simple SQL query as a last resort
+    if (healthLogs.length === 0) {
+      return [];
+    }
+
+    // For each health log, manually fetch related data to build the expected structure
+    const logsWithData = await Promise.all(
+      healthLogs.map(async (log) => {
+        try {
+          // Fetch related data
+          const [healthDataRecord] = await db.query.healthData.findMany({
+            where: eq(schema.healthData.logId, log.id),
+            limit: 1,
+          });
+
+          const workoutsData = await db.query.workouts.findMany({
+            where: eq(schema.workouts.logId, log.id),
+          });
+
+          const mealsData = await db.query.meals.findMany({
+            where: eq(schema.meals.logId, log.id),
+          });
+
+          const [painData] = await db.query.painDiscomfort.findMany({
+            where: eq(schema.painDiscomfort.logId, log.id),
+            limit: 1,
+          });
+
+          // Build the structured health data object that the frontend expects
+          const structuredHealthData = {
+            date: log.date,
+            screenTimeHours: healthDataRecord?.screenTimeHours || null,
+            waterIntakeLiters: healthDataRecord?.waterIntakeLiters || null,
+            energyLevel: healthDataRecord?.energyLevel || null,
+            weightKg: healthDataRecord?.weightKg || null,
+            otherActivities: healthDataRecord?.otherActivities || null,
+            notes: healthDataRecord?.generalNotes || null,
+            sleep: healthDataRecord?.sleepHours || healthDataRecord?.sleepQuality
+              ? {
+                  hours: healthDataRecord.sleepHours,
+                  quality: healthDataRecord.sleepQuality,
+                }
+              : null,
+            mood: healthDataRecord?.moodRating || healthDataRecord?.moodNotes
+              ? {
+                  rating: healthDataRecord.moodRating,
+                  notes: healthDataRecord.moodNotes,
+                }
+              : null,
+            workouts: workoutsData.map((workout) => ({
+              type: workout.type,
+              durationMinutes: workout.durationMinutes,
+              distanceKm: workout.distanceKm,
+              intensity: workout.intensity,
+              notes: workout.notes,
+            })),
+            meals: mealsData.map((meal) => ({
+              type: meal.type,
+              notes: meal.notes,
+            })),
+            painDiscomfort: painData
+              ? {
+                  location: painData.location,
+                  intensity: painData.intensity,
+                  notes: painData.notes,
+                }
+              : null,
+          };
+
+          return {
+            id: log.id,
+            date: log.date,
+            audioUrl: log.audioUrl,
+            transcript: log.transcript,
+            healthData: structuredHealthData,
+            createdAt: log.createdAt,
+            updatedAt: log.updatedAt,
+          };
+        } catch (relationError) {
+          console.error(`Error fetching related data for log ${log.id}:`, relationError);
+          
+          // Fallback to structured data JSON if relations fail
+          let structuredData = null;
+          if (log.structuredData) {
+            try {
+              structuredData = JSON.parse(log.structuredData);
+            } catch (parseError) {
+              console.error("Error parsing structured data JSON:", parseError);
+            }
+          }
+
+          return {
+            id: log.id,
+            date: log.date,
+            audioUrl: log.audioUrl,
+            transcript: log.transcript,
+            healthData: structuredData || {},
+            createdAt: log.createdAt,
+            updatedAt: log.updatedAt,
+          };
+        }
+      })
+    );
+
+    return logsWithData;
+  } catch (error) {
+    console.error("Database query failed completely, falling back to raw SQL:", error);
+
+    // Final fallback to raw SQL
     try {
-      // Check if the health_logs table exists before attempting to query it
       const tableExists = await ctx.env.DB.prepare(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='health_logs'",
       ).all();
 
       if (tableExists.results.length === 0) {
-        console.log(
-          "health_logs table doesn't exist yet, returning empty array",
-        );
+        console.log("health_logs table doesn't exist yet, returning empty array");
         return [];
       }
 
-      // Perform a simple query to fetch just the health logs
       const rawResults = await ctx.env.DB.prepare(
         "SELECT * FROM health_logs ORDER BY date DESC",
       ).all<RawHealthLogRow>();
@@ -311,9 +480,7 @@ export async function getAllHealthLogs(ctx: AppContext) {
         return [];
       }
 
-      // Map the rows to our expected structure
       return rawResults.results.map((row: RawHealthLogRow) => {
-        // Parse the structured data JSON if it exists
         let structuredData = null;
         if (row.structured_data) {
           try {
@@ -328,23 +495,13 @@ export async function getAllHealthLogs(ctx: AppContext) {
           date: row.date,
           audioUrl: row.audio_url,
           transcript: row.transcript,
-          structuredData,
+          healthData: structuredData || {},
           createdAt: row.created_at,
           updatedAt: row.updated_at,
-          // If we have structured data, use it instead of providing empty values
-          healthData: structuredData ? structuredData.healthData : null,
-          workouts:
-            structuredData && structuredData.workouts
-              ? structuredData.workouts
-              : [],
-          meals:
-            structuredData && structuredData.meals ? structuredData.meals : [],
-          painDiscomfort: structuredData ? structuredData.painDiscomfort : null,
         };
       });
     } catch (fallbackError) {
       console.error("Fallback SQL query also failed:", fallbackError);
-      // If even the fallback fails, return an empty array
       return [];
     }
   }

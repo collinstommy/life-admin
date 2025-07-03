@@ -1,4 +1,5 @@
 import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { relations } from "drizzle-orm";
 
 // Main table to store health logs
 export const healthLogs = sqliteTable("health_logs", {
@@ -70,6 +71,45 @@ export const painDiscomfort = sqliteTable("pain_discomfort", {
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at").notNull(),
 });
+
+// Relations definitions for Drizzle ORM
+export const healthLogsRelations = relations(healthLogs, ({ one, many }) => ({
+  healthData: one(healthData, {
+    fields: [healthLogs.id],
+    references: [healthData.logId],
+  }),
+  workouts: many(workouts),
+  meals: many(meals),
+  painDiscomfort: many(painDiscomfort),
+}));
+
+export const healthDataRelations = relations(healthData, ({ one }) => ({
+  healthLog: one(healthLogs, {
+    fields: [healthData.logId],
+    references: [healthLogs.id],
+  }),
+}));
+
+export const workoutsRelations = relations(workouts, ({ one }) => ({
+  healthLog: one(healthLogs, {
+    fields: [workouts.logId],
+    references: [healthLogs.id],
+  }),
+}));
+
+export const mealsRelations = relations(meals, ({ one }) => ({
+  healthLog: one(healthLogs, {
+    fields: [meals.logId],
+    references: [healthLogs.id],
+  }),
+}));
+
+export const painDiscomfortRelations = relations(painDiscomfort, ({ one }) => ({
+  healthLog: one(healthLogs, {
+    fields: [painDiscomfort.logId],
+    references: [healthLogs.id],
+  }),
+}));
 
 // Exporting types for type safety
 export type HealthLog = typeof healthLogs.$inferSelect;

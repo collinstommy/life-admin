@@ -173,7 +173,7 @@ export function ViewEntriesScreen() {
                             {log.healthData.meals.length} meal{log.healthData.meals.length !== 1 ? 's' : ''}
                           </span>
                         )}
-                        {log.healthData?.sleep.hours && (
+                        {log.healthData?.sleep?.hours && (
                           <span className="flex items-center">
                             <span className="mr-1">😴</span>
                             {log.healthData.sleep.hours}h sleep
@@ -185,7 +185,7 @@ export function ViewEntriesScreen() {
                             Energy {log.healthData.energyLevel}/10
                           </span>
                         )}
-                        {log.healthData?.mood.rating && (
+                        {log.healthData?.mood?.rating && (
                           <span className="flex items-center">
                             <span className="mr-1">😊</span>
                             Mood {log.healthData.mood.rating}/10

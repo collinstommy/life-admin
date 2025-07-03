@@ -506,26 +506,9 @@ app.get("/api/health-log", async (c) => {
         });
       }
 
-      // Transform logs to include structured data directly
-      const formattedLogs = logs.map((log: HealthLog & { structuredData?: any; healthData?: any; workouts?: any; meals?: any; painDiscomfort?: any }) => {
-        // If we have structured data, use it directly
-        if (log.structuredData) {
-          return {
-            id: log.id,
-            date: log.date,
-            audioUrl: log.audioUrl,
-            transcript: log.transcript,
-            healthData: log.structuredData,
-            createdAt: log.createdAt,
-            updatedAt: log.updatedAt,
-          };
-        }
-
-        // Fall back to the old format if needed
-        return log;
-      });
-
-      return c.json(formattedLogs);
+      // The getAllHealthLogs function now returns properly formatted data
+      // with healthData containing the structured information
+      return c.json(logs);
     } catch (error: unknown) {
       console.error("Database error when fetching health logs:", error);
 
@@ -573,19 +556,17 @@ app.get("/api/health-log/:id", async (c) => {
 
     console.log(`Retrieved health log with ID ${id} from database`);
 
-    // If we have structured data, use it directly in the response
-    if (log.structuredData) {
-      return c.json({
-        id: log.id,
-        date: log.date,
-        audioUrl: log.audioUrl,
-        transcript: log.transcript,
-        healthData: log.structuredData,
-      });
-    }
-
-    // Otherwise return the log as is
-    return c.json(log);
+    // The getHealthLogById function now returns properly structured data
+    // Transform to match expected frontend format
+    return c.json({
+      id: log.id,
+      date: log.date,
+      audioUrl: log.audioUrl,
+      transcript: log.transcript,
+      healthData: log.structuredData,
+      createdAt: log.createdAt,
+      updatedAt: log.updatedAt,
+    });
   } catch (error) {
     console.error("Error fetching health log:", error);
     return c.json({ error: "Failed to fetch health log" }, 500);

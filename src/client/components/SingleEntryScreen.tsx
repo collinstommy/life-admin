@@ -34,7 +34,7 @@ function HealthDataDisplay({ data }: { data: StructuredHealthData }) {
         )}
 
         {/* Mood */}
-        {data.mood.rating && (
+        {data.mood?.rating && (
           <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl p-4 text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -47,7 +47,7 @@ function HealthDataDisplay({ data }: { data: StructuredHealthData }) {
         )}
 
         {/* Sleep */}
-        {data.sleep.hours && (
+        {data.sleep?.hours && (
           <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl p-4 text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -141,7 +141,7 @@ function HealthDataDisplay({ data }: { data: StructuredHealthData }) {
                 <p className="text-orange-800">{data.screenTimeHours}h</p>
               </div>
             )}
-            {data.sleep.quality && (
+            {data.sleep?.quality && (
               <div className="bg-purple-50 rounded-lg p-2">
                 <p className="text-purple-600 font-medium">Sleep Quality</p>
                 <p className="text-purple-800">{data.sleep.quality}/10</p>
@@ -159,9 +159,9 @@ function HealthDataDisplay({ data }: { data: StructuredHealthData }) {
             </h3>
             <div className="bg-red-50 rounded-lg p-3">
               <p className="font-medium text-red-900">
-                {data.painDiscomfort.location} - Level {data.painDiscomfort.intensity}/5
+                {data.painDiscomfort?.location} - Level {data.painDiscomfort?.intensity}/5
               </p>
-              {data.painDiscomfort.notes && (
+              {data.painDiscomfort?.notes && (
                 <p className="text-xs text-red-700 mt-1">{data.painDiscomfort.notes}</p>
               )}
             </div>

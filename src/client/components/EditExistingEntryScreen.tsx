@@ -393,13 +393,13 @@ function HealthDataPreview({ data }: { data: StructuredHealthData }) {
                 <p className="text-orange-800">{data.screenTimeHours}h</p>
               </div>
             )}
-            {data.sleep.hours && (
+            {data.sleep?.hours && (
               <div className="bg-purple-50 rounded-lg p-2">
                 <p className="text-purple-600 font-medium">Sleep</p>
                 <p className="text-purple-800">{data.sleep.hours}h</p>
               </div>
             )}
-            {data.sleep.quality && (
+            {data.sleep?.quality && (
               <div className="bg-purple-50 rounded-lg p-2">
                 <p className="text-purple-600 font-medium">Sleep Quality</p>
                 <p className="text-purple-800">{data.sleep.quality}/10</p>
@@ -411,7 +411,7 @@ function HealthDataPreview({ data }: { data: StructuredHealthData }) {
                 <p className="text-yellow-800">{data.energyLevel}/10</p>
               </div>
             )}
-            {data.mood.rating && (
+            {data.mood?.rating && (
               <div className="bg-pink-50 rounded-lg p-2">
                 <p className="text-pink-600 font-medium">Mood</p>
                 <p className="text-pink-800">{data.mood.rating}/10</p>
