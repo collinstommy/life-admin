@@ -3,52 +3,19 @@ import { Link, useParams } from '@tanstack/react-router';
 import { useHealthLogs, useDeleteHealthLog } from '../hooks/useHealthLogs';
 import { ConfirmDialog } from './ConfirmDialog';
 import { HealthLog as DBHealthLog, HealthLog } from '../../db/schema';
-
-interface HealthData {
-  date: string;
-  screenTimeHours: number | null;
-  workouts: Array<{
-    type: string;
-    durationMinutes: number;
-    distanceKm?: number;
-    intensity: number;
-    notes?: string;
-  }>;
-  meals: Array<{
-    type: string;
-    notes: string;
-  }>;
-  waterIntakeLiters: number | null;
-  painDiscomfort?: {
-    location: string | null;
-    intensity: number | null;
-    notes: string | null;
-  };
-  sleep: {
-    hours: number | null;
-    quality: number | null;
-  };
-  energyLevel: number | null;
-  mood: {
-    rating: number | null;
-    notes: string | null;
-  };
-  weightKg: number | null;
-  otherActivities: string | null;
-  notes: string | null;
-}
+import { StructuredHealthData } from '../../lib/ai';
 
 interface HealthLogWithData {
   id: number;
   date: string;
   audioUrl: string | null;
   transcript: string | null;
-  healthData: HealthData;
+  healthData: StructuredHealthData;
   createdAt: number;
   updatedAt: number;
 }
 
-function HealthDataDisplay({ data }: { data: HealthData }) {
+function HealthDataDisplay({ data }: { data: StructuredHealthData }) {
   return (
     <div className="space-y-6">
       {/* Key Metrics Grid */}

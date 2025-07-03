@@ -2,47 +2,15 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useHealthLogs, useDeleteHealthLog } from '../hooks/useHealthLogs';
 import { ConfirmDialog } from './ConfirmDialog';
-
-interface HealthData {
-  date: string;
-  screenTimeHours: number | null;
-  workouts: Array<{
-    type: string;
-    durationMinutes: number;
-    distanceKm?: number;
-    intensity: number;
-    notes?: string;
-  }>;
-  meals: Array<{
-    type: string;
-    notes: string;
-  }>;
-  waterIntakeLiters: number | null;
-  painDiscomfort?: {
-    location: string | null;
-    intensity: number | null;
-    notes: string | null;
-  };
-  sleep: {
-    hours: number | null;
-    quality: number | null;
-  };
-  energyLevel: number | null;
-  mood: {
-    rating: number | null;
-    notes: string | null;
-  };
-  weightKg: number | null;
-  otherActivities: string | null;
-  notes: string | null;
-}
+import { EditExistingEntryModal } from './EditExistingEntryModal';
+import { StructuredHealthData } from '../../lib/ai';
 
 interface HealthLog {
   id: number;
   date: string;
   audioUrl: string | null;
   transcript: string | null;
-  healthData: HealthData;
+  healthData: StructuredHealthData;
   createdAt: number;
   updatedAt: number;
 }
@@ -56,6 +24,10 @@ export function ViewEntriesScreen() {
     logId: '',
     logDate: ''
   });
+  const [editModal, setEditModal] = useState<{ show: boolean; entry: any | null }>({
+    show: false,
+    entry: null
+  });
 
   const handleDelete = async (logId: string) => {
     try {
@@ -64,6 +36,19 @@ export function ViewEntriesScreen() {
     } catch (error) {
       console.error('Delete failed:', error);
     }
+  };
+
+  const handleEdit = (log: any) => {
+    setEditModal({ show: true, entry: log });
+  };
+
+  const handleEditSave = () => {
+    setEditModal({ show: false, entry: null });
+    // Logs will automatically refresh due to query invalidation
+  };
+
+  const handleEditCancel = () => {
+    setEditModal({ show: false, entry: null });
   };
 
   if (isLoading) {
@@ -224,14 +209,27 @@ export function ViewEntriesScreen() {
                       </div>
                     </div>
 
-                    {/* Delete Button */}
-                    <div className="flex items-center justify-center p-4 border-l border-gray-100">
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-center border-l border-gray-100">
+                      {/* Edit Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(log);
+                        }}
+                        className="text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors p-2 rounded-md cursor-pointer"
+                        title="Edit entry"
+                      >
+                        <span className="icon-[mdi-light--pencil] w-5 h-5"></span>
+                      </button>
+                      
+                      {/* Delete Button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setDeleteConfirm({ show: true, logId: log.id.toString(), logDate });
                         }}
-                        className="text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors p-2 rounded-md cursor-pointer"
+                        className="text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors p-2 rounded-md cursor-pointer ml-1"
                         title="Delete entry"
                       >
                         <span className="icon-[mdi-light--delete] w-5 h-5"></span>
@@ -244,6 +242,16 @@ export function ViewEntriesScreen() {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {editModal.show && editModal.entry && (
+        <EditExistingEntryModal
+          isOpen={editModal.show}
+          entry={editModal.entry}
+          onSave={handleEditSave}
+          onCancel={handleEditCancel}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog

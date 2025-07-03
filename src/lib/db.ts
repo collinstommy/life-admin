@@ -158,17 +158,29 @@ export async function getHealthLogById(ctx: AppContext, id: number) {
   const db = initDb(ctx);
 
   try {
+    // Use a simple query without complex relationships to avoid "referencedTable" errors
     const healthLog = await db.query.healthLogs.findFirst({
       where: eq(schema.healthLogs.id, id),
-      with: {
-        healthData: true,
-        workouts: true,
-        meals: true,
-        painDiscomfort: true,
-      },
     });
 
-    return healthLog || null;
+    if (!healthLog) {
+      return null;
+    }
+
+    // Parse structured data if it exists
+    let structuredData = null;
+    if (healthLog.structuredData) {
+      try {
+        structuredData = JSON.parse(healthLog.structuredData);
+      } catch (parseError) {
+        console.error("Error parsing structured data JSON:", parseError);
+      }
+    }
+
+    return {
+      ...healthLog,
+      structuredData,
+    };
   } catch (error) {
     console.error(`Failed to get health log with ID ${id}:`, error);
     throw new Error(`Failed to get health log: ${error instanceof Error ? error.message : String(error)}`);
@@ -335,5 +347,150 @@ export async function getAllHealthLogs(ctx: AppContext) {
       // If even the fallback fails, return an empty array
       return [];
     }
+  }
+}
+
+/**
+ * Updates an existing health log with new data using complete replacement strategy
+ * @param ctx Hono context with D1 binding
+ * @param id ID of the health log to update
+ * @param healthData Updated structured health data
+ * @param originalTranscript Original transcript from the entry
+ * @param updateTranscript New transcript from the voice update
+ * @returns ID of the updated health log
+ */
+export async function updateHealthLog(
+  ctx: AppContext,
+  id: number,
+  healthData: StructuredHealthData,
+  originalTranscript: string,
+  updateTranscript: string,
+): Promise<number> {
+  const db = initDb(ctx);
+  const now = Math.floor(Date.now() / 1000);
+
+  // Create merged transcript summary
+  const mergedTranscript = `Original: ${originalTranscript}\nUpdated with: ${updateTranscript}`;
+
+  try {
+    console.log(`Starting update for health log ID: ${id}`);
+
+    // 1. Update the main health log with new JSON and merged transcript
+    await db
+      .update(schema.healthLogs)
+      .set({
+        structuredData: JSON.stringify(healthData),
+        transcript: mergedTranscript,
+        updatedAt: now,
+      })
+      .where(eq(schema.healthLogs.id, id));
+
+    console.log(`Updated main health log entry for ID: ${id}`);
+
+    // 2. Delete all existing related data for this log (if they exist)
+    try {
+      await db.delete(schema.workouts).where(eq(schema.workouts.logId, id));
+      console.log(`Deleted existing workouts for log ID: ${id}`);
+    } catch (deleteError) {
+      console.log(`No workouts to delete for log ID: ${id}`, deleteError);
+    }
+
+    try {
+      await db.delete(schema.meals).where(eq(schema.meals.logId, id));
+      console.log(`Deleted existing meals for log ID: ${id}`);
+    } catch (deleteError) {
+      console.log(`No meals to delete for log ID: ${id}`, deleteError);
+    }
+
+    try {
+      await db.delete(schema.painDiscomfort).where(eq(schema.painDiscomfort.logId, id));
+      console.log(`Deleted existing pain/discomfort for log ID: ${id}`);
+    } catch (deleteError) {
+      console.log(`No pain/discomfort to delete for log ID: ${id}`, deleteError);
+    }
+
+    try {
+      await db.delete(schema.healthData).where(eq(schema.healthData.logId, id));
+      console.log(`Deleted existing health data for log ID: ${id}`);
+    } catch (deleteError) {
+      console.log(`No health data to delete for log ID: ${id}`, deleteError);
+    }
+
+    // 3. Insert new healthData record
+    await db.insert(schema.healthData).values({
+      logId: id,
+      screenTimeHours: healthData.screenTimeHours,
+      waterIntakeLiters: healthData.waterIntakeLiters,
+      sleepHours: healthData.sleep?.hours || null,
+      sleepQuality: healthData.sleep?.quality || null,
+      energyLevel: healthData.energyLevel,
+      moodRating: healthData.mood?.rating || null,
+      moodNotes: healthData.mood?.notes || null,
+      weightKg: healthData.weightKg,
+      otherActivities: healthData.otherActivities,
+      generalNotes: healthData.notes,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    console.log(`Inserted new health data for log ID: ${id}`);
+
+    // 4. Insert new workouts if any
+    if (healthData.workouts && healthData.workouts.length > 0) {
+      for (const workout of healthData.workouts) {
+        await db.insert(schema.workouts).values({
+          logId: id,
+          type: workout.type,
+          durationMinutes: workout.durationMinutes,
+          distanceKm: workout.distanceKm || null,
+          intensity: workout.intensity,
+          notes: workout.notes || null,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+      console.log(`Inserted ${healthData.workouts.length} workouts for log ID: ${id}`);
+    }
+
+    // 5. Insert new meals if any
+    if (healthData.meals && healthData.meals.length > 0) {
+      for (const meal of healthData.meals) {
+        await db.insert(schema.meals).values({
+          logId: id,
+          type: meal.type,
+          notes: meal.notes,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+      console.log(`Inserted ${healthData.meals.length} meals for log ID: ${id}`);
+    }
+
+    // 6. Insert new pain/discomfort if any
+    if (healthData.painDiscomfort && 
+        (healthData.painDiscomfort.location || 
+         healthData.painDiscomfort.intensity || 
+         healthData.painDiscomfort.notes)) {
+      await db.insert(schema.painDiscomfort).values({
+        logId: id,
+        location: healthData.painDiscomfort.location,
+        intensity: healthData.painDiscomfort.intensity,
+        notes: healthData.painDiscomfort.notes || null,
+        createdAt: now,
+        updatedAt: now,
+      });
+      console.log(`Inserted pain/discomfort data for log ID: ${id}`);
+    }
+
+    console.log(`Health log updated successfully, ID: ${id}`);
+    return id;
+
+  } catch (error) {
+    console.error("Failed to update health log:", error);
+    throw new Error(
+      `Failed to update health log: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
   }
 }

@@ -2,6 +2,9 @@
 - [x] use vite for frontend and tailwind build 
 - [ ] set up hono client for types safety @https://hono.dev/docs/concepts/stacks#with-react
 - [x] add icons from iconify - use tailwind plugin
+- [ ] use vercel AI SDK for calling llm
+- [ ] use zod for schema validation when calling llm
+
 
 
 ## UI
@@ -18,17 +21,6 @@
 
 ## Features
 - [x] Edit an entry - **COMPLETELY IMPLEMENTED WITH REAL AUDIO TRANSCRIPTION**
-   - ✅ implemented with extract-first flow: record/type → extract data → review modal → record updates or save
-   - ✅ new EditEntryModal shows condensed health data preview with beautiful UI
-   - ✅ VoiceUpdateRecorder allows iterative voice updates to add/modify data
-   - ✅ smart AI merging understands additive vs corrective language
-   - ✅ three action options: Accept & Save, Record Update, Cancel
-   - ✅ supports both voice recordings and manual text entry workflows
-   - ✅ **FULLY PRODUCTION READY**: Complete real audio transcription implementation
-     - ✅ **VoiceRecorder.tsx**: Real transcription for initial voice recordings (mocks removed)
-     - ✅ **EditEntryModal.tsx**: Real transcription for voice updates (demo mode removed)
-     - ✅ **Backend**: `/api/transcribe-audio` endpoint using Gemini API
-     - ✅ **Frontend**: Proper loading states, error handling, and user feedback
-     - ✅ **Flow**: Record → Transcribe → Extract → Review → Update → Save
-     - ✅ **No mocks anywhere**: 100% real audio processing throughout the app
-
+- [ ] chat interface - use vercel sdk
+- [ ] add a system prompt to the chat interface + profile + goals
+- [ ] add a way to update an existing entry, with a voice recorder.  

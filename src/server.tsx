@@ -9,9 +9,9 @@ import { AppContext, HonoApp } from "./types";
 import { sign, verify } from "hono/jwt";
 import { getCookie, setCookie } from "hono/cookie";
 import { storeAudioRecording, getAudioRecording } from "./lib/storage";
-import { transcribeAudio, extractHealthData, mergeHealthDataWithUpdate } from "./lib/ai";
+import { transcribeAudio, extractHealthData, mergeHealthDataWithUpdate, StructuredHealthData } from "./lib/ai";
 // We'll use these in Phase 2 with database integration
-import { getAllHealthLogs, getHealthLogById, initDb, deleteHealthLog, deleteAllHealthLogs } from "./lib/db";
+import { getAllHealthLogs, getHealthLogById, initDb, deleteHealthLog, deleteAllHealthLogs, updateHealthLog } from "./lib/db";
 // Import the saveHealthLog function
 import { saveHealthLog } from "./lib/db";
 // Import types from schema
@@ -732,6 +732,82 @@ app.get("*", async (c) => {
   
   // Serve the SPA for all other routes (client-side routing)
   return c.html(htmlTemplate);
+});
+
+// Update existing health log
+app.put("/api/health-log/:id", async (c) => {
+  try {
+    console.log("Update health log request received");
+    const id = parseInt(c.req.param('id'));
+    const body = await c.req.json();
+    const { healthData, updateTranscript } = body;
+
+    if (!id || isNaN(id)) {
+      console.error("Invalid or missing health log ID");
+      return c.json({ error: "Valid health log ID is required" }, 400);
+    }
+
+    if (!healthData) {
+      console.error("No health data provided in request");
+      return c.json({ error: "Health data is required" }, 400);
+    }
+
+    if (!updateTranscript) {
+      console.error("No update transcript provided in request");
+      return c.json({ error: "Update transcript is required" }, 400);
+    }
+
+    console.log(`Updating health log with ID: ${id}`);
+
+    try {
+      // Get the existing health log to retrieve original transcript
+      const existingLog = await getHealthLogById(c as AppContext, id);
+      
+      if (!existingLog) {
+        console.error(`Health log with ID ${id} not found`);
+        return c.json({ error: "Health log not found" }, 404);
+      }
+
+      const originalTranscript = existingLog.transcript || "";
+
+      // Update the health log with complete replacement
+      const updatedId = await updateHealthLog(
+        c as AppContext,
+        id,
+        healthData,
+        originalTranscript,
+        updateTranscript,
+      );
+      
+      console.log("Health log updated successfully with ID:", updatedId);
+
+      return c.json({
+        success: true,
+        message: "Health log updated successfully",
+        id: updatedId,
+        data: healthData,
+      });
+    } catch (dataError) {
+      console.error("Error updating health log:", dataError);
+      return c.json(
+        {
+          error: "Failed to update health log",
+          message:
+            dataError instanceof Error ? dataError.message : String(dataError),
+        },
+        500,
+      );
+    }
+  } catch (error) {
+    console.error("Unexpected error updating health log:", error);
+    return c.json(
+      {
+        error: "Failed to update health log",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
 });
 
 export default app;

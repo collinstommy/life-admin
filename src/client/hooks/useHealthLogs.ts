@@ -140,6 +140,21 @@ const api = {
     return response.json();
   },
 
+  async updateExistingEntry(id: string, healthData: any, updateTranscript: string): Promise<SaveHealthLogResponse> {
+    const response = await fetch(`/api/health-log/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ healthData, updateTranscript }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Update failed (${response.status}): ${errorText}`);
+    }
+    
+    return response.json();
+  },
+
   async getHealthLogs(): Promise<HealthLog[]> {
     const response = await fetch('/api/health-log');
     
@@ -238,6 +253,18 @@ export function useTranscribeAudio() {
   return useMutation({
     mutationFn: api.transcribeAudio,
     // Don't invalidate queries since we're just transcribing
+  });
+}
+
+export function useUpdateExistingEntry() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, healthData, updateTranscript }: { id: string; healthData: any; updateTranscript: string }) =>
+      api.updateExistingEntry(id, healthData, updateTranscript),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-logs'] });
+    },
   });
 }
 
