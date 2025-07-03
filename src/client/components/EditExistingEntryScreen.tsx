@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useUpdateHealthData, useTranscribeAudio, useUpdateExistingEntry } from '../hooks/useHealthLogs';
+import { Link, useNavigate, useParams } from '@tanstack/react-router';
+import { useUpdateHealthData, useTranscribeAudio, useUpdateExistingEntry, useHealthLogs } from '../hooks/useHealthLogs';
 import { VoiceUpdateRecorder } from './VoiceUpdateRecorder';
 import { StructuredHealthData } from '../../lib/ai';
 
@@ -17,19 +18,34 @@ interface HealthLogEntry {
   audioUrl?: string;
 }
 
-interface EditExistingEntryModalProps {
-  isOpen: boolean;
-  entry: HealthLogEntry;
-  onSave: () => void;
-  onCancel: () => void;
-}
+export function EditExistingEntryScreen() {
+  const navigate = useNavigate();
+  const { id } = useParams({ strict: false });
+  const { data: logs, isLoading } = useHealthLogs();
+  
+  // Find the entry by ID and ensure transcript is not null
+  const entry = logs?.find(log => log.id.toString() === id);
+  const processedEntry = entry ? {
+    ...entry,
+    transcript: entry.transcript || ''
+  } as HealthLogEntry : null;
 
-export function EditExistingEntryModal({ 
-  isOpen, 
-  entry, 
-  onSave, 
-  onCancel 
-}: EditExistingEntryModalProps) {
+  // If entry not found and not loading, redirect
+  if (!isLoading && !processedEntry) {
+    navigate({ to: '/view-entries' });
+    return null;
+  }
+
+  // Show loading while fetching data
+  if (isLoading || !processedEntry) {
+    return (
+      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-gray-600">Loading entry...</span>
+      </div>
+    );
+  }
+  
   // Parse the entry data
   const parseEntryData = (entry: HealthLogEntry): StructuredHealthData => {
     // First check if we have healthData directly (from server response)
@@ -78,7 +94,7 @@ export function EditExistingEntryModal({
       workouts: [],
       meals: [],
       waterIntakeLiters: null,
-             painDiscomfort: undefined,
+      painDiscomfort: undefined,
       sleep: {
         hours: null,
         quality: null,
@@ -94,7 +110,7 @@ export function EditExistingEntryModal({
     };
   };
 
-  const [currentData, setCurrentData] = useState<StructuredHealthData>(() => parseEntryData(entry));
+  const [currentData, setCurrentData] = useState<StructuredHealthData>(() => parseEntryData(processedEntry));
   const [isRecordingUpdate, setIsRecordingUpdate] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [updateTranscript, setUpdateTranscript] = useState<string>('');
@@ -140,18 +156,21 @@ export function EditExistingEntryModal({
       }
 
       await updateExistingEntry.mutateAsync({
-        id: entry.id.toString(),
+        id: processedEntry.id.toString(),
         healthData: currentData,
         updateTranscript: updateTranscript
       });
       
-      onSave();
+      // Navigate back to view entries after successful save
+      navigate({ to: '/view-entries' });
     } catch (error) {
       console.error('Failed to save updated health log:', error);
     }
   };
 
-  if (!isOpen) return null;
+  const handleCancel = () => {
+    navigate({ to: '/view-entries' });
+  };
 
   const isProcessingUpdate = isTranscribing || updateHealthData.isPending;
   const canSave = updateTranscript.length > 0;
@@ -168,111 +187,126 @@ export function EditExistingEntryModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-semibold text-gray-900">Edit Health Entry</h2>
-          <p className="text-gray-600 text-sm mt-1">
-            {formatDate(entry.date)} - Record voice updates to modify this entry
-          </p>
+    <div className="bg-gray-50 min-h-screen">
+      {/* Navigation Header */}
+      <div className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14">
+            <Link to="/view-entries" className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+              <span className="icon-[mdi-light--chevron-left] w-4 h-4 mr-2"></span>
+              Back to Entries
+            </Link>
+          </div>
         </div>
+      </div>
 
-        {/* Content */}
-        <div className="p-6">
-          <HealthDataPreview data={currentData} />
-        </div>
-
-        {/* Actions */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={handleSave}
-            disabled={updateExistingEntry.isPending || isProcessingUpdate || !canSave}
-            className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed"
-          >
-            {updateExistingEntry.isPending ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Saving...
-              </div>
-            ) : (
-              '✅ Save Changes'
-            )}
-          </button>
-
-          <VoiceUpdateRecorder
-            isRecording={isRecordingUpdate}
-            onStartRecording={() => setIsRecordingUpdate(true)}
-            onStopRecording={() => setIsRecordingUpdate(false)}
-            onRecordingComplete={handleRecordUpdate}
-            disabled={isProcessingUpdate || updateExistingEntry.isPending}
-          />
-
-          <button
-            onClick={onCancel}
-            disabled={updateExistingEntry.isPending || isProcessingUpdate}
-            className="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            ❌ Cancel
-          </button>
-        </div>
-
-        {/* Update Status */}
-        {isTranscribing && (
-          <div className="p-4 bg-blue-50 border-t border-blue-200">
-            <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-              <div>
-                <p className="text-blue-800 font-medium">Transcribing your voice update...</p>
-                <p className="text-blue-600 text-sm">Converting speech to text.</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {updateHealthData.isPending && (
-          <div className="p-4 bg-blue-50 border-t border-blue-200">
-            <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-              <div>
-                <p className="text-blue-800 font-medium">Processing your update...</p>
-                <p className="text-blue-600 text-sm">Merging new information with existing data.</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error States */}
-        {transcribeAudio.isError && (
-          <div className="p-4 bg-red-50 border-t border-red-200">
-            <p className="text-red-700 font-medium">Transcription Failed</p>
-            <p className="text-red-600 text-sm">{transcribeAudio.error?.message}</p>
-          </div>
-        )}
-
-        {updateHealthData.isError && (
-          <div className="p-4 bg-red-50 border-t border-red-200">
-            <p className="text-red-700 font-medium">Update Failed</p>
-            <p className="text-red-600 text-sm">{updateHealthData.error?.message}</p>
-          </div>
-        )}
-
-        {updateExistingEntry.isError && (
-          <div className="p-4 bg-red-50 border-t border-red-200">
-            <p className="text-red-700 font-medium">Save Failed</p>
-            <p className="text-red-600 text-sm">{updateExistingEntry.error?.message}</p>
-          </div>
-        )}
-
-        {/* Instructions */}
-        {!canSave && (
-          <div className="p-4 bg-yellow-50 border-t border-yellow-200">
-            <p className="text-yellow-800 text-sm">
-              Click "🎤 Record Update" to make voice changes to this entry. 
-              Examples: "Change my mood to 8", "I also had a snack", "Actually, my workout was 45 minutes"
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {/* Header */}
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-2xl font-semibold text-gray-900">Edit Health Entry</h2>
+            <p className="text-gray-600 text-sm mt-1">
+              {formatDate(processedEntry.date)} - Record voice updates to modify this entry
             </p>
           </div>
-        )}
+
+          {/* Content */}
+          <div className="p-6">
+            <HealthDataPreview data={currentData} />
+          </div>
+
+          {/* Actions */}
+          <div className="p-6 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleSave}
+              disabled={updateExistingEntry.isPending || isProcessingUpdate || !canSave}
+              className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed"
+            >
+              {updateExistingEntry.isPending ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </div>
+              ) : (
+                '✅ Save Changes'
+              )}
+            </button>
+
+            <VoiceUpdateRecorder
+              isRecording={isRecordingUpdate}
+              onStartRecording={() => setIsRecordingUpdate(true)}
+              onStopRecording={() => setIsRecordingUpdate(false)}
+              onRecordingComplete={handleRecordUpdate}
+              disabled={isProcessingUpdate || updateExistingEntry.isPending}
+            />
+
+            <button
+              onClick={handleCancel}
+              disabled={updateExistingEntry.isPending || isProcessingUpdate}
+              className="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              ❌ Cancel
+            </button>
+          </div>
+
+          {/* Update Status */}
+          {isTranscribing && (
+            <div className="p-4 bg-blue-50 border-t border-blue-200">
+              <div className="flex items-center space-x-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                <div>
+                  <p className="text-blue-800 font-medium">Transcribing your voice update...</p>
+                  <p className="text-blue-600 text-sm">Converting speech to text.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {updateHealthData.isPending && (
+            <div className="p-4 bg-blue-50 border-t border-blue-200">
+              <div className="flex items-center space-x-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                <div>
+                  <p className="text-blue-800 font-medium">Processing your update...</p>
+                  <p className="text-blue-600 text-sm">Merging new information with existing data.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error States */}
+          {transcribeAudio.isError && (
+            <div className="p-4 bg-red-50 border-t border-red-200">
+              <p className="text-red-700 font-medium">Transcription Failed</p>
+              <p className="text-red-600 text-sm">{transcribeAudio.error?.message}</p>
+            </div>
+          )}
+
+          {updateHealthData.isError && (
+            <div className="p-4 bg-red-50 border-t border-red-200">
+              <p className="text-red-700 font-medium">Update Failed</p>
+              <p className="text-red-600 text-sm">{updateHealthData.error?.message}</p>
+            </div>
+          )}
+
+          {updateExistingEntry.isError && (
+            <div className="p-4 bg-red-50 border-t border-red-200">
+              <p className="text-red-700 font-medium">Save Failed</p>
+              <p className="text-red-600 text-sm">{updateExistingEntry.error?.message}</p>
+            </div>
+          )}
+
+          {/* Instructions */}
+          {!canSave && (
+            <div className="p-4 bg-yellow-50 border-t border-yellow-200">
+              <p className="text-yellow-800 text-sm">
+                Click "🎤 Record Update" to make voice changes to this entry. 
+                Examples: "Change my mood to 8", "I also had a snack", "Actually, my workout was 45 minutes"
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

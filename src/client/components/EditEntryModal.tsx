@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
+import { Link, useNavigate, useLocation } from '@tanstack/react-router';
 import { useUpdateHealthData, useSaveHealthLog, useTranscribeAudio } from '../hooks/useHealthLogs';
 import { VoiceUpdateRecorder } from './VoiceUpdateRecorder';
 import { StructuredHealthData } from '../../lib/ai';
 
-interface EditEntryModalProps {
-  isOpen: boolean;
-  initialData: StructuredHealthData;
-  transcript: string;
-  audioUrl?: string;
-  onSave: (id: string) => void;
-  onCancel: () => void;
-}
+export function EditEntryScreen() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get data from location state (passed from previous screen)
+  const { initialData, transcript, audioUrl } = (location.state as any) || {
+    initialData: null,
+    transcript: '',
+    audioUrl: undefined
+  };
 
-export function EditEntryModal({ 
-  isOpen, 
-  initialData, 
-  transcript, 
-  audioUrl, 
-  onSave, 
-  onCancel 
-}: EditEntryModalProps) {
+  // If no data was passed, redirect back
+  if (!initialData) {
+    navigate({ to: '/add-entry' });
+    return null;
+  }
   const [currentData, setCurrentData] = useState<StructuredHealthData>(initialData);
   const [isRecordingUpdate, setIsRecordingUpdate] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -64,19 +64,36 @@ export function EditEntryModal({
         audioUrl
       });
       
-      onSave(response.id);
+      // Navigate to the view entries screen after successful save
+      navigate({ to: '/view-entries' });
     } catch (error) {
       console.error('Failed to save health log:', error);
     }
   };
 
-  if (!isOpen) return null;
+  const handleCancel = () => {
+    navigate({ to: '/add-entry' });
+  };
 
   const isProcessingUpdate = isTranscribing || updateHealthData.isPending;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="bg-gray-50 min-h-screen">
+      {/* Navigation Header */}
+      <div className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14">
+            <Link to="/add-entry" className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+              <span className="icon-[mdi-light--chevron-left] w-4 h-4 mr-2"></span>
+              Back
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-2xl font-semibold text-gray-900">Review Your Health Entry</h2>
@@ -116,7 +133,7 @@ export function EditEntryModal({
           />
 
           <button
-            onClick={onCancel}
+            onClick={handleCancel}
             disabled={saveHealthLog.isPending || isProcessingUpdate}
             className="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
@@ -163,6 +180,7 @@ export function EditEntryModal({
             <p className="text-red-600 text-sm">{updateHealthData.error?.message}</p>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

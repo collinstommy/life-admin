@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useExtractHealthData, useTranscribeAudio } from '../hooks/useHealthLogs';
-import { EditEntryModal } from './EditEntryModal';
 
 export function VoiceRecorder() {
   const [isRecording, setIsRecording] = useState(false);
@@ -14,7 +13,6 @@ export function VoiceRecorder() {
   const [transcript, setTranscript] = useState<string>('');
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [extractedData, setExtractedData] = useState<any>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -137,8 +135,8 @@ export function VoiceRecorder() {
       setExtractedData(response.data);
       console.log('Health data extracted successfully');
 
-      // Show the edit modal
-      setShowEditModal(true);
+      // Navigate to edit screen - for now just navigate and handle data passing later
+      navigate({ to: '/edit-entry' });
       
     } catch (error) {
       console.error('Processing failed:', error);
@@ -149,16 +147,7 @@ export function VoiceRecorder() {
     }
   };
 
-  const handleSaveEntry = (id: string) => {
-    setShowEditModal(false);
-    // Navigate back to home or show success message
-    navigate({ to: '/' });
-  };
 
-  const handleCancelEntry = () => {
-    setShowEditModal(false);
-    resetRecorder();
-  };
 
   const resetRecorder = () => {
     setRecordedBlob(null);
@@ -321,17 +310,6 @@ export function VoiceRecorder() {
         </div>
       </div>
 
-      {/* Edit Modal */}
-      {showEditModal && extractedData && (
-        <EditEntryModal
-          isOpen={showEditModal}
-          initialData={extractedData}
-          transcript={transcript}
-          audioUrl={audioUrl}
-          onSave={handleSaveEntry}
-          onCancel={handleCancelEntry}
-        />
-      )}
     </>
   );
 } 

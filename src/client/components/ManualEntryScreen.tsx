@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useExtractHealthData } from '../hooks/useHealthLogs';
-import { EditEntryModal } from './EditEntryModal';
 
 export function ManualEntryScreen() {
   const [transcript, setTranscript] = useState('');
-  const [extractedData, setExtractedData] = useState<any>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
   
   const extractHealthData = useExtractHealthData();
   const navigate = useNavigate();
@@ -21,31 +18,15 @@ export function ManualEntryScreen() {
 
     try {
       const response = await extractHealthData.mutateAsync(transcript.trim());
-      setExtractedData(response.data);
-      setShowEditModal(true);
+      // Navigate to edit screen
+      navigate({ to: '/edit-entry' });
     } catch (error) {
       console.error('Failed to extract health data:', error);
     }
   };
 
-  const handleSaveEntry = (id: string) => {
-    setShowEditModal(false);
-    setTranscript(''); // Clear the textarea after successful save
-    setExtractedData(null);
-    // Navigate back to home or show success message
-    navigate({ to: '/' });
-  };
-
-  const handleCancelEntry = () => {
-    setShowEditModal(false);
-    setExtractedData(null);
-    // Keep the transcript so user can modify and try again
-  };
-
   const handleClear = () => {
     setTranscript('');
-    setExtractedData(null);
-    setShowEditModal(false);
   };
 
   return (
@@ -168,16 +149,6 @@ export function ManualEntryScreen() {
         </div>
       </div>
 
-      {/* Edit Modal */}
-      {showEditModal && extractedData && (
-        <EditEntryModal
-          isOpen={showEditModal}
-          initialData={extractedData}
-          transcript={transcript}
-          onSave={handleSaveEntry}
-          onCancel={handleCancelEntry}
-        />
-      )}
     </>
   );
 } 

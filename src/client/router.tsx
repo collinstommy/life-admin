@@ -7,6 +7,8 @@ import { VoiceRecorder } from './components/VoiceRecorder'
 import { TranscriptProcessor } from './components/TranscriptProcessor'
 import { HistoryView } from './components/HistoryView'
 import { ManualEntryScreen } from './components/ManualEntryScreen'
+import { EditEntryScreen } from './components/EditEntryModal'
+import { EditExistingEntryScreen } from './components/EditExistingEntryScreen'
 import { useAuth } from './hooks/useAuth'
 
 // Root layout component
@@ -64,6 +66,20 @@ const singleEntryRoute = createRoute({
   component: SingleEntryScreen,
 })
 
+// Edit Entry route (for editing while creating)
+const editEntryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/edit-entry',
+  component: EditEntryScreen,
+})
+
+// Edit Existing Entry route (for editing saved entries)
+const editExistingEntryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/edit-entry/$id',
+  component: EditExistingEntryScreen,
+})
+
 // Debug route
 const debugRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -96,6 +112,8 @@ const routeTree = rootRoute.addChildren([
   addEntryRoute,
   viewEntriesRoute,
   singleEntryRoute,
+  editEntryRoute,
+  editExistingEntryRoute,
   debugRoute,
   debugTranscriptRoute,
   debugHistoryRoute,

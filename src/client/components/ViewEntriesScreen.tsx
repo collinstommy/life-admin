@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useHealthLogs, useDeleteHealthLog } from '../hooks/useHealthLogs';
 import { ConfirmDialog } from './ConfirmDialog';
-import { EditExistingEntryModal } from './EditExistingEntryModal';
 import { StructuredHealthData } from '../../lib/ai';
 
 interface HealthLog {
@@ -24,11 +23,6 @@ export function ViewEntriesScreen() {
     logId: '',
     logDate: ''
   });
-  const [editModal, setEditModal] = useState<{ show: boolean; entry: any | null }>({
-    show: false,
-    entry: null
-  });
-
   const handleDelete = async (logId: string) => {
     try {
       await deleteHealthLog.mutateAsync(logId);
@@ -39,16 +33,7 @@ export function ViewEntriesScreen() {
   };
 
   const handleEdit = (log: any) => {
-    setEditModal({ show: true, entry: log });
-  };
-
-  const handleEditSave = () => {
-    setEditModal({ show: false, entry: null });
-    // Logs will automatically refresh due to query invalidation
-  };
-
-  const handleEditCancel = () => {
-    setEditModal({ show: false, entry: null });
+    navigate({ to: '/edit-entry/$id', params: { id: log.id.toString() } });
   };
 
   if (isLoading) {
@@ -242,16 +227,6 @@ export function ViewEntriesScreen() {
           </div>
         )}
       </div>
-
-      {/* Edit Modal */}
-      {editModal.show && editModal.entry && (
-        <EditExistingEntryModal
-          isOpen={editModal.show}
-          entry={editModal.entry}
-          onSave={handleEditSave}
-          onCancel={handleEditCancel}
-        />
-      )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
