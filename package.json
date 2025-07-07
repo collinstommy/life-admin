@@ -27,7 +27,8 @@
     "notion-to-md": "^3.1.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^7.6.3"
+    "react-router-dom": "^7.6.3",
+    "zod": "^3.25.71"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20231016.0",

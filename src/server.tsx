@@ -17,6 +17,37 @@ import { saveHealthLog } from "./lib/db";
 // Import types from schema
 import { HealthLog } from "./db/schema";
 import { seedDatabase } from "./seed";
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
+
+// Validation schemas
+const loginSchema = z.object({
+  password: z.string().min(1, 'Password is required'),
+});
+
+const processTranscriptSchema = z.object({
+  transcript: z.string().min(1, 'Transcript is required'),
+});
+
+const extractHealthDataSchema = z.object({
+  transcript: z.string().min(1, 'Transcript is required'),
+});
+
+const updateHealthDataSchema = z.object({
+  originalData: z.any(),
+  updateTranscript: z.string().min(1, 'Update transcript is required'),
+});
+
+const saveHealthLogSchema = z.object({
+  healthData: z.any(),
+  transcript: z.string().optional(),
+  audioUrl: z.string().optional(),
+});
+
+const updateHealthLogSchema = z.object({
+  healthData: z.any(),
+  updateTranscript: z.string().min(1, 'Update transcript is required'),
+});
 
 // Middleware to verify API key
 const authenticateApiKey: MiddlewareHandler<HonoApp> = async (c, next) => {
@@ -60,606 +91,624 @@ app.use("/static/*", serveStatic({ root: "./", manifest }));
 app.use("/api/*", authenticateJwt);
 app.use("/api/*", withDb);
 
-app.post("/auth/login", async (c) => {
-  const { password } = await c.req.json();
-  console.log("Password:", password);
-  console.log("Environment password:", c.env.PASSWORD);
-  if (password === c.env.PASSWORD) {
-    const token = await sign({ user: "admin", exp: Math.floor(Date.now() / 1000) + (60 * 60) }, c.env.JWT_SECRET);
-    setCookie(c, "jwt", token, { httpOnly: true, secure: true, sameSite: "Strict", maxAge: 60 * 60 });
-    return c.json({ message: "Logged in successfully" });
-  } else {
-    return c.json({ error: "Invalid credentials" }, 401);
-  }
-});
+const authRoutes = app
+  .post("/auth/login", zValidator('json', loginSchema), async (c) => {
+    const { password } = c.req.valid('json');
+    console.log("Password:", password);
+    console.log("Environment password:", c.env.PASSWORD);
+    if (password === c.env.PASSWORD) {
+      const token = await sign({ user: "admin", exp: Math.floor(Date.now() / 1000) + (60 * 60) }, c.env.JWT_SECRET);
+      setCookie(c, "jwt", token, { httpOnly: true, secure: true, sameSite: "Strict", maxAge: 60 * 60 });
+      return c.json({ message: "Logged in successfully" });
+    } else {
+      return c.json({ error: "Invalid credentials" }, 401);
+    }
+  })
+  .get("/auth/status", async (c) => {
+    const token = getCookie(c, "jwt");
 
-// Check authentication status
-app.get("/auth/status", async (c) => {
-  const token = getCookie(c, "jwt");
-
-  if (!token) {
-    return c.json({ isAuthenticated: false });
-  }
-
-  try {
-    const decodedPayload = await verify(token, c.env.JWT_SECRET);
-    if (!decodedPayload || decodedPayload.user !== 'admin') {
+    if (!token) {
       return c.json({ isAuthenticated: false });
     }
-    return c.json({ isAuthenticated: true });
-  } catch (e) {
-    return c.json({ isAuthenticated: false });
-  }
-});
 
-// Logout endpoint - clears the JWT cookie
-app.post("/auth/logout", async (c) => {
-  // Clear the JWT cookie by setting it to expire immediately
-  setCookie(c, "jwt", "", { 
-    httpOnly: true, 
-    secure: true, 
-    sameSite: "Strict", 
-    maxAge: 0 // This expires the cookie immediately
+    try {
+      const decodedPayload = await verify(token, c.env.JWT_SECRET);
+      if (!decodedPayload || decodedPayload.user !== 'admin') {
+        return c.json({ isAuthenticated: false });
+      }
+      return c.json({ isAuthenticated: true });
+    } catch (e) {
+      return c.json({ isAuthenticated: false });
+    }
+  })
+  .post("/auth/logout", async (c) => {
+    // Clear the JWT cookie by setting it to expire immediately
+    setCookie(c, "jwt", "", { 
+      httpOnly: true, 
+      secure: true, 
+      sameSite: "Strict", 
+      maxAge: 0 // This expires the cookie immediately
+    });
+    return c.json({ message: "Logged out successfully" });
   });
-  return c.json({ message: "Logged out successfully" });
-  });
-
-app.post("/api/seed", async (c) => {
-  try {
-    const result = await seedDatabase(c as AppContext);
-    return c.json(result);
-  } catch (error) {
-    console.error("Error seeding database:", error);
-    return c.json(
-      {
-        error: "Failed to seed database",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
 
 // Legacy routes for backwards compatibility
 app.use("/logs", authenticateApiKey);
 
-// Process transcript directly (without audio)
-app.post("/api/process-transcript", async (c) => {
-  try {
-    console.log("Process transcript request received");
-    const body = await c.req.json();
-    const transcript = body.transcript;
-
-    if (!transcript) {
-      console.error("No transcript provided in request");
-      return c.json({ error: "No transcript provided" }, 400);
-    }
-
-    console.log("Transcript received:", transcript.substring(0, 100) + "...");
-
+// Define API routes with validation
+const apiRoutes = app
+  .post("/api/process-transcript", zValidator('json', processTranscriptSchema), async (c) => {
     try {
-      // Extract structured data using Gemini
-      const healthData = await extractHealthData(c, transcript);
-      console.log("Health data extracted successfully");
+      console.log("Process transcript request received");
+      const { transcript } = c.req.valid('json');
 
-      // Save to database
-      const logId = await saveHealthLog(
-        c as AppContext,
-        "",
-        transcript,
-        healthData,
-      );
-      console.log("Health log saved to database with ID:", logId);
+      console.log("Transcript received:", transcript.substring(0, 100) + "...");
 
-      console.log("Successfully processed transcript", {
-        id: logId,
-      });
+      try {
+        // Extract structured data using Gemini
+        const healthData = await extractHealthData(c, transcript);
+        console.log("Health data extracted successfully");
 
-      // Return the structured data with the log ID
-      return c.json({
-        success: true,
-        message: "Transcript processed successfully",
-        id: logId,
-        transcript,
-        data: healthData,
-      });
-    } catch (dataError) {
-      console.error("Error extracting structured data:", dataError);
+        // Save to database
+        const logId = await saveHealthLog(
+          c as AppContext,
+          "",
+          transcript,
+          healthData,
+        );
+        console.log("Health log saved to database with ID:", logId);
+
+        console.log("Successfully processed transcript", {
+          id: logId,
+        });
+
+        // Return the structured data with the log ID
+        return c.json({
+          success: true,
+          message: "Transcript processed successfully",
+          id: logId,
+          transcript,
+          data: healthData,
+        });
+      } catch (dataError) {
+        console.error("Error extracting structured data:", dataError);
+        return c.json(
+          {
+            error: "Failed to extract structured data",
+            message:
+              dataError instanceof Error ? dataError.message : String(dataError),
+          },
+          500,
+        );
+      }
+    } catch (error) {
+      console.error("Unexpected error processing transcript:", error);
       return c.json(
         {
-          error: "Failed to extract structured data",
-          message:
-            dataError instanceof Error ? dataError.message : String(dataError),
+          error: "Failed to process transcript",
+          message: error instanceof Error ? error.message : String(error),
         },
         500,
       );
     }
-  } catch (error) {
-    console.error("Unexpected error processing transcript:", error);
-    return c.json(
-      {
-        error: "Failed to process transcript",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
-
-// Extract health data from transcript (without saving to database)
-app.post("/api/extract-health-data", async (c) => {
-  try {
-    console.log("Extract health data request received");
-    const body = await c.req.json();
-    const transcript = body.transcript;
-
-    if (!transcript) {
-      console.error("No transcript provided in request");
-      return c.json({ error: "No transcript provided" }, 400);
-    }
-
-    console.log("Transcript received for extraction:", transcript.substring(0, 100) + "...");
-
+  })
+  .post("/api/extract-health-data", zValidator('json', extractHealthDataSchema), async (c) => {
     try {
-      // Extract structured data using Gemini
-      const healthData = await extractHealthData(c, transcript);
-      console.log("Health data extracted successfully");
+      console.log("Extract health data request received");
+      const { transcript } = c.req.valid('json');
 
-      // Return the structured data without saving
-      return c.json({
-        success: true,
-        message: "Health data extracted successfully",
-        transcript,
-        data: healthData,
-      });
-    } catch (dataError) {
-      console.error("Error extracting structured data:", dataError);
+      console.log("Transcript received for extraction:", transcript.substring(0, 100) + "...");
+
+      try {
+        // Extract structured data using Gemini
+        const healthData = await extractHealthData(c, transcript);
+        console.log("Health data extracted successfully");
+
+        // Return the structured data without saving
+        return c.json({
+          success: true,
+          message: "Health data extracted successfully",
+          transcript,
+          data: healthData,
+        });
+      } catch (dataError) {
+        console.error("Error extracting structured data:", dataError);
+        return c.json(
+          {
+            error: "Failed to extract structured data",
+            message:
+              dataError instanceof Error ? dataError.message : String(dataError),
+          },
+          500,
+        );
+      }
+    } catch (error) {
+      console.error("Unexpected error extracting health data:", error);
       return c.json(
         {
-          error: "Failed to extract structured data",
-          message:
-            dataError instanceof Error ? dataError.message : String(dataError),
+          error: "Failed to extract health data",
+          message: error instanceof Error ? error.message : String(error),
         },
         500,
       );
     }
-  } catch (error) {
-    console.error("Unexpected error extracting health data:", error);
-    return c.json(
-      {
-        error: "Failed to extract health data",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
-
-// Update existing health data with a new transcript
-app.post("/api/update-health-data", async (c) => {
-  try {
-    console.log("Update health data request received");
-    const body = await c.req.json();
-    const { originalData, updateTranscript } = body;
-
-    if (!originalData || !updateTranscript) {
-      console.error("Missing originalData or updateTranscript");
-      return c.json({ error: "Original data and update transcript are required" }, 400);
-    }
-
-    console.log("Update transcript received:", updateTranscript.substring(0, 100) + "...");
-
+  })
+  .post("/api/update-health-data", zValidator('json', updateHealthDataSchema), async (c) => {
     try {
-      // Merge the update with existing data using Gemini
-      const updatedHealthData = await mergeHealthDataWithUpdate(c, originalData, updateTranscript);
-      console.log("Health data merged successfully");
+      console.log("Update health data request received");
+      const { originalData, updateTranscript } = c.req.valid('json');
 
-      // Return the updated structured data without saving
-      return c.json({
-        success: true,
-        message: "Health data updated successfully",
-        updateTranscript,
-        data: updatedHealthData,
-      });
-    } catch (dataError) {
-      console.error("Error merging health data:", dataError);
+      console.log("Update transcript received:", updateTranscript.substring(0, 100) + "...");
+
+      try {
+        // Merge the update with existing data using Gemini
+        const updatedHealthData = await mergeHealthDataWithUpdate(c, originalData, updateTranscript);
+        console.log("Health data merged successfully");
+
+        // Return the updated structured data without saving
+        return c.json({
+          success: true,
+          message: "Health data updated successfully",
+          updateTranscript,
+          data: updatedHealthData,
+        });
+      } catch (dataError) {
+        console.error("Error merging health data:", dataError);
+        return c.json(
+          {
+            error: "Failed to merge health data",
+            message:
+              dataError instanceof Error ? dataError.message : String(dataError),
+          },
+          500,
+        );
+      }
+    } catch (error) {
+      console.error("Unexpected error updating health data:", error);
       return c.json(
         {
-          error: "Failed to merge health data",
-          message:
-            dataError instanceof Error ? dataError.message : String(dataError),
+          error: "Failed to update health data",
+          message: error instanceof Error ? error.message : String(error),
         },
         500,
       );
     }
-  } catch (error) {
-    console.error("Unexpected error updating health data:", error);
-    return c.json(
-      {
-        error: "Failed to update health data",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
-
-// Transcribe audio only (for voice updates)
-app.post("/api/transcribe-audio", async (c) => {
-  try {
-    console.log("Audio transcription request received");
-    const formData = await c.req.formData();
-    const audioFile = formData.get("audio") as File;
-
-    if (!audioFile) {
-      console.error("No audio file provided in request");
-      return c.json({ error: "No audio file provided" }, 400);
-    }
-
-    console.log("Audio file received for transcription:", {
-      name: audioFile.name,
-      type: audioFile.type,
-      size: audioFile.size,
-    });
-
+  })
+  .post("/api/transcribe-audio", async (c) => {
     try {
-      // Transcribe audio using Gemini API
-      const audioBuffer = await audioFile.arrayBuffer();
-      const transcript = await transcribeAudio(c, audioBuffer);
-      console.log("Transcription completed:", transcript);
+      console.log("Audio transcription request received");
+      const formData = await c.req.formData();
+      const audioFile = formData.get("audio") as File;
 
-      return c.json({
-        success: true,
-        transcript,
+      if (!audioFile) {
+        console.error("No audio file provided in request");
+        return c.json({ error: "No audio file provided" }, 400);
+      }
+
+      console.log("Audio file received for transcription:", {
+        name: audioFile.name,
+        type: audioFile.type,
+        size: audioFile.size,
       });
-    } catch (transcriptError) {
-      console.error("Error transcribing audio:", transcriptError);
+
+      try {
+        // Transcribe audio using Gemini API
+        const audioBuffer = await audioFile.arrayBuffer();
+        const transcript = await transcribeAudio(c, audioBuffer);
+        console.log("Transcription completed:", transcript);
+
+        return c.json({
+          success: true,
+          transcript,
+        });
+      } catch (transcriptError) {
+        console.error("Error transcribing audio:", transcriptError);
+        return c.json(
+          {
+            error: "Failed to transcribe audio",
+            message:
+              transcriptError instanceof Error
+                ? transcriptError.message
+                : String(transcriptError),
+          },
+          500,
+        );
+      }
+    } catch (error) {
+      console.error("Unexpected error in audio transcription:", error);
       return c.json(
         {
-          error: "Failed to transcribe audio",
-          message:
-            transcriptError instanceof Error
-              ? transcriptError.message
-              : String(transcriptError),
+          error: "Failed to process audio transcription",
+          message: error instanceof Error ? error.message : String(error),
         },
         500,
       );
     }
-  } catch (error) {
-    console.error("Unexpected error in audio transcription:", error);
-    return c.json(
-      {
-        error: "Failed to process audio transcription",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
-
-// Save final health data to database
-app.post("/api/save-health-log", async (c) => {
-  try {
-    console.log("Save health log request received");
-    const body = await c.req.json();
-    const { healthData, transcript, audioUrl } = body;
-
-    if (!healthData) {
-      console.error("No health data provided in request");
-      return c.json({ error: "Health data is required" }, 400);
-    }
-
-    console.log("Saving health data to database");
-
+  })
+  .post("/api/save-health-log", zValidator('json', saveHealthLogSchema), async (c) => {
     try {
-      // Save to database
-      const logId = await saveHealthLog(
-        c as AppContext,
-        audioUrl || "",
-        transcript || "",
-        healthData,
-      );
-      console.log("Health log saved to database with ID:", logId);
+      console.log("Save health log request received");
+      const { healthData, transcript, audioUrl } = c.req.valid('json');
 
-      return c.json({
-        success: true,
-        message: "Health log saved successfully",
-        id: logId,
-        data: healthData,
-      });
-    } catch (dataError) {
-      console.error("Error saving health log:", dataError);
+      console.log("Saving health data to database");
+
+      try {
+        // Save to database
+        const logId = await saveHealthLog(
+          c as AppContext,
+          audioUrl || "",
+          transcript || "",
+          healthData,
+        );
+        console.log("Health log saved to database with ID:", logId);
+
+        return c.json({
+          success: true,
+          message: "Health log saved successfully",
+          id: logId,
+          data: healthData,
+        });
+      } catch (dataError) {
+        console.error("Error saving health log:", dataError);
+        return c.json(
+          {
+            error: "Failed to save health log",
+            message:
+              dataError instanceof Error ? dataError.message : String(dataError),
+          },
+          500,
+        );
+      }
+    } catch (error) {
+      console.error("Unexpected error saving health log:", error);
       return c.json(
         {
           error: "Failed to save health log",
-          message:
-            dataError instanceof Error ? dataError.message : String(dataError),
+          message: error instanceof Error ? error.message : String(error),
         },
         500,
       );
     }
-  } catch (error) {
-    console.error("Unexpected error saving health log:", error);
-    return c.json(
-      {
-        error: "Failed to save health log",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
-
-app.post("/api/health-log", async (c) => {
-  try {
-    console.log("Health log upload request received");
-    const formData = await c.req.formData();
-    const audioFile = formData.get("audio") as File;
-
-    if (!audioFile) {
-      console.error("No audio file provided in request");
-      return c.json({ error: "No audio file provided" }, 400);
-    }
-
-    console.log("Audio file received:", {
-      name: audioFile.name,
-      type: audioFile.type,
-      size: audioFile.size,
-    });
-
-    let transcript = "";
-    let audioUrl = "";
-
+  })
+  .post("/api/health-log", async (c) => {
     try {
-      // Store audio in R2
-      const audioBuffer = await audioFile.arrayBuffer();
-      audioUrl = await storeAudioRecording(c, audioBuffer, "webm");
-      console.log("Audio stored in R2:", audioUrl);
+      console.log("Health log upload request received");
+      const formData = await c.req.formData();
+      const audioFile = formData.get("audio") as File;
 
-      // Transcribe audio using real Whisper API
-      transcript = await transcribeAudio(c, audioBuffer);
-      console.log("Transcript:", transcript);
-    } catch (transcriptError) {
-      console.error(
-        "Error in audio processing or transcription:",
-        transcriptError,
-      );
-      return c.json(
-        {
-          error: "Failed to process audio",
-          message:
-            transcriptError instanceof Error
-              ? transcriptError.message
-              : String(transcriptError),
-        },
-        500,
-      );
-    }
-
-    try {
-      const healthData = await extractHealthData(c, transcript);
-      console.log("Health data extracted successfully");
-
-      const logId = await saveHealthLog(
-        c as AppContext,
-        audioUrl,
-        transcript,
-        healthData,
-      );
-      console.log("Health log saved to database with ID:", logId);
-
-      console.log("Successfully processed health log", {
-        success: true,
-        message: "Health log processed successfully",
-        id: logId,
-        transcript,
-        data: healthData,
-      });
-
-      // Return the structured data with the log ID
-      return c.json({
-        success: true,
-        message: "Health log processed successfully",
-        id: logId,
-        transcript,
-        data: healthData,
-      });
-    } catch (dataError) {
-      console.error("Error extracting structured data:", dataError);
-      return c.json(
-        {
-          error: "Failed to extract structured data",
-          message:
-            dataError instanceof Error ? dataError.message : String(dataError),
-        },
-        500,
-      );
-    }
-  } catch (error) {
-    console.error("Unexpected error processing health log:", error);
-    return c.json(
-      {
-        error: "Failed to process health log",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
-
-app.get("/api/health-log", async (c) => {
-  try {
-    console.log("Fetching all health logs from database");
-
-    try {
-      // Get logs from database
-      const logs = await getAllHealthLogs(c as AppContext);
-      console.log(`Retrieved ${logs.length} health logs from database`);
-
-      // If no logs found, return friendly message
-      if (logs.length === 0) {
-        console.log("No health logs found in database");
-        return c.json({
-          logs: [],
-          message:
-            "No health logs found. Create your first health log by recording or entering a transcript.",
-        });
+      if (!audioFile) {
+        console.error("No audio file provided in request");
+        return c.json({ error: "No audio file provided" }, 400);
       }
 
-      // The getAllHealthLogs function now returns properly formatted data
-      // with healthData containing the structured information
-      return c.json(logs);
-    } catch (error: unknown) {
-      console.error("Database error when fetching health logs:", error);
+      console.log("Audio file received:", {
+        name: audioFile.name,
+        type: audioFile.type,
+        size: audioFile.size,
+      });
 
-      // Check if it's a "no such table" error
-      const dbError = error as Error;
-      if (dbError.message && dbError.message.includes("no such table")) {
-        console.log(
-          "Health logs table doesn't exist yet, returning empty result",
+      let transcript = "";
+      let audioUrl = "";
+
+      try {
+        // Store audio in R2
+        const audioBuffer = await audioFile.arrayBuffer();
+        audioUrl = await storeAudioRecording(c, audioBuffer, "webm");
+        console.log("Audio stored in R2:", audioUrl);
+
+        // Transcribe audio using real Whisper API
+        transcript = await transcribeAudio(c, audioBuffer);
+        console.log("Transcript:", transcript);
+      } catch (transcriptError) {
+        console.error(
+          "Error in audio processing or transcription:",
+          transcriptError,
         );
-        return c.json({
-          logs: [],
-          message:
-            "The health tracker is being set up for the first time. Create your first health log by recording or entering a transcript.",
-        });
+        return c.json(
+          {
+            error: "Failed to process audio",
+            message:
+              transcriptError instanceof Error
+                ? transcriptError.message
+                : String(transcriptError),
+          },
+          500,
+        );
       }
 
-      // For other database errors, rethrow to be caught by the outer try/catch
-      throw error;
+      try {
+        const healthData = await extractHealthData(c, transcript);
+        console.log("Health data extracted successfully");
+
+        const logId = await saveHealthLog(
+          c as AppContext,
+          audioUrl,
+          transcript,
+          healthData,
+        );
+        console.log("Health log saved to database with ID:", logId);
+
+        console.log("Successfully processed health log", {
+          success: true,
+          message: "Health log processed successfully",
+          id: logId,
+          transcript,
+          data: healthData,
+        });
+
+        // Return the structured data with the log ID
+        return c.json({
+          success: true,
+          message: "Health log processed successfully",
+          id: logId,
+          transcript,
+          data: healthData,
+        });
+      } catch (dataError) {
+        console.error("Error extracting structured data:", dataError);
+        return c.json(
+          {
+            error: "Failed to extract structured data",
+            message:
+              dataError instanceof Error ? dataError.message : String(dataError),
+          },
+          500,
+        );
+      }
+    } catch (error) {
+      console.error("Unexpected error processing health log:", error);
+      return c.json(
+        {
+          error: "Failed to process health log",
+          message: error instanceof Error ? error.message : String(error),
+        },
+        500,
+      );
     }
-  } catch (error) {
-    console.error("Error fetching health logs:", error);
-    return c.json(
-      {
-        error: "Failed to fetch health logs",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      500,
-    );
-  }
-});
+  })
+  .get("/api/health-log", async (c) => {
+    try {
+      console.log("Fetching all health logs from database");
 
-// Get a specific health log by ID
-app.get("/api/health-log/:id", async (c) => {
-  try {
-    const id = parseInt(c.req.param("id"), 10);
-    console.log(`Fetching health log with ID ${id} from database`);
+      try {
+        // Get logs from database
+        const logs = await getAllHealthLogs(c as AppContext);
+        console.log(`Retrieved ${logs.length} health logs from database`);
 
-    // Get log from database
-    const log = await getHealthLogById(c as AppContext, id);
+        // If no logs found, return friendly message
+        if (logs.length === 0) {
+          console.log("No health logs found in database");
+          return c.json({
+            logs: [],
+            message:
+              "No health logs found. Create your first health log by recording or entering a transcript.",
+          });
+        }
 
-    if (!log) {
-      console.log(`Health log with ID ${id} not found in database`);
-      return c.json({ error: "Health log not found" }, 404);
+        // The getAllHealthLogs function now returns properly formatted data
+        // with healthData containing the structured information
+        return c.json(logs);
+      } catch (error: unknown) {
+        console.error("Database error when fetching health logs:", error);
+
+        // Check if it's a "no such table" error
+        const dbError = error as Error;
+        if (dbError.message && dbError.message.includes("no such table")) {
+          console.log(
+            "Health logs table doesn't exist yet, returning empty result",
+          );
+          return c.json({
+            logs: [],
+            message:
+              "The health tracker is being set up for the first time. Create your first health log by recording or entering a transcript.",
+          });
+        }
+
+        // For other database errors, rethrow to be caught by the outer try/catch
+        throw error;
+      }
+    } catch (error) {
+      console.error("Error fetching health logs:", error);
+      return c.json(
+        {
+          error: "Failed to fetch health logs",
+          message: error instanceof Error ? error.message : "Unknown error",
+        },
+        500,
+      );
     }
+  })
+  .get("/api/health-log/:id", async (c) => {
+    try {
+      const id = parseInt(c.req.param("id"), 10);
+      console.log(`Fetching health log with ID ${id} from database`);
 
-    console.log(`Retrieved health log with ID ${id} from database`);
+      // Get log from database
+      const log = await getHealthLogById(c as AppContext, id);
 
-    // The getHealthLogById function now returns properly structured data
-    // Transform to match expected frontend format
-    return c.json({
-      id: log.id,
-      date: log.date,
-      audioUrl: log.audioUrl,
-      transcript: log.transcript,
-      healthData: log.structuredData,
-      createdAt: log.createdAt,
-      updatedAt: log.updatedAt,
-    });
-  } catch (error) {
-    console.error("Error fetching health log:", error);
-    return c.json({ error: "Failed to fetch health log" }, 500);
-  }
-});
+      if (!log) {
+        console.log(`Health log with ID ${id} not found in database`);
+        return c.json({ error: "Health log not found" }, 404);
+      }
 
-// Delete a specific health log by ID
-app.delete("/api/health-log/:id", async (c) => {
-  try {
-    const id = parseInt(c.req.param("id"), 10);
-    
-    if (isNaN(id)) {
-      return c.json({ error: "Invalid health log ID" }, 400);
+      console.log(`Retrieved health log with ID ${id} from database`);
+
+      // The getHealthLogById function now returns properly structured data
+      // Transform to match expected frontend format
+      return c.json({
+        id: log.id,
+        date: log.date,
+        audioUrl: log.audioUrl,
+        transcript: log.transcript,
+        healthData: log.structuredData,
+        createdAt: log.createdAt,
+        updatedAt: log.updatedAt,
+      });
+    } catch (error) {
+      console.error("Error fetching health log:", error);
+      return c.json({ error: "Failed to fetch health log" }, 500);
     }
+  })
+  .delete("/api/health-log/:id", async (c) => {
+    try {
+      const id = parseInt(c.req.param("id"), 10);
+      
+      if (isNaN(id)) {
+        return c.json({ error: "Invalid health log ID" }, 400);
+      }
 
-    console.log(`Attempting to delete health log with ID ${id}`);
+      console.log(`Attempting to delete health log with ID ${id}`);
 
-    // Delete the health log
-    const success = await deleteHealthLog(c as AppContext, id);
+      // Delete the health log
+      const success = await deleteHealthLog(c as AppContext, id);
 
-    if (!success) {
-      console.log(`Health log with ID ${id} not found or could not be deleted`);
-      return c.json({ error: "Health log not found" }, 404);
+      if (!success) {
+        console.log(`Health log with ID ${id} not found or could not be deleted`);
+        return c.json({ error: "Health log not found" }, 404);
+      }
+
+      console.log(`Successfully deleted health log with ID ${id}`);
+      return c.json({ 
+        success: true, 
+        message: `Health log ${id} deleted successfully` 
+      });
+    } catch (error) {
+      console.error("Error deleting health log:", error);
+      return c.json(
+        {
+          error: "Failed to delete health log",
+          message: error instanceof Error ? error.message : String(error),
+        },
+        500,
+      );
     }
+  })
+  .delete("/api/health-logs", async (c) => {
+    try {
+      console.log("Attempting to delete all health logs");
 
-    console.log(`Successfully deleted health log with ID ${id}`);
-    return c.json({ 
-      success: true, 
-      message: `Health log ${id} deleted successfully` 
-    });
-  } catch (error) {
-    console.error("Error deleting health log:", error);
-    return c.json(
-      {
-        error: "Failed to delete health log",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
+      // Delete all health logs
+      const deletedCount = await deleteAllHealthLogs(c as AppContext);
 
-// Delete all health logs
-app.delete("/api/health-logs", async (c) => {
-  try {
-    console.log("Attempting to delete all health logs");
-
-    // Delete all health logs
-    const deletedCount = await deleteAllHealthLogs(c as AppContext);
-
-    console.log(`Successfully deleted ${deletedCount} health logs`);
-    return c.json({ 
-      success: true, 
-      message: `${deletedCount} health logs deleted successfully`,
-      deletedCount 
-    });
-  } catch (error) {
-    console.error("Error deleting all health logs:", error);
-    return c.json(
-      {
-        error: "Failed to delete all health logs",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
-
-// Get an audio recording by filename
-app.get("/recordings/:filename", authenticateJwt, async (c) => {
-  try {
-    const filename = c.req.param("filename");
-    console.log("Requesting recording:", filename);
-
-    const response = await getAudioRecording(c, filename);
-
-    if (!response) {
-      console.log("Recording not found:", filename);
-      return c.json({ error: "Recording not found" }, 404);
+      console.log(`Successfully deleted ${deletedCount} health logs`);
+      return c.json({ 
+        success: true, 
+        message: `${deletedCount} health logs deleted successfully`,
+        deletedCount 
+      });
+    } catch (error) {
+      console.error("Error deleting all health logs:", error);
+      return c.json(
+        {
+          error: "Failed to delete all health logs",
+          message: error instanceof Error ? error.message : String(error),
+        },
+        500,
+      );
     }
+  })
+  .get("/recordings/:filename", authenticateJwt, async (c) => {
+    try {
+      const filename = c.req.param("filename");
+      console.log("Requesting recording:", filename);
 
-    return response;
-  } catch (error) {
-    console.error("Error retrieving recording:", error);
-    return c.json(
-      {
-        error: "Failed to retrieve recording",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
+      const response = await getAudioRecording(c, filename);
+
+      if (!response) {
+        console.log("Recording not found:", filename);
+        return c.json({ error: "Recording not found" }, 404);
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Error retrieving recording:", error);
+      return c.json(
+        {
+          error: "Failed to retrieve recording",
+          message: error instanceof Error ? error.message : String(error),
+        },
+        500,
+      );
+    }
+  })
+  .put("/api/health-log/:id", zValidator('json', updateHealthLogSchema), async (c) => {
+    try {
+      console.log("Update health log request received");
+      const id = parseInt(c.req.param('id'));
+      const { healthData, updateTranscript } = c.req.valid('json');
+
+      if (!id || isNaN(id)) {
+        console.error("Invalid or missing health log ID");
+        return c.json({ error: "Valid health log ID is required" }, 400);
+      }
+
+      console.log(`Updating health log with ID: ${id}`);
+
+      try {
+        // Get the existing health log to retrieve original transcript
+        const existingLog = await getHealthLogById(c as AppContext, id);
+        
+        if (!existingLog) {
+          console.error(`Health log with ID ${id} not found`);
+          return c.json({ error: "Health log not found" }, 404);
+        }
+
+        const originalTranscript = existingLog.transcript || "";
+
+        // Update the health log with complete replacement
+        const updatedId = await updateHealthLog(
+          c as AppContext,
+          id,
+          healthData,
+          originalTranscript,
+          updateTranscript,
+        );
+        
+        console.log("Health log updated successfully with ID:", updatedId);
+
+        return c.json({
+          success: true,
+          message: "Health log updated successfully",
+          id: updatedId,
+          data: healthData,
+        });
+      } catch (dataError) {
+        console.error("Error updating health log:", dataError);
+        return c.json(
+          {
+            error: "Failed to update health log",
+            message:
+              dataError instanceof Error ? dataError.message : String(dataError),
+          },
+          500,
+        );
+      }
+    } catch (error) {
+      console.error("Unexpected error updating health log:", error);
+      return c.json(
+        {
+          error: "Failed to update health log",
+          message: error instanceof Error ? error.message : String(error),
+        },
+        500,
+      );
+    }
+  })
+  .post("/api/seed", async (c) => {
+    try {
+      const result = await seedDatabase(c as AppContext);
+      return c.json(result);
+    } catch (error) {
+      console.error("Error seeding database:", error);
+      return c.json(
+        {
+          error: "Failed to seed database",
+          message: error instanceof Error ? error.message : String(error),
+        },
+        500,
+      );
+    }
+  });
 
 // Legacy API endpoint
 app.get("/logs", async (c) => {
@@ -715,80 +764,8 @@ app.get("*", async (c) => {
   return c.html(htmlTemplate);
 });
 
-// Update existing health log
-app.put("/api/health-log/:id", async (c) => {
-  try {
-    console.log("Update health log request received");
-    const id = parseInt(c.req.param('id'));
-    const body = await c.req.json();
-    const { healthData, updateTranscript } = body;
-
-    if (!id || isNaN(id)) {
-      console.error("Invalid or missing health log ID");
-      return c.json({ error: "Valid health log ID is required" }, 400);
-    }
-
-    if (!healthData) {
-      console.error("No health data provided in request");
-      return c.json({ error: "Health data is required" }, 400);
-    }
-
-    if (!updateTranscript) {
-      console.error("No update transcript provided in request");
-      return c.json({ error: "Update transcript is required" }, 400);
-    }
-
-    console.log(`Updating health log with ID: ${id}`);
-
-    try {
-      // Get the existing health log to retrieve original transcript
-      const existingLog = await getHealthLogById(c as AppContext, id);
-      
-      if (!existingLog) {
-        console.error(`Health log with ID ${id} not found`);
-        return c.json({ error: "Health log not found" }, 404);
-      }
-
-      const originalTranscript = existingLog.transcript || "";
-
-      // Update the health log with complete replacement
-      const updatedId = await updateHealthLog(
-        c as AppContext,
-        id,
-        healthData,
-        originalTranscript,
-        updateTranscript,
-      );
-      
-      console.log("Health log updated successfully with ID:", updatedId);
-
-      return c.json({
-        success: true,
-        message: "Health log updated successfully",
-        id: updatedId,
-        data: healthData,
-      });
-    } catch (dataError) {
-      console.error("Error updating health log:", dataError);
-      return c.json(
-        {
-          error: "Failed to update health log",
-          message:
-            dataError instanceof Error ? dataError.message : String(dataError),
-        },
-        500,
-      );
-    }
-  } catch (error) {
-    console.error("Unexpected error updating health log:", error);
-    return c.json(
-      {
-        error: "Failed to update health log",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
+// Export the route types for RPC
+export type AuthRoutes = typeof authRoutes;
+export type ApiRoutes = typeof apiRoutes;
 
 export default app;
