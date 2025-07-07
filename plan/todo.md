@@ -4,7 +4,8 @@
 - [x] add icons from iconify - use tailwind plugin
 - [ ] use vercel AI SDK for calling llm
 - [ ] use zod for schema validation when calling llm
-
+- [ ] e2e testing
+- [ ] stage/qa environment
 
 
 ## UI
@@ -18,9 +19,13 @@
     - we want to have a delete button for each entry
     - implemented with beautiful UI showing key metrics, workouts, meals, sleep, mood, etc. in a user-friendly format
 - [x] Add delete all button
+- [ ] add examples to record screen
 
 ## Features
 - [x] Edit an entry - **COMPLETELY IMPLEMENTED WITH REAL AUDIO TRANSCRIPTION**
 - [ ] chat interface - use vercel sdk
 - [ ] add a system prompt to the chat interface + profile + goals
-- [ ] add a way to update an existing entry, with a voice recorder.  
+- [x] add a way to update an existing entry, with a voice recorder.
+
+## Bugs
+- [ ] long recording fails
