@@ -1,58 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { InferResponseType } from 'hono/client';
 import { HealthLog } from '../../db/schema';
+import { client } from '../api/client';
 
-
-interface UploadResponse {
-  success: boolean;
-  message: string;
-  id: string;
-  transcript: string;
-  data: any;
-}
-
-interface ProcessTranscriptResponse {
-  success: boolean;
-  message: string;
-  id: string;
-  transcript: string;
-  data: any;
-}
-
-interface ExtractHealthDataResponse {
-  success: boolean;
-  message: string;
-  transcript: string;
-  data: any;
-}
-
-interface UpdateHealthDataResponse {
-  success: boolean;
-  message: string;
-  updateTranscript: string;
-  data: any;
-}
-
-interface SaveHealthLogResponse {
-  success: boolean;
-  message: string;
-  id: string;
-  data: any;
-}
-
-interface TranscribeAudioResponse {
-  success: boolean;
-  transcript: string;
-}
-
-// API functions
+// API functions using typed client with inferred types
 const api = {
-  async uploadRecording(audioBlob: Blob): Promise<UploadResponse> {
+  async uploadRecording(audioBlob: Blob) {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'recording.webm');
     
-    const response = await fetch('/api/health-log', {
-      method: 'POST',
-      body: formData,
+    const response = await client.api.api['health-log'].$post({
+      form: formData,
     });
     
     if (!response.ok) {
@@ -63,11 +21,9 @@ const api = {
     return response.json();
   },
 
-  async processTranscript(transcript: string): Promise<ProcessTranscriptResponse> {
-    const response = await fetch('/api/process-transcript', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transcript }),
+  async processTranscript(transcript: string) {
+    const response = await client.api.api['process-transcript'].$post({
+      json: { transcript },
     });
     
     if (!response.ok) {
@@ -78,11 +34,9 @@ const api = {
     return response.json();
   },
 
-  async extractHealthData(transcript: string): Promise<ExtractHealthDataResponse> {
-    const response = await fetch('/api/extract-health-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transcript }),
+  async extractHealthData(transcript: string) {
+    const response = await client.api.api['extract-health-data'].$post({
+      json: { transcript },
     });
     
     if (!response.ok) {
@@ -93,11 +47,9 @@ const api = {
     return response.json();
   },
 
-  async updateHealthData(originalData: any, updateTranscript: string): Promise<UpdateHealthDataResponse> {
-    const response = await fetch('/api/update-health-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ originalData, updateTranscript }),
+  async updateHealthData(originalData: any, updateTranscript: string) {
+    const response = await client.api.api['update-health-data'].$post({
+      json: { originalData, updateTranscript },
     });
     
     if (!response.ok) {
@@ -108,11 +60,9 @@ const api = {
     return response.json();
   },
 
-  async saveHealthLog(healthData: any, transcript?: string, audioUrl?: string): Promise<SaveHealthLogResponse> {
-    const response = await fetch('/api/save-health-log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ healthData, transcript, audioUrl }),
+  async saveHealthLog(healthData: any, transcript?: string, audioUrl?: string) {
+    const response = await client.api.api['save-health-log'].$post({
+      json: { healthData, transcript, audioUrl },
     });
     
     if (!response.ok) {
@@ -123,13 +73,12 @@ const api = {
     return response.json();
   },
 
-  async transcribeAudio(audioBlob: Blob): Promise<TranscribeAudioResponse> {
+  async transcribeAudio(audioBlob: Blob) {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'update.webm');
     
-    const response = await fetch('/api/transcribe-audio', {
-      method: 'POST',
-      body: formData,
+    const response = await client.api.api['transcribe-audio'].$post({
+      form: formData,
     });
     
     if (!response.ok) {
@@ -140,11 +89,10 @@ const api = {
     return response.json();
   },
 
-  async updateExistingEntry(id: string, healthData: any, updateTranscript: string): Promise<SaveHealthLogResponse> {
-    const response = await fetch(`/api/health-log/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ healthData, updateTranscript }),
+  async updateExistingEntry(id: string, healthData: any, updateTranscript: string) {
+    const response = await client.api.api['health-log'][':id'].$put({
+      param: { id },
+      json: { healthData, updateTranscript },
     });
     
     if (!response.ok) {
@@ -156,7 +104,7 @@ const api = {
   },
 
   async getHealthLogs(): Promise<HealthLog[]> {
-    const response = await fetch('/api/health-log');
+    const response = await client.api.api['health-log'].$get();
     
     if (!response.ok) {
       throw new Error(`Failed to fetch logs: ${response.status}`);
@@ -166,9 +114,9 @@ const api = {
     return Array.isArray(data) ? data : data.logs || [];
   },
 
-  async deleteHealthLog(id: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`/api/health-log/${id}`, {
-      method: 'DELETE',
+  async deleteHealthLog(id: string) {
+    const response = await client.api.api['health-log'][':id'].$delete({
+      param: { id },
     });
     
     if (!response.ok) {
@@ -179,14 +127,23 @@ const api = {
     return response.json();
   },
 
-  async deleteAllHealthLogs(): Promise<{ success: boolean; message: string; deletedCount: number }> {
-    const response = await fetch('/api/health-logs', {
-      method: 'DELETE',
-    });
+  async deleteAllHealthLogs() {
+    const response = await client.api.api['health-logs'].$delete();
     
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Delete all failed (${response.status}): ${errorText}`);
+    }
+    
+    return response.json();
+  },
+
+  async seedDatabase() {
+    const response = await client.api.api.seed.$post({});
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Seed failed (${response.status}): ${errorText}`);
     }
     
     return response.json();
@@ -284,6 +241,17 @@ export function useDeleteAllHealthLogs() {
   
   return useMutation({
     mutationFn: api.deleteAllHealthLogs,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-logs'] });
+    },
+  });
+}
+
+export function useSeedDatabase() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: api.seedDatabase,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['health-logs'] });
     },
