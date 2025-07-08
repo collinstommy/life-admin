@@ -44,6 +44,7 @@
 - **PLANNING ONLY** - do not write, edit, or modify any code files
 - **THINK HARD** by default for thorough analysis
 - **READ EXPLORATION** context from `./plan/notes.md`
+- **OUTPUT PLANS to** `./plan/:feature-name.md`
 - **GITHUB INTEGRATION** - plan becomes part of issue/PR discussion
 
 ## Code
@@ -70,3 +71,4 @@
 - **ACTUAL CODE IMPLEMENTATION** happens in this phase
 - **ONE TODO IN_PROGRESS** at a time to maintain focus
 - **MARK COMPLETE IMMEDIATELY** after finishing each task
+- **Move complete plans into the `./plan/completed` folder**

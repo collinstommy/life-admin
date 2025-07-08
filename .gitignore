@@ -10,3 +10,6 @@ out.js
 # Ignore the built files
 /assets/static/index.js
 /assets/static/styles.css
+
+# Test database files
+test-db-*.sqlite

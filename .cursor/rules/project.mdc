@@ -5,3 +5,5 @@ alwaysApply: false
 ---
 - Prefer seperate pages over modals. Use router routes instead of adding a modal. Confirmation modals are ok.
 - Use backend types on the backend.
+
+Check ./AI.md for how to write code in this repo
