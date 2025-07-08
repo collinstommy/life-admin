@@ -120,7 +120,7 @@ export function VoiceRecorder() {
       // First, transcribe the audio
       console.log('Transcribing audio recording...');
       const transcriptionResponse = await transcribeAudio.mutateAsync(recordedBlob);
-      const transcribedText = transcriptionResponse.transcript;
+      const transcribedText = (transcriptionResponse as any).transcript;
       console.log('Transcription result:', transcribedText);
       setTranscript(transcribedText);
       setIsTranscribing(false);
@@ -132,11 +132,19 @@ export function VoiceRecorder() {
       // Extract health data from transcript
       console.log('Extracting health data from transcript...');
       const response = await extractHealthData.mutateAsync(transcribedText);
-      setExtractedData(response.data);
+      const extractedHealthData = (response as any).data;
+      setExtractedData(extractedHealthData);
       console.log('Health data extracted successfully');
 
-      // Navigate to edit screen - for now just navigate and handle data passing later
-      navigate({ to: '/edit-entry' });
+      // Navigate to edit screen with extracted data
+      navigate({ 
+        to: '/edit-entry',
+        state: {
+          initialData: extractedHealthData,
+          transcript: transcribedText,
+          audioUrl: audioURL
+        }
+      } as any);
       
     } catch (error) {
       console.error('Processing failed:', error);

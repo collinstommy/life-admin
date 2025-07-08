@@ -274,7 +274,7 @@ const apiRoutes = app
       );
     }
   })
-  .post("/api/transcribe-audio", async (c) => {
+    .post("/api/transcribe-audio", async (c) => {
     try {
       console.log("Audio transcription request received");
       const formData = await c.req.formData();

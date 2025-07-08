@@ -6,11 +6,10 @@ import { client } from '../api/client';
 // API functions using typed client with inferred types
 const api = {
   async uploadRecording(audioBlob: Blob) {
-    const formData = new FormData();
-    formData.append('audio', audioBlob, 'recording.webm');
-    
     const response = await client.api.api['health-log'].$post({
-      form: formData,
+      form: {
+        audio: audioBlob,
+      },
     });
     
     if (!response.ok) {
@@ -74,11 +73,10 @@ const api = {
   },
 
   async transcribeAudio(audioBlob: Blob) {
-    const formData = new FormData();
-    formData.append('audio', audioBlob, 'update.webm');
-    
     const response = await client.api.api['transcribe-audio'].$post({
-      form: formData,
+      form: {
+        audio: audioBlob,
+      },
     });
     
     if (!response.ok) {

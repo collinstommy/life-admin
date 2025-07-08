@@ -15,6 +15,7 @@ export function EditEntryScreen() {
     audioUrl: undefined
   };
 
+
   // If no data was passed, redirect back
   if (!initialData) {
     navigate({ to: '/add-entry' });
