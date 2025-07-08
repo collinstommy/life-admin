@@ -196,6 +196,48 @@ export function VoiceRecorder() {
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">Voice Recorder</h2>
             
+            {/* Instructions */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                <div className="flex items-center space-x-2 text-blue-700">
+                  <span className="icon-[mdi--dumbbell] w-4 h-4 flex-shrink-0"></span>
+                  <span>Exercise</span>
+                </div>
+                <div className="flex items-center space-x-2 text-blue-700">
+                  <span className="icon-[mdi--sleep] w-4 h-4 flex-shrink-0"></span>
+                  <span>Sleep</span>
+                </div>
+                <div className="flex items-center space-x-2 text-blue-700">
+                  <span className="icon-[mdi--water] w-4 h-4 flex-shrink-0"></span>
+                  <span>Hydration</span>
+                </div>
+                <div className="flex items-center space-x-2 text-blue-700">
+                  <span className="icon-[mdi--food] w-4 h-4 flex-shrink-0"></span>
+                  <span>Meals & Snacks</span>
+                </div>
+                <div className="flex items-center space-x-2 text-blue-700">
+                  <span className="icon-[mdi--heart-pulse] w-4 h-4 flex-shrink-0"></span>
+                  <span>Health Symptoms</span>
+                </div>
+                <div className="flex items-center space-x-2 text-blue-700">
+                  <span className="icon-[mdi--monitor-cellphone] w-4 h-4 flex-shrink-0"></span>
+                  <span>Screen Time</span>
+                </div>
+                <div className="flex items-center space-x-2 text-blue-700">
+                  <span className="icon-[mdi--emoticon-happy] w-4 h-4 flex-shrink-0"></span>
+                  <span>Mood</span>
+                </div>
+                <div className="flex items-center space-x-2 text-blue-700">
+                  <span className="icon-[mdi--lightning-bolt] w-4 h-4 flex-shrink-0"></span>
+                  <span>Energy</span>
+                </div>
+                <div className="flex items-center space-x-2 text-blue-700">
+                  <span className="icon-[mdi--note-text] w-4 h-4 flex-shrink-0"></span>
+                  <span>Notes</span>
+                </div>
+              </div>
+            </div>
+            
             {/* Error Display */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
@@ -220,25 +262,34 @@ export function VoiceRecorder() {
                   <button 
                     onClick={startRecording}
                     disabled={!isInitialized || isLoadingOrProcessing}
-                    className="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white px-6 py-3 rounded-full text-lg font-semibold transition-colors"
+                    className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:shadow-none"
                   >
-                    {!isInitialized ? 'Initializing...' : 'Start Recording'}
+                    <span className="flex items-center space-x-2">
+                      <span className="icon-[mdi--microphone] w-5 h-5"></span>
+                      <span>{!isInitialized ? 'Initializing...' : 'Start Recording'}</span>
+                    </span>
                   </button>
                 ) : (
                   <button 
                     onClick={stopRecording}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-full text-lg font-semibold transition-colors"
+                    className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse"
                   >
-                    Stop Recording
+                    <span className="flex items-center space-x-2">
+                      <span className="icon-[mdi--stop] w-5 h-5"></span>
+                      <span>Stop Recording</span>
+                    </span>
                   </button>
                 )}
               </div>
 
               {isRecording && (
-                <div className="mt-4">
-                  <div className="inline-flex items-center space-x-2 text-red-600">
-                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">Recording...</span>
+                <div className="mt-6">
+                  <div className="inline-flex items-center space-x-3 bg-red-50 border border-red-200 rounded-full px-6 py-3 text-red-700">
+                    <div className="relative">
+                      <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
+                      <div className="absolute inset-0 w-4 h-4 bg-red-500 rounded-full animate-ping"></div>
+                    </div>
+                    <span className="text-base font-semibold">Recording in Progress...</span>
                   </div>
                 </div>
               )}
