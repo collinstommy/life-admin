@@ -19,7 +19,9 @@
     - we want to have a delete button for each entry
     - implemented with beautiful UI showing key metrics, workouts, meals, sleep, mood, etc. in a user-friendly format
 - [x] Add delete all button
-- [ ] add examples to record screen
+- [ ] Record screen
+   - [ ] add examples to record screen
+   - [ ] green/red color for recorder
 
 ## Features
 - [x] Edit an entry - **COMPLETELY IMPLEMENTED WITH REAL AUDIO TRANSCRIPTION**
