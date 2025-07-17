@@ -146,6 +146,19 @@ const api = {
     
     return response.json();
   },
+
+  async createHealthLogFromText(text: string) {
+    const response = await client.api.api['create-health-log-from-text'].$post({
+      json: { text },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Create from text failed (${response.status}): ${errorText}`);
+    }
+
+    return response.json();
+  },
 };
 
 export function useHealthLogs() {
@@ -250,6 +263,17 @@ export function useSeedDatabase() {
   
   return useMutation({
     mutationFn: api.seedDatabase,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-logs'] });
+    },
+  });
+}
+
+export function useCreateHealthLogFromText() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ text }: { text: string }) => api.createHealthLogFromText(text),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['health-logs'] });
     },

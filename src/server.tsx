@@ -49,6 +49,10 @@ const updateHealthLogSchema = z.object({
   updateTranscript: z.string().min(1, 'Update transcript is required'),
 });
 
+const createHealthLogFromTextSchema = z.object({
+  text: z.string().min(1, 'Text is required'),
+});
+
 // Middleware to verify API key
 const authenticateApiKey: MiddlewareHandler<HonoApp> = async (c, next) => {
   const apiKey = c.req.header("X-API-Key");
@@ -708,7 +712,66 @@ const apiRoutes = app
         500,
       );
     }
-  });
+  })
+  .post(
+    "/api/create-health-log-from-text",
+    zValidator('json', createHealthLogFromTextSchema),
+    async (c) => {
+      try {
+        console.log("Create health log from text request received");
+        const { text } = c.req.valid('json');
+
+        console.log("Text received:", text.substring(0, 100) + "...");
+
+        try {
+          // Extract structured data using Gemini
+          const healthData = await extractHealthData(c, text);
+          console.log("Health data extracted successfully");
+
+          // Save to database
+          const logId = await saveHealthLog(
+            c as AppContext,
+            "", // No audio URL for text-based entries
+            text,
+            healthData,
+          );
+          console.log("Health log saved to database with ID:", logId);
+
+          console.log("Successfully processed text entry", {
+            id: logId,
+          });
+
+          // Return the structured data with the log ID
+          return c.json({
+            success: true,
+            message: "Text entry processed successfully",
+            id: logId,
+            transcript: text,
+            data: healthData,
+          });
+        } catch (dataError) {
+          console.error("Error extracting structured data:", dataError);
+          return c.json(
+            {
+              error: "Failed to extract structured data",
+              message:
+                dataError instanceof Error ? dataError.message : String(dataError),
+            },
+            500,
+          );
+        }
+      } catch (error) {
+        console.error("Unexpected error processing text entry:", error);
+        return c.json(
+          {
+            error: "Failed to process text entry",
+            message: error instanceof Error ? error.message : String(error),
+          },
+          500,
+        );
+      }
+    },
+  );
 
 // Legacy API endpoint
 app.get("/logs", async (c) => {

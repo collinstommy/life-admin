@@ -106,10 +106,18 @@ const debugManualEntryRoute = createRoute({
   component: ManualEntryScreen,
 })
 
+// Add Text Entry route
+const addTextEntryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/add-text-entry',
+  component: ManualEntryScreen,
+})
+
 // Create the route tree
 const routeTree = rootRoute.addChildren([
   indexRoute,
   addEntryRoute,
+  addTextEntryRoute, // Add this line
   viewEntriesRoute,
   singleEntryRoute,
   editEntryRoute,

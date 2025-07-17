@@ -21,8 +21,20 @@ export function HomeScreen() {
             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
               <span className="text-blue-600 text-2xl">🎙️</span>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Add Entry</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Add Voice Entry</h3>
             <p className="text-gray-600 text-sm">Record your health log</p>
+          </Link>
+
+          {/* Add Text Entry Button */}
+          <Link
+            to="/add-text-entry"
+            className="bg-white hover:bg-gray-50 p-6 rounded-xl shadow-sm transition-all duration-200 hover:shadow-md hover:scale-105 block text-center group"
+          >
+            <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-200 transition-colors">
+              <span className="text-indigo-600 text-2xl">✍️</span>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Add Text Entry</h3>
+            <p className="text-gray-600 text-sm">Type your health log</p>
           </Link>
 
           {/* View Entries Button */}
