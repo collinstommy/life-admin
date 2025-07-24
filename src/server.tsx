@@ -771,7 +771,85 @@ const apiRoutes = app
         );
       }
     },
-  );
+  )
+  .post("/api/basic-coach/chat", async (c) => {
+    try {
+      const body = await c.req.json();
+      const { message, profileText } = body;
+
+      if (!message || !profileText) {
+        return c.json(
+          { error: "Both message and profileText are required" },
+          400
+        );
+      }
+
+      const systemPrompt = `You are a friendly health coach AI. Use the user's profile information to provide personalized health guidance, tips, and support. Keep responses encouraging, practical, and focused on actionable advice. Profile: ${profileText}`;
+
+      const messages = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: message }
+      ];
+
+      const apiKey = c.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return c.json(
+          { error: "AI service not configured" },
+          500
+        );
+      }
+
+      const modelId = "gemini-2.0-flash";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
+
+      const requestBody = {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: systemPrompt },
+              { text: message }
+            ]
+          }
+        ],
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.7,
+          maxOutputTokens: 512,
+        },
+      };
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+      }
+
+      const data = await response.json();
+      const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm here to help with your health goals. What would you like to discuss?";
+
+      return c.json({
+        message: responseText,
+        success: true,
+      });
+    } catch (error) {
+      console.error("Error in basic coach chat:", error);
+      return c.json(
+        {
+          error: "Failed to process chat message",
+          message: error instanceof Error ? error.message : String(error),
+        },
+        500
+      );
+    }
+  });
 
 // Legacy API endpoint
 app.get("/logs", async (c) => {

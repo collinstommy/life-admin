@@ -10,7 +10,14 @@ type Bindings = {
   DAILY_LOG_API_KEY: string;
   // New bindings for health tracker
   HEALTH_RECORDINGS: R2Bucket;
-  AI: unknown; // For Cloudflare AI (Whisper, etc.)
+  AI: {
+    run: (model: string, options: {
+      messages: Array<{role: string, content: string}>;
+      stream?: boolean;
+      max_tokens?: number;
+      temperature?: number;
+    }) => Promise<{response: string}>;
+  }; // For Cloudflare AI (Workers AI)
   DB: D1Database; // For Cloudflare D1
   // Gemini API
   GEMINI_API_KEY: string;

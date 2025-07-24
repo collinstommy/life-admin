@@ -9,6 +9,7 @@ import { HistoryView } from './components/HistoryView'
 import { ManualEntryScreen } from './components/ManualEntryScreen'
 import { EditEntryScreen } from './components/EditEntryModal'
 import { EditExistingEntryScreen } from './components/EditExistingEntryScreen'
+import { BasicCoachTab } from './components/BasicCoachTab'
 import { useAuth } from './hooks/useAuth'
 
 // Root layout component
@@ -113,11 +114,18 @@ const addTextEntryRoute = createRoute({
   component: ManualEntryScreen,
 })
 
+// AI Coach route
+const aiCoachRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/ai-coach',
+  component: BasicCoachTab,
+})
+
 // Create the route tree
 const routeTree = rootRoute.addChildren([
   indexRoute,
   addEntryRoute,
-  addTextEntryRoute, // Add this line
+  addTextEntryRoute,
   viewEntriesRoute,
   singleEntryRoute,
   editEntryRoute,
@@ -126,6 +134,7 @@ const routeTree = rootRoute.addChildren([
   debugTranscriptRoute,
   debugHistoryRoute,
   debugManualEntryRoute,
+  aiCoachRoute,
 ])
 
 // Create the router

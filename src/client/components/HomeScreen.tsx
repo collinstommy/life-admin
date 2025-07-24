@@ -49,6 +49,18 @@ export function HomeScreen() {
             <p className="text-gray-600 text-sm">Browse your health history</p>
           </Link>
 
+          {/* AI Coach Button */}
+          <Link
+            to="/ai-coach"
+            className="bg-white hover:bg-gray-50 p-6 rounded-xl shadow-sm transition-all duration-200 hover:shadow-md hover:scale-105 block text-center group"
+          >
+            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-200 transition-colors">
+              <span className="text-orange-600 text-2xl">🤖</span>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">AI Coach</h3>
+            <p className="text-gray-600 text-sm">Get personalized health guidance</p>
+          </Link>
+
           {/* Debug Button */}
           <Link
             to="/debug"
