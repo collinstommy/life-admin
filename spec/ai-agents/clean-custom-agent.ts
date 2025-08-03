@@ -1,5 +1,3 @@
-// Custom Agent Solution - Voice Task System
-
 interface Intent {
   action: string;
   confidence: number;
@@ -20,7 +18,6 @@ abstract class TaskExecutor {
   abstract validate(intent: Intent): boolean;
 }
 
-// Expense Task Executor Implementation
 class ExpenseTaskExecutor extends TaskExecutor {
   domain = "expense";
   
@@ -70,36 +67,26 @@ class ExpenseTaskExecutor extends TaskExecutor {
     }
   }
   
-}
-
-// Intent Classification Service
-class IntentClassifier {
-  async classify(transcript: string): Promise<Intent> {
-    const prompt = `
-Analyze this voice command and extract:
-- action: (add, create_list, search, etc.)
-- domain: (expense, book, list)  
-- parameters: (amount, name, description, etc.)
-- confidence: 0-1
-
-Input: "${transcript}"
-Return JSON format:
-{
-  "action": "string",
-  "confidence": 0.95,
-  "parameters": {},
-  "domain": "expense"
-}
-    `.trim();
-    
-    // Simulate Gemini API call
-    const mockResponse = this.mockIntentClassification(transcript);
-    return mockResponse;
+  private async addExpense(params: any): Promise<TaskResult> {
+    return { success: true, message: "Expense added" };
   }
   
+  private async createList(params: any): Promise<TaskResult> {
+    return { success: true, message: "List created" };
+  }
+  
+  private async searchExpenses(params: any): Promise<TaskResult> {
+    return { success: true, message: "Expenses found" };
+  }
 }
 
-// Task Router
+class IntentClassifier {
+  async classify(transcript: string): Promise<Intent> {
+    const prompt = `Analyze this voice command and extract intent`;
+    return {} as Intent;
+  }
+}
+
 class TaskRouter {
   private executors: Map<string, TaskExecutor> = new Map();
   
@@ -110,67 +97,26 @@ class TaskRouter {
   async route(intent: Intent): Promise<TaskResult> {
     const executor = this.executors.get(intent.domain);
     if (!executor) {
-      return {
-        success: false,
-        message: `Unknown domain: ${intent.domain}`,
-        error: "No executor found"
-      };
+      return { success: false, message: "Unknown domain", error: "No executor" };
     }
-    
     return await executor.execute(intent);
   }
 }
-Im 84 years old and YouTube has given me a new life. I'm sat here with my dear wife and we've watched the entire show dancing, as best we can, in our living room! Fred again just rocked our world! Thank you!!! No cap this was lit.
-￼
 
-// Main Voice Task Processor
 class VoiceTaskProcessor {
   private classifier = new IntentClassifier();
   private router = new TaskRouter();
   
   async process(transcript: string): Promise<TaskResult> {
     try {
-      // 1. Classify intent
       const intent = await this.classifier.classify(transcript);
-      
-      // 2. Check confidence
       if (intent.confidence < 0.8) {
-        return {
-          success: false,
-          message: "I'm not sure what you want me to do. Can you rephrase that?",
-          error: "Low confidence"
-        };
+        return { success: false, message: "Low confidence", error: "Clarification needed" };
       }
-      
-      // 3. Route and execute
       return await this.router.route(intent);
-      
     } catch (error) {
-      return {
-        success: false,
-        message: "Failed to process voice command",
-        error: error instanceof Error ? error.message : "Unknown error"
-      };
+      return { success: false, message: "Processing failed", error: error.message };
     }
-  }
-}
-
-// Usage example
-async function exampleUsage() {
-  const processor = new VoiceTaskProcessor();
-  
-  console.log("=== Custom Agent Examples ===");
-  
-  const examples = [
-    "Add expense to grocery list. 50 dollars for milk and bread",
-    "Create a new expense list called vacation",
-    "Search expenses in house list"
-  ];
-  
-  for (const transcript of examples) {
-    console.log(`\nInput: "${transcript}"`);
-    const result = await processor.process(transcript);
-    console.log(`Result: ${result.message}`);
   }
 }
 
