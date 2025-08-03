@@ -36,6 +36,8 @@ npm run deploy
 ```
 
 ## ToDo
-- db
-- admin screen to view past logs and recordings
+- [ ] db
+- [ ] admin screen to view past logs and recordings
+- [ ] elysia - get errors from client api?
+
 

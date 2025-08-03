@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @plugin "@iconify/tailwind4";
-
+@plugin "daisyui";
 
 #map { height: calc(100vh - 180px); }
 

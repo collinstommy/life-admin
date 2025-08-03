@@ -8,4 +8,7 @@ export default {
     extend: {},
   },
   plugins: [daisyui, addDynamicIconSelectors()],
+  daisyui: {
+    themes: ["light", "dark"],
+  },
 };

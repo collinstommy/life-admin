@@ -47,7 +47,7 @@
     "@vitejs/plugin-react": "^4.6.0",
     "better-sqlite3": "^12.2.0",
     "concurrently": "^8.2.2",
-    "daisyui": "^4.7.2",
+    "daisyui": "^5.0.50",
     "drizzle-kit": "^0.31.2",
     "eslint": "^8.50.0",
     "prettier": "^3.0.3",
