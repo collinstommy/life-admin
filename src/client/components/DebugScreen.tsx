@@ -95,6 +95,20 @@ export function DebugScreen() {
               )}
             </div>
           </div>
+
+          {/* Design System Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Design System</h2>
+            <p className="text-gray-600 mb-4">
+              View our complete design system with all components, colors, and guidelines.
+            </p>
+            <button
+              onClick={() => navigate({ to: '/debug/design-system' })}
+              className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition-colors"
+            >
+              View Design System
+            </button>
+          </div>
           
           <ConfirmDialog
             isOpen={showDeleteConfirm}

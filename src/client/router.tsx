@@ -10,6 +10,7 @@ import { ManualEntryScreen } from './components/ManualEntryScreen'
 import { EditEntryScreen } from './components/EditEntryModal'
 import { EditExistingEntryScreen } from './components/EditExistingEntryScreen'
 import { useAuth } from './hooks/useAuth'
+import DesignSystem from './components/DesignSystem'
 
 // Root layout component
 function RootLayout() {
@@ -106,6 +107,12 @@ const debugManualEntryRoute = createRoute({
   component: ManualEntryScreen,
 })
 
+const debugDesignSystemRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/debug/design-system',
+  component: DesignSystem,
+})
+
 // Add Text Entry route
 const addTextEntryRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -126,6 +133,7 @@ const routeTree = rootRoute.addChildren([
   debugTranscriptRoute,
   debugHistoryRoute,
   debugManualEntryRoute,
+  debugDesignSystemRoute,
 ])
 
 // Create the router
