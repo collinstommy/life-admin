@@ -36,8 +36,14 @@ npm run deploy
 ```
 
 ## ToDo
+
+### DX
 - [ ] db
 - [ ] admin screen to view past logs and recordings
 - [ ] elysia - get errors from client api?
+
+### Features
+- [ ] Edit entry using text
+- [ ] Improved form for text entry (meals fields, common items)
 
 
