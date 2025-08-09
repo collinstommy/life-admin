@@ -12,7 +12,6 @@ import { VoiceRecorder } from "./components/VoiceRecorder";
 import { TranscriptProcessor } from "./components/TranscriptProcessor";
 import { HistoryView } from "./components/HistoryView";
 import { ManualEntryScreen } from "./components/ManualEntryScreen";
-import { EditEntryModal } from "./components/EditEntryModal";
 import { EditExistingEntryScreen } from "./components/EditExistingEntryScreen";
 import { useAuth } from "./hooks/useAuth";
 import DesignSystem from "./components/DesignSystem";
@@ -125,7 +124,6 @@ const routeTree = rootRoute.addChildren([
   addTextEntryRoute, // Add this line
   viewEntriesRoute,
   singleEntryRoute,
-  editEntryRoute,
   editExistingEntryRoute,
   debugRoute,
   debugTranscriptRoute,

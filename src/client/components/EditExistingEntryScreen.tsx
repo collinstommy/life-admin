@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { useUpdateHealthData, useTranscribeAudio, useUpdateExistingEntry, useHealthLogs } from '../hooks/useHealthLogs';
 import { VoiceUpdateRecorder } from './VoiceUpdateRecorder';
+import { TextUpdateInput } from './TextUpdateInput';
 import { StructuredHealthData } from '../../lib/ai';
 
 interface HealthLogEntry {
@@ -113,6 +114,7 @@ export function EditExistingEntryScreen() {
   const [currentData, setCurrentData] = useState<StructuredHealthData>(() => parseEntryData(processedEntry));
   const [isRecordingUpdate, setIsRecordingUpdate] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isProcessingTextUpdate, setIsProcessingTextUpdate] = useState(false);
   const [updateTranscript, setUpdateTranscript] = useState<string>('');
   
   const updateHealthData = useUpdateHealthData();
@@ -148,6 +150,27 @@ export function EditExistingEntryScreen() {
     }
   };
 
+  const handleTextUpdate = async (text: string) => {
+    try {
+      setIsProcessingTextUpdate(true);
+      setUpdateTranscript(text);
+      
+      console.log('Processing text update...');
+      const response = await updateHealthData.mutateAsync({
+        originalData: currentData,
+        updateTranscript: text
+      });
+      
+      setCurrentData(response.data);
+      setIsProcessingTextUpdate(false);
+      console.log('Text update processed successfully');
+      
+    } catch (error) {
+      console.error('Failed to process text update:', error);
+      setIsProcessingTextUpdate(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       if (!updateTranscript) {
@@ -172,7 +195,7 @@ export function EditExistingEntryScreen() {
     navigate({ to: '/view-entries' });
   };
 
-  const isProcessingUpdate = isTranscribing || updateHealthData.isPending;
+  const isProcessingUpdate = isTranscribing || updateHealthData.isPending || isProcessingTextUpdate;
   const canSave = updateTranscript.length > 0;
 
   const formatDate = (dateStr: string | null) => {
@@ -207,13 +230,23 @@ export function EditExistingEntryScreen() {
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-2xl font-semibold text-gray-900">Edit Health Entry</h2>
             <p className="text-gray-600 text-sm mt-1">
-              {formatDate(processedEntry.date)} - Record voice updates to modify this entry
+              {formatDate(processedEntry.date)} - Record voice or text updates to modify this entry
             </p>
           </div>
 
           {/* Content */}
           <div className="p-6">
             <HealthDataPreview data={currentData} />
+          </div>
+
+          {/* Text Update Input */}
+          <div className="p-6 border-t border-gray-200">
+            <TextUpdateInput
+              onSubmit={handleTextUpdate}
+              onCancel={() => {}}
+              isProcessing={isProcessingTextUpdate}
+              disabled={updateExistingEntry.isPending || isRecordingUpdate}
+            />
           </div>
 
           {/* Actions */}
@@ -275,6 +308,18 @@ export function EditExistingEntryScreen() {
             </div>
           )}
 
+          {isProcessingTextUpdate && (
+            <div className="p-4 bg-blue-50 border-t border-blue-200">
+              <div className="flex items-center space-x-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                <div>
+                  <p className="text-blue-800 font-medium">Processing your text update...</p>
+                  <p className="text-blue-600 text-sm">Merging new information with existing data.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Error States */}
           {transcribeAudio.isError && (
             <div className="p-4 bg-red-50 border-t border-red-200">
@@ -301,7 +346,7 @@ export function EditExistingEntryScreen() {
           {!canSave && (
             <div className="p-4 bg-yellow-50 border-t border-yellow-200">
               <p className="text-yellow-800 text-sm">
-                Click "🎤 Record Update" to make voice changes to this entry. 
+                Click "🎤 Record Update" for voice changes or "✏️ Text Update" for text changes to modify this entry. 
                 Examples: "Change my mood to 8", "I also had a snack", "Actually, my workout was 45 minutes"
               </p>
             </div>
