@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Entry Screen - Structured Form Mockup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.10/dist/full.css" rel="stylesheet" type="text/css" />
+    <style>
+        .glass-card {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .section-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <!-- Navigation Header -->
+    <div class="glass-card sticky top-0 z-50 border-b border-slate-200/50 rounded-b-2xl">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <button class="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 rounded-lg transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    Back
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="glass-card rounded-2xl p-6">
+            <!-- Header -->
+            <div class="flex items-center space-x-4 mb-8">
+                <div class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center">
+                    <span class="text-white text-xl">📝</span>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900">Structured Health Entry</h1>
+                    <p class="text-slate-600">Fill in your daily health details</p>
+                </div>
+            </div>
+
+            <form class="space-y-4">
+                <!-- Basic Info Section -->
+                <div class="section-card rounded-xl p-4">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                        Basic Information
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">Sleep (hours)</span>
+                            </label>
+                            <input type="number" step="0.5" min="0" max="24" class="input input-bordered rounded-lg" placeholder="8.5">
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">Energy Level (1-10)</span>
+                            </label>
+                            <input type="number" min="1" max="10" class="input input-bordered rounded-lg" placeholder="7">
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">Mood (1-10)</span>
+                            </label>
+                            <input type="number" min="1" max="10" class="input input-bordered rounded-lg" placeholder="8">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meals Section -->
+                <div class="section-card rounded-xl p-4">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
+                        Meals & Nutrition
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">🌅 Breakfast</span>
+                            </label>
+                            <textarea class="textarea textarea-bordered rounded-lg h-16" placeholder="Greek yogurt with berries and granola"></textarea>
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">☀️ Lunch</span>
+                            </label>
+                            <textarea class="textarea textarea-bordered rounded-lg h-16" placeholder="Grilled chicken salad with mixed vegetables"></textarea>
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">🌙 Dinner</span>
+                            </label>
+                            <textarea class="textarea textarea-bordered rounded-lg h-16" placeholder="Salmon with quinoa and steamed broccoli"></textarea>
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">🍎 Snacks</span>
+                            </label>
+                            <textarea class="textarea textarea-bordered rounded-lg h-16" placeholder="Apple with almond butter, handful of nuts"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Beverages Section -->
+                <div class="section-card rounded-xl p-4">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>
+                        Beverages
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">☕ Coffee/Tea</span>
+                            </label>
+                            <input type="text" class="input input-bordered rounded-lg" placeholder="2 cups coffee, 1 green tea">
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">💧 Water (glasses)</span>
+                            </label>
+                            <input type="number" min="0" class="input input-bordered rounded-lg" placeholder="8">
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">🥤 Other Drinks</span>
+                            </label>
+                            <input type="text" class="input input-bordered rounded-lg" placeholder="Smoothie, kombucha">
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">🍷 Alcohol</span>
+                            </label>
+                            <input type="text" class="input input-bordered rounded-lg" placeholder="1 glass wine">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise Section -->
+                <div class="section-card rounded-xl p-4">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
+                        Exercise & Activity
+                    </h2>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">🏃‍♀️ Workouts</span>
+                        </label>
+                        <textarea class="textarea textarea-bordered rounded-lg h-16" placeholder="45 min strength training - upper body, 30 min walk, yoga stretching"></textarea>
+                    </div>
+                </div>
+
+                <!-- Health Metrics Section -->
+                <div class="section-card rounded-xl p-4">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>
+                        Health Metrics
+                    </h2>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">Weight (lbs/kg)</span>
+                        </label>
+                        <input type="number" step="0.1" class="input input-bordered rounded-lg" placeholder="150.5">
+                    </div>
+                </div>
+
+                <!-- Pain & Symptoms Section -->
+                <div class="section-card rounded-xl p-4">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>
+                        Pain & Symptoms
+                    </h2>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">🩹 Pain/Discomfort</span>
+                        </label>
+                        <input type="text" class="input input-bordered rounded-lg" placeholder="Lower back pain level 3, mild headache in afternoon">
+                    </div>
+                </div>
+
+                <!-- Additional Notes Section -->
+                <div class="section-card rounded-xl p-4">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-teal-500 rounded-full mr-3"></span>
+                        Additional Notes
+                    </h2>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">General Notes</span>
+                        </label>
+                        <textarea class="textarea textarea-bordered rounded-lg h-20" placeholder="Overall good day, felt productive at work, looking forward to weekend hiking trip..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end space-x-4 pt-2">
+                    <button type="button" class="btn btn-ghost text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary px-6">
+                        Submit Entry
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading State Mockup (hidden by default) -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="glass-card rounded-2xl p-6 m-4">
+            <div class="flex items-center space-x-3">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                <span class="text-slate-700 font-medium">Processing your health entry...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple form interaction demo
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.getElementById('loading-overlay').classList.add('flex');
+            
+            setTimeout(() => {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                document.getElementById('loading-overlay').classList.remove('flex');
+                alert('Entry submitted successfully! (This is just a mockup)');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

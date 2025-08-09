@@ -38,10 +38,11 @@ npm run deploy
 ## ToDo
 
 ### DX
-- [ ] admin screen to view past logs and recordings
-- [ ] elysia - get errors from client api?
-- [ ] use new design system
+- [x] admin screen to view past logs and recordings
+- [x] elysia - get errors from client api?
+- [x] use new design system
 - [ ] schema to check for correct merged data
+- [ ] robust test suite with different test cases
 
 ### Features
 - [x] Edit entry using text

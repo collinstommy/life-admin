@@ -17,6 +17,7 @@ This is a JavaScript/TypeScript project primarily built for Cloudflare Workers, 
 *   **Authentication:** JWT-based authentication is implemented using `hono/jwt` and `hono/cookie`.
 *   **Design System:** Comprehensive design system with glassmorphism effects, consistent typography, and reusable components documented in `DESIGN_SYSTEM.md`.
 
+
 ## Project Structure Breakdown:
 
 *   **`/assets`**: Contains static frontend assets (HTML, CSS, JavaScript).
@@ -94,3 +95,10 @@ The "Health Tracking Voice Recording Application" is a streamlined personal heal
     *   **UI Enhancement & Data Visualization:** Improve user experience, add historical data viewing, and implement basic data visualization.
     *   **Analytics & Insights:** Introduce trend analysis features, AI-powered health insights, and data export capabilities.
     *   **Review and Editing:** Add functionality for reviewing and editing data.
+
+
+    ## Guide to styling
+    - Use DESIGN_SYSTEM.md to style components
+    - Examples are found in src/client/components/DesignSystem.tsx
+    - Use DaisyUI components for styling
+    - When building mock designs, place the in ./design/
