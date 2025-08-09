@@ -26,16 +26,16 @@ export const ManualEntryScreen: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
       {/* Navigation Header */}
-      <div className="bg-white shadow-sm sticky top-0 z-10">
+      <div className="glass-card sticky top-0 z-50 border-b border-slate-200/50 rounded-b-2xl">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
+          <div className="flex items-center justify-between h-16">
             <button
               onClick={() => navigate({ to: '/' })}
-              className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 rounded-lg transition-colors"
             >
-              <span className="icon-[mdi-light--chevron-left] w-4 h-4 mr-2"></span>
+              <span className="icon-[mdi--chevron-left] w-5 h-5 mr-2"></span>
               Back
             </button>
           </div>
@@ -43,39 +43,70 @@ export const ManualEntryScreen: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h1 className="text-2xl font-bold mb-4">New Text Entry</h1>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="glass-card rounded-2xl p-6">
+          <div className="flex items-center space-x-4 mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl">📝</span>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">New Text Entry</h1>
+              <p className="text-slate-600">Enter your health update details</p>
+            </div>
+          </div>
+          
           <Instructions />
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <textarea
-              className="textarea textarea-bordered w-full h-64 text-base"
-              placeholder="Enter your health log details here..."
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              disabled={createHealthLog.isPending}
-            />
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={createHealthLog.isPending || !text.trim()}
-            >
-              {createHealthLog.isPending ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  Submitting...
-                </>
-              ) : (
-                'Submit'
-              )}
-            </button>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium text-slate-900">Health Log Details</span>
+              </label>
+              <textarea
+                className="textarea textarea-bordered w-full h-64 text-base rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                placeholder="Enter your health log details here..."
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                disabled={createHealthLog.isPending}
+              />
+              <label className="label">
+                <span className="label-text-alt text-slate-500">Describe your day, activities, mood, energy, sleep, meals, and any other health observations</span>
+              </label>
+            </div>
+            
+            <div className="flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={() => navigate({ to: '/' })}
+                className="btn btn-ghost text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary px-6"
+                disabled={createHealthLog.isPending || !text.trim()}
+              >
+                {createHealthLog.isPending ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Entry'
+                )}
+              </button>
+            </div>
+            
             {createHealthLog.isError && (
-              <div className="alert alert-error">
-                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{createHealthLog.error.message}</span>
+              <div className="glass-card bg-red-50/50 border-red-200 rounded-xl p-4">
+                <div className="flex items-center space-x-2">
+                  <span className="icon-[mdi--alert] w-5 h-5 text-red-600"></span>
+                  <div>
+                    <p className="text-red-700 font-semibold">Submission Failed</p>
+                    <p className="text-red-600 text-sm">{createHealthLog.error?.message}</p>
+                  </div>
+                </div>
               </div>
             )}
           </form>

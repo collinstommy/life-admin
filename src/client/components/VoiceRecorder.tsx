@@ -156,8 +156,6 @@ export function VoiceRecorder() {
     }
   };
 
-
-
   const resetRecorder = () => {
     setRecordedBlob(null);
     setRecordingTime('00:00');
@@ -179,33 +177,41 @@ export function VoiceRecorder() {
 
   return (
     <>
-      <div className="bg-gray-50 min-h-screen">
+      <div className="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
         {/* Navigation Header */}
-        <div className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="glass-card sticky top-0 z-50 border-b border-slate-200/50 rounded-b-2xl">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-14">
-              <Link to="/" className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                <span className="icon-[mdi-light--chevron-left] w-4 h-4 mr-2"></span>
-                Back
+            <div className="flex items-center justify-between h-16">
+              <Link to="/" className="flex items-center space-x-2 text-slate-600 hover:text-slate-900 transition-colors">
+                <span className="icon-[mdi--chevron-left] w-5 h-5"></span>
+                <span className="text-sm font-medium">Back</span>
               </Link>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Voice Recorder</h2>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="glass-card rounded-2xl p-6">
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">🎤</span>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Voice Recorder</h2>
+                <p className="text-slate-600">Record your health update using voice</p>
+              </div>
+            </div>
             
             <Instructions />
             
             {/* Error Display */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-                <p className="text-red-700">{error}</p>
+              <div className="glass-card bg-red-50/50 border-red-200 rounded-xl p-4 mb-6">
+                <p className="text-red-700 font-medium">{error}</p>
                 <button 
                   onClick={initializeRecorder}
-                  className="mt-2 text-sm text-red-600 underline hover:text-red-800"
+                  className="mt-2 text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
                 >
                   Try Again
                 </button>
@@ -213,8 +219,8 @@ export function VoiceRecorder() {
             )}
 
             {/* Recording Controls */}
-            <div className="text-center mb-6">
-              <div className="text-4xl font-mono mb-4 text-gray-700">
+            <div className="text-center mb-8">
+              <div className="text-5xl font-mono mb-6 text-slate-700 tracking-wider">
                 {recordingTime}
               </div>
               
@@ -223,20 +229,20 @@ export function VoiceRecorder() {
                   <button 
                     onClick={startRecording}
                     disabled={!isInitialized || isLoadingOrProcessing}
-                    className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:shadow-none"
+                    className="btn btn-lg bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:shadow-none"
                   >
                     <span className="flex items-center space-x-2">
-                      <span className="icon-[mdi--microphone] w-5 h-5"></span>
+                      <span className="icon-[mdi--microphone] w-6 h-6"></span>
                       <span>{!isInitialized ? 'Initializing...' : 'Start Recording'}</span>
                     </span>
                   </button>
                 ) : (
                   <button 
                     onClick={stopRecording}
-                    className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse"
+                    className="btn btn-lg bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse"
                   >
                     <span className="flex items-center space-x-2">
-                      <span className="icon-[mdi--stop] w-5 h-5"></span>
+                      <span className="icon-[mdi--stop] w-6 h-6"></span>
                       <span>Stop Recording</span>
                     </span>
                   </button>
@@ -244,8 +250,8 @@ export function VoiceRecorder() {
               </div>
 
               {isRecording && (
-                <div className="mt-6">
-                  <div className="inline-flex items-center space-x-3 bg-red-50 border border-red-200 rounded-full px-6 py-3 text-red-700">
+                <div className="mt-8">
+                  <div className="inline-flex items-center space-x-3 bg-red-50/80 border border-red-200 rounded-full px-6 py-3 text-red-700">
                     <div className="relative">
                       <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
                       <div className="absolute inset-0 w-4 h-4 bg-red-500 rounded-full animate-ping"></div>
@@ -258,28 +264,35 @@ export function VoiceRecorder() {
 
             {/* Recording Preview */}
             {recordedBlob && (
-              <div className="border border-gray-200 rounded-lg p-4 mb-4">
-                <h3 className="text-lg font-medium mb-3">Recording Preview</h3>
+              <div className="glass-card rounded-xl p-6 mb-6">
+                <h3 className="text-xl font-semibold text-slate-900 mb-4">Recording Preview</h3>
                 
                 <audio 
                   controls 
                   src={URL.createObjectURL(recordedBlob)} 
-                  className="w-full mb-4"
+                  className="w-full mb-6 rounded-lg"
                 />
                 
                 <div className="flex justify-center space-x-4">
                   <button 
                     onClick={processRecording}
                     disabled={isLoadingOrProcessing}
-                    className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-6 py-2 rounded-md font-semibold transition-colors"
+                    className="btn btn-primary btn-md"
                   >
-                    {isLoadingOrProcessing ? 'Processing...' : 'Process & Review'}
+                    {isLoadingOrProcessing ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm"></span>
+                        Processing...
+                      </>
+                    ) : (
+                      'Process & Review'
+                    )}
                   </button>
                   
                   <button 
                     onClick={discardRecording}
                     disabled={isLoadingOrProcessing}
-                    className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white px-6 py-2 rounded-md font-semibold transition-colors"
+                    className="btn btn-ghost btn-md text-slate-600 hover:text-red-600 hover:bg-red-50"
                   >
                     Discard
                   </button>
@@ -289,24 +302,24 @@ export function VoiceRecorder() {
 
             {/* Processing Status */}
             {isTranscribing && (
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <div className="glass-card bg-blue-50/50 border-blue-200 rounded-xl p-6 mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   <div>
-                    <p className="text-blue-800 font-medium">Transcribing your recording...</p>
-                    <p className="text-blue-600 text-sm">Converting speech to text using AI.</p>
+                    <p className="text-blue-800 font-semibold">Transcribing your recording...</p>
+                    <p className="text-blue-600 text-sm">Converting speech to text using AI</p>
                   </div>
                 </div>
               </div>
             )}
 
             {isProcessing && !isTranscribing && (
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <div className="glass-card bg-blue-50/50 border-blue-200 rounded-xl p-6 mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   <div>
-                    <p className="text-blue-800 font-medium">Extracting health data...</p>
-                    <p className="text-blue-600 text-sm">Analyzing your transcript for health information.</p>
+                    <p className="text-blue-800 font-semibold">Extracting health data...</p>
+                    <p className="text-blue-600 text-sm">Analyzing your transcript for health information</p>
                   </div>
                 </div>
               </div>
@@ -314,22 +327,31 @@ export function VoiceRecorder() {
 
             {/* Error States */}
             {transcribeAudio.isError && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-                <p className="text-red-700 font-medium">Transcription Failed</p>
-                <p className="text-red-600 text-sm">{transcribeAudio.error?.message}</p>
+              <div className="glass-card bg-red-50/50 border-red-200 rounded-xl p-6 mb-6">
+                <div className="flex items-center space-x-2">
+                  <span className="icon-[mdi--alert] w-5 h-5 text-red-600"></span>
+                  <div>
+                    <p className="text-red-700 font-semibold">Transcription Failed</p>
+                    <p className="text-red-600 text-sm">{transcribeAudio.error?.message}</p>
+                  </div>
+                </div>
               </div>
             )}
 
             {extractHealthData.isError && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-                <p className="text-red-700 font-medium">Health Data Extraction Failed</p>
-                <p className="text-red-600 text-sm">{extractHealthData.error?.message}</p>
+              <div className="glass-card bg-red-50/50 border-red-200 rounded-xl p-6 mb-6">
+                <div className="flex items-center space-x-2">
+                  <span className="icon-[mdi--alert] w-5 h-5 text-red-600"></span>
+                  <div>
+                    <p className="text-red-700 font-semibold">Health Data Extraction Failed</p>
+                    <p className="text-red-600 text-sm">{extractHealthData.error?.message}</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
         </div>
       </div>
-
     </>
   );
-} 
+}
