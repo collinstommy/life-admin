@@ -20,6 +20,9 @@ import { seedDatabase } from "./seed";
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 
+// JWT token expiration duration (7 days in seconds)
+const SEVEN_DAYS = 60 * 60 * 24 * 7;
+
 // Validation schemas
 const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
@@ -101,8 +104,8 @@ const authRoutes = app
     console.log("Password:", password);
     console.log("Environment password:", c.env.PASSWORD);
     if (password === c.env.PASSWORD) {
-      const token = await sign({ user: "admin", exp: Math.floor(Date.now() / 1000) + (60 * 60) }, c.env.JWT_SECRET);
-      setCookie(c, "jwt", token, { httpOnly: true, secure: true, sameSite: "Strict", maxAge: 60 * 60 });
+      const token = await sign({ user: "admin", exp: Math.floor(Date.now() / 1000) + SEVEN_DAYS }, c.env.JWT_SECRET);
+      setCookie(c, "jwt", token, { httpOnly: true, secure: true, sameSite: "Strict", maxAge: SEVEN_DAYS });
       return c.json({ message: "Logged in successfully" });
     } else {
       return c.json({ error: "Invalid credentials" }, 401);
