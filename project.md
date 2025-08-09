@@ -15,6 +15,7 @@ This is a JavaScript/TypeScript project primarily built for Cloudflare Workers, 
 *   **Notion API:** Used for legacy log fetching (`src/api/notion.ts`, `@notionhq/client`, `notion-to-md`).
 *   **Bun:** Used for client-side JavaScript bundling (`bun build` command in `package.json`).
 *   **Authentication:** JWT-based authentication is implemented using `hono/jwt` and `hono/cookie`.
+*   **Design System:** Comprehensive design system with glassmorphism effects, consistent typography, and reusable components documented in `DESIGN_SYSTEM.md`.
 
 ## Project Structure Breakdown:
 
@@ -31,6 +32,7 @@ This is a JavaScript/TypeScript project primarily built for Cloudflare Workers, 
     *   `types.ts`: TypeScript type definitions.
     *   `api/notion.ts`: Notion API client.
     *   `client/index.js`: Client-side JavaScript entry point.
+    *   `client/components/DesignSystem.tsx`: Design system components and showcase.
     *   `db/schema.ts`: Drizzle database schema.
     *   `lib/ai.ts`, `lib/db.ts`, `lib/storage.ts`: Utility functions for AI, database, and storage.
     *   `shared/Layout.tsx`: Shared UI components.
@@ -39,6 +41,7 @@ This is a JavaScript/TypeScript project primarily built for Cloudflare Workers, 
 *   **`drizzle.config.ts`**: Drizzle ORM configuration.
 *   **`tailwind.config.js`**: Tailwind CSS configuration.
 *   **`tsconfig.json`**: TypeScript configuration.
+*   **`DESIGN_SYSTEM.md`**: Comprehensive design system documentation with components, colors, and usage guidelines.
 *   **`.dev.vars.sample`**: Sample environment variables for local development.
 *   **`.eslintrc.js`, `.prettierrc`, `.gitignore`**: Development and code quality configuration.
 
@@ -81,10 +84,11 @@ The "Health Tracking Voice Recording Application" is a streamlined personal heal
     *   **Structured Data Extraction:** Employs Gemini with a specific prompt engineering strategy to convert raw transcripts into a structured JSON format, ensuring only explicitly mentioned information is extracted.
 
 5.  **Technical Stack:**
-    *   **Frontend:** HTML, CSS, JavaScript.
+    *   **Frontend:** React 19, TypeScript, Tailwind CSS with custom design system.
     *   **Backend:** Cloudflare Workers with Hono (web framework).
     *   **Storage:** Cloudflare R2 (for audio), Cloudflare D1 (for structured data).
     *   **AI:** Cloudflare Whisper (transcription), Gemini (structured data extraction).
+    *   **Design System:** Glassmorphism-based UI with consistent components, documented in `DESIGN_SYSTEM.md` and implemented in `src/client/components/DesignSystem.tsx`.
 
 6.  **Development Roadmap (Planned Future Features):**
     *   **UI Enhancement & Data Visualization:** Improve user experience, add historical data viewing, and implement basic data visualization.
