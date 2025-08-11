@@ -26,7 +26,7 @@ npm start            # Start development server with auto-reload
 
 ## Production Deployment
 
-### Deploy to Production
+### Deploy to Production    
 ```bash
 # 1. Apply database migrations to production
 npm run db:apply:remote
@@ -46,6 +46,6 @@ npm run deploy
 
 ### Features
 - [x] Edit entry using text
-- [ ] Improved form for text entry (meals fields, common items)
+- [x] Improved form for text entry (meals fields, common items)
 
 
