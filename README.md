@@ -43,6 +43,8 @@ npm run deploy
 - [x] use new design system
 - [ ] schema to check for correct merged data
 - [ ] robust test suite with different test cases
+    - [ ] test edit
+    - [ ] test create
 
 ### Features
 - [x] Edit entry using text
