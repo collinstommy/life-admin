@@ -8,6 +8,7 @@ type Bindings = {
   NOTION_DATABASE_ID: string;
   DAILY_LOG_CACHE: KVNamespace;
   DAILY_LOG_API_KEY: string;
+  LOGS_API_KEY: string;
   // New bindings for health tracker
   HEALTH_RECORDINGS: R2Bucket;
   AI: unknown; // For Cloudflare AI (Whisper, etc.)

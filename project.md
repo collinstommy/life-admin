@@ -1,108 +1,104 @@
-Pnew ### Tech Stack Overview
-1. **Frontend**:
-   - React 19 with Vite
-   - TanStack Router for routing
-   - TanStack Query (React Query) for data fetching
-   - Tailwind CSS with DaisyUI for styling
-   - Iconify for icons
+## Project Overview
 
-2. **Backend**:
-   - Hono.js server framework
-   - Cloudflare Workers runtime
-   - Drizzle ORM for database interactions
-   - Zod for schema validation
+This is a JavaScript/TypeScript project primarily built for Cloudflare Workers, utilizing Hono as the web framework. It's a "Health Tracking Voice Recording Application" that processes voice data, extracts structured health information using AI, and stores it in a D1 database and R2 storage.
 
-3. **Database**:
-   - SQLite (local development)
-   - Cloudflare D1 (production)
-   - R2 for audio storage
+## Key Technologies and Dependencies:
 
-4. **AI Integration**:
-   - Cloudflare AI for transcription and health data extraction
-   - Notion API integration
+*   **Cloudflare Workers:** The primary deployment environment, indicated by `wrangler.toml` and `@cloudflare/workers-types`.
+*   **Hono:** A lightweight web framework for Cloudflare Workers, used for routing and API handling (`hono` package).
+*   **TypeScript:** Used for development, as seen by `.ts` files and `tsconfig.json`.
+*   **Drizzle ORM:** Used for database interactions with Cloudflare D1 (`drizzle-orm`, `drizzle-kit`). The `drizzle` directory contains schema and migrations.
+*   **Cloudflare D1:** Serverless SQL database, indicated by `drizzle.config.ts` and `wrangler.toml`.
+*   **Cloudflare R2:** Object storage for audio recordings, configured in `wrangler.toml`.
+*   **AI Integration:** Implies use of Cloudflare AI services (Whisper for transcription, Gemini for structured data extraction), as mentioned in `plan/complete/plan.md`.
+*   **Tailwind CSS:** Utility-first CSS framework for styling the frontend (`tailwindcss`, `tailwind.config.js`).
+*   **Notion API:** Used for legacy log fetching (`src/api/notion.ts`, `@notionhq/client`, `notion-to-md`).
+*   **Bun:** Used for client-side JavaScript bundling (`bun build` command in `package.json`).
+*   **Authentication:** JWT-based authentication is implemented using `hono/jwt` and `hono/cookie`.
+*   **Design System:** Comprehensive design system with glassmorphism effects, consistent typography, and reusable components documented in `DESIGN_SYSTEM.md`.
 
-5. **Build Tools**:
-   - Vite for frontend bundling
-   - Wrangler for Cloudflare deployments
-   - TypeScript across the codebase
 
-### Key Features
-1. **Voice-Based Health Tracking**:
-   - Record voice logs about health metrics
-   - Automatic transcription using AI
-   - Structured data extraction (sleep, exercise, nutrition, mood, etc.)
+## Project Structure Breakdown:
 
-2. **Manual Entry System**:
-   - Text-based health log creation
-   - Edit existing entries
+*   **`/assets`**: Contains static frontend assets (HTML, CSS, JavaScript).
+    *   `health-tracker.css`, `index.html`, `styles.css`: Frontend UI.
+    *   `js/app.js`, `js/recorder.js`: Client-side application logic and audio recording.
+*   **`/drizzle`**: Drizzle ORM related files.
+    *   `0000_initial_schema.sql`, `migrations/`: Database schema and migration files.
+*   **`/plan`**: Documentation and planning files.
+    *   `auth-progress.md`, `brief.md`, `plan.md`, `plan2.md`, `progress.md`, `recording-ui.md`, `tune-prompt.md`, `summary.md`: Various planning and progress documents.
+*   **`/src`**: Source code for the Cloudflare Worker.
+    *   `app.tsx`, `server.tsx`: Main application and server entry points.
+    *   `styles.css`: Main CSS file (processed by Tailwind).
+    *   `types.ts`: TypeScript type definitions.
+    *   `api/notion.ts`: Notion API client.
+    *   `client/index.js`: Client-side JavaScript entry point.
+    *   `client/components/DesignSystem.tsx`: Design system components and showcase.
+    *   `db/schema.ts`: Drizzle database schema.
+    *   `lib/ai.ts`, `lib/db.ts`, `lib/storage.ts`: Utility functions for AI, database, and storage.
+    *   `shared/Layout.tsx`: Shared UI components.
+*   **`wrangler.toml`**: Cloudflare Workers configuration.
+*   **`package.json`**: Project metadata and dependencies.
+*   **`drizzle.config.ts`**: Drizzle ORM configuration.
+*   **`tailwind.config.js`**: Tailwind CSS configuration.
+*   **`tsconfig.json`**: TypeScript configuration.
+*   **`DESIGN_SYSTEM.md`**: Comprehensive design system documentation with components, colors, and usage guidelines.
+*   **`.dev.vars.sample`**: Sample environment variables for local development.
+*   **`.eslintrc.js`, `.prettierrc`, `.gitignore`**: Development and code quality configuration.
 
-3. **Data Visualization**:
-   - View historical health data
-   - Filter and analyze trends
+## Project Purpose (from `plan/summary.md` and other plan files):
+The "Health Tracking Voice Recording Application" is a streamlined personal health journal designed to minimize friction in logging daily health activities. It allows users to record voice logs, which are then processed using AI to extract structured health data. This structured data, along with the raw recordings, is stored for later retrieval, enabling users to review and analyze their health trends over time. The application aims to transform casual spoken reflections into organized, AI-analyzable data.
 
-4. **Authentication**:
-   - JWT-based auth system
-   - Protected API routes
+**Key Features and Breakdown:**
 
-5. **Database Management**:
-   - SQL schema for health metrics
-   - Migrations system
-   - Seed data capability
+1.  **Voice Recording & Frontend:**
+    *   **Web Interface:** Provides a responsive web application for recording voice logs.
+    *   **UI Controls:** Includes controls for starting, stopping, and previewing recordings, along with a timer display.
+    *   **Data Display:** Shows raw transcripts and extracted structured health data.
+    *   **Daily Entries:** Displays entries for each day.
 
-### Project Structure
-```
-src/
-├── app.tsx            # Main Hono app setup
-├── server.tsx         # Server entry point
-├── client/            # Frontend code
-│   ├── components/    # React components
-│   ├── hooks/         # Custom hooks
-│   ├── router.tsx     # Client-side routing
-├── db/                # Database schema
-├── lib/               # Shared utilities
-│   ├── ai.ts          # AI integration
-│   ├── db.ts          # Database operations
-│   ├── storage.ts     # Cloud storage
-├── api/               # API clients
-├── types.ts           # Type definitions
-```
+2.  **Backend API & Data Flow:**
+    *   **RESTful Endpoints:** Handles recordings, transcripts, and structured data.
+    *   **Audio Upload:** Users record voice, and the audio is sent to the backend API.
+    *   **R2 Storage:** Raw audio recordings are stored in Cloudflare R2 object storage.
+    *   **Transcription:** Audio is processed using Cloudflare Whisper for speech-to-text transcription.
+    *   **Structured Data Extraction:** Transcripts are analyzed by Gemini (a large language model) to extract structured health data in a predefined JSON format.
+    *   **D1 Database Storage:** Structured health data and metadata are stored in a Cloudflare D1 database.
+    *   **Confirmation & View:** Users receive confirmation and a view of the structured data after processing.
+    *   **API for Health Logs:** Provides an API to list and retrieve health logs, including filtering options and access to specific details.
+    *   **Manual Data Management:** Allows for manual updates and removal of health log data.
 
-### Development Workflow
-1. **Running the App**:
-   ```bash
-   npm start  # Starts dev server with hot reload
-   ```
+3.  **Structured Health Data Categories:**
+    The application extracts and stores detailed health metrics, including:
+    *   Screen time
+    *   Water intake
+    *   Sleep duration and quality
+    *   Energy and mood ratings
+    *   Weight tracking
+    *   Workout sessions (type, duration, intensity, notes)
+    *   Meals and nutrition (type, notes)
+    *   Pain and discomfort (location, intensity, notes)
+    *   Other activities and general notes
 
-2. **Database Operations**:
-   ```bash
-   npm run db:generate  # Generate migrations
-   npm run db:apply     # Apply migrations locally
-   npm run db:studio    # Open DB management UI
-   ```
+4.  **AI Processing Pipeline:**
+    *   **Speech-to-Text:** Utilizes Cloudflare Whisper for accurate transcription of voice recordings.
+    *   **Structured Data Extraction:** Employs Gemini with a specific prompt engineering strategy to convert raw transcripts into a structured JSON format, ensuring only explicitly mentioned information is extracted.
 
-3. **Testing & Linting**:
-   - ESLint configured with TypeScript support
-   - Run linting: `npm run lint`
-   - Prettier for code formatting
+5.  **Technical Stack:**
+    *   **Frontend:** React 19, TypeScript, Tailwind CSS with custom design system.
+    *   **Backend:** Cloudflare Workers with Hono (web framework).
+    *   **Storage:** Cloudflare R2 (for audio), Cloudflare D1 (for structured data).
+    *   **AI:** Cloudflare Whisper (transcription), Gemini (structured data extraction).
+    *   **Design System:** Glassmorphism-based UI with consistent components, documented in `DESIGN_SYSTEM.md` and implemented in `src/client/components/DesignSystem.tsx`.
 
-4. **Production Deployment**:
-   ```bash
-   npm run build       # Build production assets
-   npm run deploy      # Deploy to Cloudflare
-   ```
+6.  **Development Roadmap (Planned Future Features):**
+    *   **UI Enhancement & Data Visualization:** Improve user experience, add historical data viewing, and implement basic data visualization.
+    *   **Analytics & Insights:** Introduce trend analysis features, AI-powered health insights, and data export capabilities.
+    *   **Review and Editing:** Add functionality for reviewing and editing data.
 
-### Key Components
-1. **VoiceRecorder** - Handles audio recording and processing
-2. **ViewEntriesScreen** - Displays historical health logs
-3. **EditEntryModal** - For modifying health entries
-4. **TranscriptProcessor** - AI-powered transcript analysis
-5. **HealthTrackerApp** - Main application container
 
-### Notable Dependencies
-- @hono/zod-validator - Request validation
-- @tanstack/react-query - Data fetching
-- drizzle-orm - Database ORM
-- date-fns - Date handling
-- zod - Schema validation
-
-This is a modern full-stack application leveraging Cloudflare's edge platform with AI capabilities for health tracking. The architecture is well-organized with clear separation between frontend and backend concerns.
+    ## Guide to styling
+    - Use DESIGN_SYSTEM.md to style components
+    - Examples are found in src/client/components/DesignSystem.tsx
+    - Use DaisyUI components for styling
+    - When building mock designs, place the in ./design/

@@ -26,7 +26,7 @@ class Tools:
         """
         Fetches daily logs from the Life Admin API
 
-        Returns a JSON string of daily log entries
+        Returns a JSON string of daily log entries containing meals, sleep, fitnress and other health data
         """
         if not self.valves.api_key:
             return "Error: API key not configured"
@@ -34,7 +34,7 @@ class Tools:
         try:
             headers = {"X-API-Key": self.valves.api_key}
             response = requests.get(
-                "https://life-admin.tomascollins.workers.dev/logs", headers=headers
+                "https://admin.tomascollins.dev/logs", headers=headers
             )
 
             if response.status_code != 200:

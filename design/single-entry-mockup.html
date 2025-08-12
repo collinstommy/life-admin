@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Entry - Monday, August 3, 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .energy-gradient {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .mood-gradient {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .sleep-gradient {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+        
+        .weight-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        
+        .workout-gradient {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+        }
+        
+        .meal-gradient {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        }
+        
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    
+    <!-- Header -->
+    <header class="glass-card sticky top-0 z-50 border-b border-slate-200/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 rounded-lg hover:bg-slate-100/50 transition-colors">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="text-lg font-semibold text-slate-900">Health Entry</h1>
+                        <p class="text-sm text-slate-500">Monday, August 3, 2025</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </button>
+                    <button class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Entry Summary -->
+        <div class="glass-card rounded-2xl p-6 mb-8">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center">
+                    <span class="text-white text-xl">📊</span>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Daily Health Summary</h2>
+                    <p class="text-slate-600">Monday, August 3, 2025 • 2:30 PM</p>
+                </div>
+            </div>
+            <p class="text-slate-700 text-lg">Great morning workout and balanced meals throughout the day. Feeling energized and accomplished!</p>
+        </div>
+
+        <!-- Key Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            
+            <!-- Energy Level -->
+            <div class="metric-card rounded-2xl p-6 text-white energy-gradient">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Energy</p>
+                        <p class="text-3xl font-bold">9/10</p>
+                    </div>
+                    <span class="text-3xl">⚡</span>
+                </div>
+                <div class="mt-3">
+                    <div class="w-full bg-white/20 rounded-full h-2">
+                        <div class="bg-white rounded-full h-2" style="width: 90%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mood -->
+            <div class="metric-card rounded-2xl p-6 text-white mood-gradient">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Mood</p>
+                        <p class="text-3xl font-bold">8/10</p>
+                    </div>
+                    <span class="text-3xl">😊</span>
+                </div>
+                <div class="mt-3">
+                    <div class="w-full bg-white/20 rounded-full h-2">
+                        <div class="bg-white rounded-full h-2" style="width: 80%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sleep -->
+            <div class="metric-card rounded-2xl p-6 text-white sleep-gradient">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Sleep</p>
+                        <p class="text-3xl font-bold">8h</p>
+                    </div>
+                    <span class="text-3xl">😴</span>
+                </div>
+                <div class="mt-3">
+                    <p class="text-xs opacity-90">Quality: 9/10</p>
+                </div>
+            </div>
+
+            <!-- Weight -->
+            <div class="metric-card rounded-2xl p-6 text-white weight-gradient">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Weight</p>
+                        <p class="text-3xl font-bold">72.5kg</p>
+                    </div>
+                    <span class="text-3xl">⚖️</span>
+                </div>
+                <div class="mt-3">
+                    <p class="text-xs opacity-90">Stable</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Left Column - Workouts & Meals -->
+            <div class="space-y-6">
+                
+                <!-- Workouts -->
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center">
+                            <span class="text-white">🏋️</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900">Workouts</h3>
+                        <span class="text-sm text-slate-500">1 activity</span>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-slate-900">Morning Strength Training</h4>
+                                <span class="text-sm text-red-600 font-medium">45 min</span>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-2">Full body workout focusing on compound movements</p>
+                            <div class="flex items-center space-x-4 text-xs text-slate-500">
+                                <span>Intensity: 8/10</span>
+                                <span>•</span>
+                                <span>Upper body focus</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meals -->
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center">
+                            <span class="text-white">🍽️</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900">Meals</h3>
+                        <span class="text-sm text-slate-500">3 meals</span>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-4">
+                            <h4 class="font-semibold text-slate-900 mb-1">Breakfast</h4>
+                            <p class="text-sm text-slate-600">Protein smoothie with banana, spinach, and almond milk</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-4">
+                            <h4 class="font-semibold text-slate-900 mb-1">Lunch</h4>
+                            <p class="text-sm text-slate-600">Grilled chicken salad with mixed greens and olive oil dressing</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-4">
+                            <h4 class="font-semibold text-slate-900 mb-1">Dinner</h4>
+                            <p class="text-sm text-slate-600">Salmon with quinoa and steamed vegetables</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Additional Details -->
+            <div class="space-y-6">
+                
+                <!-- Health Metrics -->
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center">
+                            <span class="text-white">📊</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900">Health Metrics</h3>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-blue-50 rounded-xl">
+                            <span class="text-sm font-medium text-blue-900">Water Intake</span>
+                            <span class="text-sm text-blue-700">3.2L</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-orange-50 rounded-xl">
+                            <span class="text-sm font-medium text-orange-900">Screen Time</span>
+                            <span class="text-sm text-orange-700">6.5h</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-purple-50 rounded-xl">
+                            <span class="text-sm font-medium text-purple-900">Sleep Quality</span>
+                            <span class="text-sm text-purple-700">9/10</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-green-50 rounded-xl">
+                            <span class="text-sm font-medium text-green-900">Steps</span>
+                            <span class="text-sm text-green-700">8,432</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Notes -->
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center">
+                            <span class="text-white">📝</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900">Additional Notes</h3>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <h4 class="font-medium text-slate-900 mb-2">Other Activities</h4>
+                            <p class="text-sm text-slate-600">15 minutes of morning meditation and evening walk</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <h4 class="font-medium text-slate-900 mb-2">General Notes</h4>
+                            <p class="text-sm text-slate-600">Feeling great overall. Energy levels are consistent throughout the day. Minor muscle soreness from yesterday's workout.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Original Transcript -->
+        <div class="glass-card rounded-2xl p-6 mt-8">
+            <details class="group">
+                <summary class="cursor-pointer">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center">
+                                <span class="text-white">🎤</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-slate-900">Original Voice Recording</h3>
+                                <p class="text-sm text-slate-600">Click to view the full transcript</p>
+                            </div>
+                        </div>
+                        <svg class="w-5 h-5 text-slate-400 transform transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                </summary>
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-slate-700 leading-relaxed">
+                            "Today was a great day! I started with a 45-minute strength training session focusing on upper body. 
+                            Had an amazing protein smoothie for breakfast with banana and spinach. Lunch was a grilled chicken salad 
+                            that really hit the spot, and dinner was perfectly cooked salmon with quinoa. I drank plenty of water 
+                            throughout the day - probably around 3.2 liters. My energy levels stayed consistently high, and I felt 
+                            really positive all day. Got a solid 8 hours of sleep last night and added in some meditation and a nice evening walk."
+                        </p>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- Audio Player (if available) -->
+        <div class="glass-card rounded-2xl p-6 mt-8">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-semibold text-slate-900">Original Recording</h4>
+                    <p class="text-sm text-slate-600">Duration: 2:34</p>
+                </div>
+                <button class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Add smooth animations
+        document.querySelectorAll('.expandable-section').forEach(section => {
+            section.addEventListener('click', function() {
+                this.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+        });
+
+        // Add intersection observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Animate metric cards
+        document.querySelectorAll('.metric-card').forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>

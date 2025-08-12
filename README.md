@@ -26,7 +26,7 @@ npm start            # Start development server with auto-reload
 
 ## Production Deployment
 
-### Deploy to Production
+### Deploy to Production    
 ```bash
 # 1. Apply database migrations to production
 npm run db:apply:remote
@@ -36,6 +36,18 @@ npm run deploy
 ```
 
 ## ToDo
-- db
-- admin screen to view past logs and recordings
+
+### DX
+- [x] admin screen to view past logs and recordings
+- [x] elysia - get errors from client api?
+- [x] use new design system
+- [ ] schema to check for correct merged data
+- [ ] robust test suite with different test cases
+    - [ ] test edit
+    - [ ] test create
+
+### Features
+- [x] Edit entry using text
+- [x] Improved form for text entry (meals fields, common items)
+
 

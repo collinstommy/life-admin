@@ -3,7 +3,6 @@ import { serveStatic } from "hono/cloudflare-workers";
 // @ts-expect-error - cloudflare
 import manifest from "__STATIC_CONTENT_MANIFEST";
 import { app } from "./app";
-import { NotionApiClient } from "./api/notion";
 import type { MiddlewareHandler } from "hono";
 import { AppContext, HonoApp } from "./types";
 import { sign, verify } from "hono/jwt";
@@ -19,6 +18,9 @@ import { HealthLog } from "./db/schema";
 import { seedDatabase } from "./seed";
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
+
+// JWT token expiration duration (7 days in seconds)
+const SEVEN_DAYS = 60 * 60 * 24 * 7;
 
 // Validation schemas
 const loginSchema = z.object({
@@ -56,7 +58,7 @@ const createHealthLogFromTextSchema = z.object({
 // Middleware to verify API key
 const authenticateApiKey: MiddlewareHandler<HonoApp> = async (c, next) => {
   const apiKey = c.req.header("X-API-Key");
-  if (!apiKey || apiKey !== c.env.DAILY_LOG_API_KEY) {
+  if (!apiKey || apiKey !== c.env.LOGS_API_KEY) {
     return c.json({ error: "Unauthorized" }, 401);
   }
   await next();
@@ -101,8 +103,8 @@ const authRoutes = app
     console.log("Password:", password);
     console.log("Environment password:", c.env.PASSWORD);
     if (password === c.env.PASSWORD) {
-      const token = await sign({ user: "admin", exp: Math.floor(Date.now() / 1000) + (60 * 60) }, c.env.JWT_SECRET);
-      setCookie(c, "jwt", token, { httpOnly: true, secure: true, sameSite: "Strict", maxAge: 60 * 60 });
+      const token = await sign({ user: "admin", exp: Math.floor(Date.now() / 1000) + SEVEN_DAYS }, c.env.JWT_SECRET);
+      setCookie(c, "jwt", token, { httpOnly: true, secure: true, sameSite: "Strict", maxAge: SEVEN_DAYS });
       return c.json({ message: "Logged in successfully" });
     } else {
       return c.json({ error: "Invalid credentials" }, 401);
@@ -773,20 +775,31 @@ const apiRoutes = app
     },
   );
 
-// Legacy API endpoint
-app.get("/logs", async (c) => {
-  const notionClient = new NotionApiClient(
-    c.env.NOTION_TOKEN,
-    c.env.NOTION_DATABASE_ID,
-    c.env.DAILY_LOG_CACHE,
-  );
-
+// Legacy API endpoint - now pulls from database
+app.get("/logs", withDb, async (c) => {
   try {
-    const logs = await notionClient.getAllLogs();
-    return c.json(logs);
+    console.log("Fetching all health logs from database via legacy /logs endpoint");
+
+      // Get logs from database - same as /api/health-log endpoint
+      const logs = await getAllHealthLogs(c as AppContext);
+      console.log(`Retrieved ${logs.length} health logs from database`);
+
+      const structuredLogs = logs.map((log: any) => {
+        return {
+          date: log.date,
+          ...log.healthData,
+        }
+      }).filter((data: any) => data !== null);
+      return c.json(structuredLogs);
   } catch (error) {
-    console.error("Error fetching logs:", error);
-    return c.json({ error: "Failed to fetch logs" }, 500);
+    console.error("Error fetching health logs:", error);
+    return c.json(
+      {
+        error: "Failed to fetch logs",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
+    );
   }
 });
 
