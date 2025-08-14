@@ -9,6 +9,7 @@ import { sign, verify } from "hono/jwt";
 import { getCookie, setCookie } from "hono/cookie";
 import { storeAudioRecording, getAudioRecording } from "./lib/storage";
 import { transcribeAudio, extractHealthData, mergeHealthDataWithUpdate, StructuredHealthData } from "./lib/ai";
+import { judgeHealthDataMerge } from "./lib/aiJudge";
 // We'll use these in Phase 2 with database integration
 import { getAllHealthLogs, getHealthLogById, initDb, deleteHealthLog, deleteAllHealthLogs, updateHealthLog } from "./lib/db";
 // Import the saveHealthLog function
@@ -53,6 +54,12 @@ const updateHealthLogSchema = z.object({
 
 const createHealthLogFromTextSchema = z.object({
   text: z.string().min(1, 'Text is required'),
+});
+
+const judgeHealthDataSchema = z.object({
+  originalData: z.any(),
+  updateTranscript: z.string().min(1, 'Update transcript is required'),
+  resultData: z.any(),
 });
 
 // Middleware to verify API key
@@ -274,6 +281,44 @@ const apiRoutes = app
       return c.json(
         {
           error: "Failed to update health data",
+          message: error instanceof Error ? error.message : String(error),
+        },
+        500,
+      );
+    }
+  })
+  .post("/api/judge-health-data", zValidator('json', judgeHealthDataSchema), async (c) => {
+    try {
+      console.log("Judge health data request received");
+      const { originalData, updateTranscript, resultData } = c.req.valid('json');
+      
+      console.log("Judging merge operation...");
+      
+      try {
+        // Use AI judge to evaluate the merge
+        const judgeResult = await judgeHealthDataMerge(c, originalData, updateTranscript, resultData);
+        console.log("AI Judge evaluation completed, score:", judgeResult.score);
+        
+        return c.json({
+          success: true,
+          message: "Merge evaluation completed",
+          judge: judgeResult,
+        });
+      } catch (judgeError) {
+        console.error("Error in AI judge:", judgeError);
+        return c.json(
+          {
+            error: "Failed to evaluate merge",
+            message: judgeError instanceof Error ? judgeError.message : String(judgeError),
+          },
+          500,
+        );
+      }
+    } catch (error) {
+      console.error("Unexpected error in judge endpoint:", error);
+      return c.json(
+        {
+          error: "Failed to judge health data",
           message: error instanceof Error ? error.message : String(error),
         },
         500,

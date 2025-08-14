@@ -13,6 +13,7 @@ import { TranscriptProcessor } from "./components/TranscriptProcessor";
 import { HistoryView } from "./components/HistoryView";
 import { ManualEntryScreen } from "./components/ManualEntryScreen";
 import { EditExistingEntryScreen } from "./components/EditExistingEntryScreen";
+import { EditValidationScreen } from "./components/EditValidationScreen";
 import { useAuth } from "./hooks/useAuth";
 import DesignSystem from "./components/DesignSystem";
 
@@ -110,6 +111,12 @@ const debugDesignSystemRoute = createRoute({
   component: DesignSystem,
 });
 
+const debugEditValidationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/debug/edit-validation",
+  component: EditValidationScreen,
+});
+
 // Add Text Entry route
 const addTextEntryRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -130,6 +137,7 @@ const routeTree = rootRoute.addChildren([
   debugHistoryRoute,
   debugManualEntryRoute,
   debugDesignSystemRoute,
+  debugEditValidationRoute,
 ]);
 
 // Create the router

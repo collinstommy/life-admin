@@ -96,6 +96,20 @@ export function DebugScreen() {
             </div>
           </div>
 
+          {/* Edit Validation Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Edit Validation Testing</h2>
+            <p className="text-gray-600 mb-4">
+              Test and validate the AI edit/merge functionality with different scenarios and track accuracy improvements.
+            </p>
+            <button
+              onClick={() => navigate({ to: '/debug/edit-validation' })}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+            >
+              Test Edit Validation
+            </button>
+          </div>
+
           {/* Design System Section */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Design System</h2>

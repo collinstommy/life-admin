@@ -733,6 +733,9 @@ export async function mergeHealthDataWithUpdate(
   }
 
   try {
+    console.log("=== MERGE DEBUG START ===");
+    console.log("Original data date field:", originalData.date);
+    console.log("Update transcript:", JSON.stringify(updateTranscript));
     console.log(
       "Making request to Gemini API to merge data with update:",
       updateTranscript.substring(0, 100) + "...",
@@ -743,6 +746,7 @@ export async function mergeHealthDataWithUpdate(
 
     // Get current date for the prompt
     const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    console.log("Current date being passed to prompt:", currentDate);
     
     const requestBody = {
       contents: [
@@ -788,6 +792,8 @@ export async function mergeHealthDataWithUpdate(
       throw new Error("Empty or invalid response from Gemini API");
     }
 
+    console.log("Raw AI response text (first 500 chars):", text.substring(0, 500));
+
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -796,10 +802,33 @@ export async function mergeHealthDataWithUpdate(
     }
 
     const jsonString = jsonMatch[0];
+    console.log("Extracted JSON string:", jsonString);
 
     try {
       const cleanedJsonString = jsonString.replace(/^```json\n?|\n?```$/g, "");
-      return JSON.parse(cleanedJsonString) as StructuredHealthData;
+      const parsedResult = JSON.parse(cleanedJsonString) as StructuredHealthData;
+      
+      console.log("=== MERGE RESULT ANALYSIS ===");
+      console.log("Original date:", originalData.date);
+      console.log("Result date:", parsedResult.date);
+      console.log("Date changed:", originalData.date !== parsedResult.date);
+      console.log("Update transcript contains date:", /date|today|yesterday|tomorrow|\d{4}-\d{2}-\d{2}/i.test(updateTranscript));
+      
+      // Compare all fields to see what changed
+      const changes: Array<{field: string, original: any, result: any}> = [];
+      (Object.keys(parsedResult) as Array<keyof StructuredHealthData>).forEach(key => {
+        if (JSON.stringify(originalData[key]) !== JSON.stringify(parsedResult[key])) {
+          changes.push({
+            field: key as string,
+            original: originalData[key],
+            result: parsedResult[key]
+          });
+        }
+      });
+      console.log("All changes detected:", JSON.stringify(changes, null, 2));
+      console.log("=== MERGE DEBUG END ===");
+      
+      return parsedResult;
     } catch (parseError) {
       console.error("Error parsing JSON:", jsonString);
       throw new Error(
@@ -821,7 +850,12 @@ function generateMergePrompt(options: {
   originalData: StructuredHealthData;
   updateTranscript: string;
 }): string {
-  return `Today's date is ${options.currentDate}.
+  console.log("=== PROMPT DEBUG ===");
+  console.log("Prompt currentDate:", options.currentDate);
+  console.log("Prompt originalData.date:", options.originalData.date);
+  console.log("Prompt updateTranscript:", JSON.stringify(options.updateTranscript));
+  
+  const prompt = `Today's date is ${options.currentDate}.
 
 You have existing health data:
 ${JSON.stringify(options.originalData, null, 2)}
@@ -852,4 +886,10 @@ CRITICAL:
 - Return the COMPLETE updated structured data with all fields
 
 Return ONLY the valid JSON object representing the merged data.`;
+
+  console.log("Complete prompt being sent to AI (first 1000 chars):");
+  console.log(prompt.substring(0, 1000) + "...");
+  console.log("=== END PROMPT DEBUG ===");
+  
+  return prompt;
 }
