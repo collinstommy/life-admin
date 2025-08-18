@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { useExtractHealthData, useTranscribeAudio } from '../hooks/useHealthLogs';
+import { useExtractHealthData, useTranscribeAudio, useSaveHealthLog } from '../hooks/useHealthLogs';
 import { Instructions } from './Instructions';
 
 export function VoiceRecorder() {
@@ -11,9 +11,6 @@ export function VoiceRecorder() {
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [transcript, setTranscript] = useState<string>('');
-  const [audioUrl, setAudioUrl] = useState<string>('');
-  const [extractedData, setExtractedData] = useState<any>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -22,6 +19,7 @@ export function VoiceRecorder() {
   
   const extractHealthData = useExtractHealthData();
   const transcribeAudio = useTranscribeAudio();
+  const saveHealthLog = useSaveHealthLog();
   const navigate = useNavigate();
 
   // Initialize recorder on component mount
@@ -123,29 +121,35 @@ export function VoiceRecorder() {
       const transcriptionResponse = await transcribeAudio.mutateAsync(recordedBlob);
       const transcribedText = (transcriptionResponse as any).transcript;
       console.log('Transcription result:', transcribedText);
-      setTranscript(transcribedText);
       setIsTranscribing(false);
 
       // Create audio URL for storage
       const audioURL = URL.createObjectURL(recordedBlob);
-      setAudioUrl(audioURL);
 
       // Extract health data from transcript
       console.log('Extracting health data from transcript...');
       const response = await extractHealthData.mutateAsync(transcribedText);
       const extractedHealthData = (response as any).data;
-      setExtractedData(extractedHealthData);
       console.log('Health data extracted successfully');
 
-      // Navigate to edit screen with extracted data
-      navigate({ 
-        to: '/edit-entry',
-        state: {
-          initialData: extractedHealthData,
-          transcript: transcribedText,
-          audioUrl: audioURL
-        }
-      } as any);
+      // Save the health log to database
+      console.log('Saving health log to database...');
+      const savedLog = await saveHealthLog.mutateAsync({
+        healthData: extractedHealthData,
+        transcript: transcribedText,
+        audioUrl: audioURL
+      });
+      console.log('Health log saved successfully:', savedLog);
+
+      // Navigate to view screen with the saved entry
+      if (savedLog && (savedLog as any).id) {
+        navigate({ 
+          to: '/view-entry/$id', 
+          params: { id: (savedLog as any).id.toString() }
+        });
+      } else {
+        navigate({ to: '/view-entries' });
+      }
       
     } catch (error) {
       console.error('Processing failed:', error);
@@ -160,9 +164,6 @@ export function VoiceRecorder() {
     setRecordedBlob(null);
     setRecordingTime('00:00');
     setError(null);
-    setTranscript('');
-    setAudioUrl('');
-    setExtractedData(null);
     setIsTranscribing(false);
     if (recordedBlob) {
       URL.revokeObjectURL(URL.createObjectURL(recordedBlob));
