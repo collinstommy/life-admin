@@ -4,6 +4,9 @@ import { useNavigate } from '@tanstack/react-router';
 import { Instructions } from './Instructions';
 
 interface FormData {
+  // Date
+  date: string;
+  
   // Basic Info
   sleep: string;
   energy: string;
@@ -32,6 +35,11 @@ interface FormData {
 
 const formDataToText = (data: FormData): string => {
   const parts: string[] = [];
+  
+  // Always include the date at the beginning
+  if (data.date) {
+    parts.push(`Date: ${data.date}`);
+  }
   
   // Basic Info
   if (data.sleep) parts.push(`I slept ${data.sleep} hours`);
@@ -62,7 +70,11 @@ const formDataToText = (data: FormData): string => {
 };
 
 export const ManualEntryScreen: React.FC = () => {
+  // Initialize with today's date
+  const today = new Date().toISOString().split('T')[0];
+  
   const [formData, setFormData] = useState<FormData>({
+    date: today,
     sleep: '',
     energy: '',
     mood: '',
@@ -145,6 +157,27 @@ export const ManualEntryScreen: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Date Section */}
+            <fieldset className="fieldset section-card rounded-xl">
+              <legend className="fieldset-legend text-lg font-semibold text-slate-900 flex items-center">
+                <span className="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>
+                Date
+              </legend>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend">Entry Date</legend>
+                  <input 
+                    type="date" 
+                    className="input input-bordered rounded-lg" 
+                    value={formData.date}
+                    onChange={(e) => updateField('date', e.target.value)}
+                    disabled={createHealthLog.isPending}
+                    required
+                  />
+                </fieldset>
+              </div>
+            </fieldset>
+
             {/* Basic Info Section */}
             <fieldset className="fieldset section-card rounded-xl">
               <legend className="fieldset-legend text-lg font-semibold text-slate-900 flex items-center">

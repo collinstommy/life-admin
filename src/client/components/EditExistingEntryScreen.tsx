@@ -173,15 +173,27 @@ export function EditExistingEntryScreen() {
 
   const handleSave = async () => {
     try {
-      if (!updateTranscript) {
-        console.error('No update transcript available');
+      // Check if only the date was changed (no update transcript)
+      const originalDate = parseEntryData(processedEntry).date;
+      const dateChanged = currentData.date !== originalDate;
+      
+      if (!updateTranscript && !dateChanged) {
+        console.error('No changes to save');
         return;
+      }
+
+      // If only date changed, create a simple update transcript
+      let finalUpdateTranscript = updateTranscript;
+      if (!updateTranscript && dateChanged) {
+        finalUpdateTranscript = `Date changed to ${currentData.date}`;
+      } else if (updateTranscript && dateChanged) {
+        finalUpdateTranscript = `${updateTranscript}. Date changed to ${currentData.date}`;
       }
 
       await updateExistingEntry.mutateAsync({
         id: processedEntry.id.toString(),
         healthData: currentData,
-        updateTranscript: updateTranscript
+        updateTranscript: finalUpdateTranscript
       });
       
       // Navigate back to view entries after successful save
@@ -196,7 +208,9 @@ export function EditExistingEntryScreen() {
   };
 
   const isProcessingUpdate = isTranscribing || updateHealthData.isPending || isProcessingTextUpdate;
-  const canSave = updateTranscript.length > 0;
+  const originalDate = parseEntryData(processedEntry).date;
+  const dateChanged = currentData.date !== originalDate;
+  const canSave = updateTranscript.length > 0 || dateChanged;
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'Unknown Date';
@@ -235,6 +249,25 @@ export function EditExistingEntryScreen() {
           {/* Content */}
           <div className="p-6">
             <HealthDataPreview data={currentData} />
+          </div>
+
+          {/* Date Editor */}
+          <div className="p-6 border-t border-slate-200/50">
+            <div className="glass-card rounded-xl p-4">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
+                <span className="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>
+                Edit Date
+              </h3>
+              <div className="max-w-xs">
+                <input 
+                  type="date" 
+                  className="input input-bordered rounded-lg w-full" 
+                  value={currentData.date ? new Date(currentData.date).toISOString().split('T')[0] : ''}
+                  onChange={(e) => setCurrentData(prev => ({ ...prev, date: e.target.value }))}
+                  disabled={updateExistingEntry.isPending || isProcessingUpdate}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Text Update Input */}
@@ -344,7 +377,7 @@ export function EditExistingEntryScreen() {
           {!canSave && (
             <div className="p-4 bg-yellow-50/80 backdrop-blur-sm border-t border-yellow-200/50">
               <p className="text-yellow-800 text-sm">
-                Use voice recording or text updates to modify this entry. 
+                Edit the date above or use voice recording/text updates to modify this entry. 
                 Examples: "Change my mood to 8", "I also had a snack", "Actually, my workout was 45 minutes"
               </p>
             </div>

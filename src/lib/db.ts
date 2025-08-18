@@ -533,13 +533,21 @@ export async function updateHealthLog(
     console.log(`Starting update for health log ID: ${id}`);
 
     // 1. Update the main health log with new JSON and merged transcript
+    const updateData: any = {
+      structuredData: JSON.stringify(healthData),
+      transcript: mergedTranscript,
+      updatedAt: now,
+    };
+
+    // If the healthData contains a date, update the date field as well
+    if (healthData.date) {
+      updateData.date = healthData.date;
+      console.log(`Updating date field to: ${healthData.date}`);
+    }
+
     await db
       .update(schema.healthLogs)
-      .set({
-        structuredData: JSON.stringify(healthData),
-        transcript: mergedTranscript,
-        updatedAt: now,
-      })
+      .set(updateData)
       .where(eq(schema.healthLogs.id, id));
 
     console.log(`Updated main health log entry for ID: ${id}`);
