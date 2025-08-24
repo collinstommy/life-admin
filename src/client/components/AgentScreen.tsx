@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { Conversation, ConversationContent } from '@/components/ai-elements/conversation';
+import { Message, MessageContent, MessageAvatar } from '@/components/ai-elements/message';
+import { PromptInput, PromptInputTextarea, PromptInputSubmit, PromptInputToolbar } from '@/components/ai-elements/prompt-input';
 
 interface Message {
   id: string;
@@ -17,7 +20,7 @@ export function AgentScreen() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
   };
 
@@ -72,96 +75,91 @@ export function AgentScreen() {
   ];
 
   return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-6 rounded-xl mb-4 border border-base-300">
-        <h1 className="text-2xl font-bold text-base-content">💰 AI Expense Assistant</h1>
-        <p className="text-base-content/70 mt-2">
-          Add expenses naturally using voice or text. I'll automatically categorize everything for you.
-        </p>
-      </div>
+    <div className='bg-white min-h-screen'>
+      <div className="flex flex-col h-full max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-xl mb-4 border border-gray-200 dark:border-gray-700">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">💰 AI Expense Assistant</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            Add expenses naturally using voice or text. I'll automatically categorize everything for you.
+          </p>
+        </div>
 
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto space-y-3 mb-4 px-1">
-        {messages.map((message: any) => (
-          <div
-            key={message.id}
-            className={`flex ${
-              message.role === 'user' ? 'justify-end' : 'justify-start'
-            }`}
-          >
-            <div
-              className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
-                message.role === 'user'
-                  ? 'bg-primary text-primary-content rounded-br-md'
-                  : 'bg-base-200 text-base-content rounded-bl-md'
-              }`}
-            >
-              <div className="whitespace-pre-wrap leading-relaxed">
-                {message.content}
-              </div>
-            </div>
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-base-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-base-content/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="w-2 h-2 bg-base-content/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-2 h-2 bg-base-content/40 rounded-full animate-bounce"></div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        {/* Messages Container */}
+        <Conversation className="flex-1 mb-4">
+          <ConversationContent className="space-y-3">
+            {messages.map((message: any) => (
+              <Message key={message.id} from={message.role}>
+                <MessageContent>
+                  <div className="whitespace-pre-wrap leading-relaxed">
+                    {message.content}
+                  </div>
+                </MessageContent>
+                <MessageAvatar 
+                  src={message.role === 'user' ? '/user-avatar.png' : '/ai-avatar.png'}
+                  name={message.role === 'user' ? 'User' : 'AI'}
+                />
+              </Message>
+            ))}
+            {isLoading && (
+              <Message from="assistant">
+                <MessageContent>
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce"></div>
+                  </div>
+                </MessageContent>
+                <MessageAvatar 
+                  src="/ai-avatar.png"
+                  name="AI"
+                />
+              </Message>
+            )}
+          </ConversationContent>
+        </Conversation>
 
-      {/* Input Form */}
-      <form onSubmit={handleSubmit} className="flex gap-3 items-end">
-        <div className="flex-1">
-          <input
-            type="text"
+        {/* Input Form */}
+        <PromptInput onSubmit={handleSubmit}>
+          <PromptInputTextarea
             value={input}
             onChange={handleInputChange}
             placeholder="Add 50 euro for groceries..."
             disabled={isLoading}
-            className="border border-gray-300 rounded px-3 py-2 w-full"
-            style={{ minHeight: '40px' }}
           />
-        </div>
-        <button
-          type="submit"
-          disabled={isLoading || !input.trim()}
-          className="btn btn-primary btn-square"
-        >
-          {isLoading ? (
-            <span className="loading loading-spinner loading-sm"></span>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-            </svg>
-          )}
-        </button>
-      </form>
+          <PromptInputToolbar>
+            <div className="flex-1" />
+            <PromptInputSubmit
+              disabled={isLoading || !input.trim()}
+              status={isLoading ? 'submitted' : undefined}
+            />
+          </PromptInputToolbar>
+        </PromptInput>
 
-      {/* Example Prompts */}
-      <div className="mt-4 p-4 bg-base-200/50 rounded-xl border border-base-300">
-        <p className="text-sm text-base-content/70 mb-3 font-medium">✨ Try these examples:</p>
-        <div className="flex flex-wrap gap-2">
-          {examplePrompts.map((example) => (
-            <button
-              key={example}
-              onClick={() => {
-                const event = { target: { value: example } } as React.ChangeEvent<HTMLInputElement>;
-                handleInputChange(event);
-                handleSubmit(event);
-              }}
-              disabled={isLoading}
-              className="btn btn-sm btn-ghost bg-base-100 hover:bg-primary/10 text-xs"
-            >
-              {example}
-            </button>
-          ))}
+        {/* Example Prompts */}
+        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 font-medium">✨ Try these examples:</p>
+          <div className="flex flex-wrap gap-2">
+            {examplePrompts.map((example) => (
+              <button
+                key={example}
+                onClick={() => {
+                  const event = { target: { value: example } } as React.ChangeEvent<HTMLTextAreaElement>;
+                  handleInputChange(event);
+                  setTimeout(() => {
+                    const form = document.querySelector('form') as HTMLFormElement;
+                    if (form) {
+                      form.requestSubmit();
+                    }
+                  }, 0);
+                }}
+                disabled={isLoading}
+                className="px-3 py-1.5 text-xs bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 transition-colors"
+              >
+                {example}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
