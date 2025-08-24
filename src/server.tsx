@@ -56,6 +56,7 @@ const createHealthLogFromTextSchema = z.object({
   text: z.string().min(1, 'Text is required'),
 });
 
+
 const judgeHealthDataSchema = z.object({
   originalData: z.any(),
   updateTranscript: z.string().min(1, 'Update transcript is required'),
@@ -818,7 +819,91 @@ const apiRoutes = app
         );
       }
     },
-  );
+  )
+  .post("/api/agent/expense", async (c) => {
+    try {
+      // Handle both old format {message: string} and new AI SDK format {messages: array}
+      const body = await c.req.json();
+      let userMessage = '';
+      
+      if (body.message) {
+        // Old format
+        userMessage = body.message;
+      } else if (body.messages) {
+        // New AI SDK format
+        const lastMessage = body.messages.findLast((msg: any) => msg.role === 'user');
+        userMessage = lastMessage?.content || '';
+      }
+      
+      if (!userMessage) {
+        return new Response('No message found', { status: 400 });
+      }
+      
+      // Import the ExpenseTaskAgent
+      const { ExpenseTaskAgent } = await import('./lib/ai-agents');
+      
+      // Create agent instance
+      const agent = new ExpenseTaskAgent(c.env.DB, c.env.GEMINI_API_KEY);
+      
+      // Process the message
+      const result = await agent.processMessage(userMessage);
+      
+      // Return streaming response for AI SDK compatibility
+      return new Response(result.message, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+        },
+      });
+    } catch (error) {
+      console.error('Error processing agent expense request:', error);
+      return new Response('Sorry, I encountered an error. Please try again.', {
+        status: 500,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+        },
+      });
+    }
+  })
+  .post("/api/agent/chat", async (c) => {
+    try {
+      const { messages } = await c.req.json();
+      
+      // Get the last user message
+      const lastMessage = messages.findLast((msg: any) => msg.role === 'user');
+      if (!lastMessage) {
+        return new Response('No user message found', { status: 400 });
+      }
+      
+      // Extract content from message (could be string or parts array)
+      const userContent = typeof lastMessage.content === 'string' 
+        ? lastMessage.content 
+        : lastMessage.content.map((part: any) => part.text || '').join('');
+      
+      // Import the ExpenseTaskAgent
+      const { ExpenseTaskAgent } = await import('./lib/ai-agents');
+      
+      // Create agent instance
+      const agent = new ExpenseTaskAgent(c.env.DB, c.env.GEMINI_API_KEY);
+      
+      // Process the message
+      const result = await agent.processMessage(userContent);
+      
+      // Return as streaming text response compatible with AI SDK
+      return new Response(result.message, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+        },
+      });
+    } catch (error) {
+      console.error('Error processing agent chat request:', error);
+      return new Response('Sorry, I encountered an error. Please try again.', { 
+        status: 500,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+        },
+      });
+    }
+  });
 
 // Legacy API endpoint - now pulls from database
 app.get("/logs", withDb, async (c) => {

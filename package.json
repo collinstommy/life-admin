@@ -15,11 +15,15 @@
     "client:watch": "vite build --watch"
   },
   "dependencies": {
+    "@ai-sdk/google": "^2.0.8",
+    "@ai-sdk/react": "^2.0.22",
+    "@ai-sdk/ui-utils": "^1.2.11",
     "@hono/zod-validator": "^0.1.8",
     "@notionhq/client": "^2.2.15",
     "@tanstack/react-query": "^5.81.5",
     "@tanstack/react-query-devtools": "^5.81.5",
     "@tanstack/react-router": "^1.123.0",
+    "ai": "^5.0.22",
     "clsx": "^2.0.0",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.44.2",
