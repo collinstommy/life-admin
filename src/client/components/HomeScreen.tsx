@@ -42,8 +42,7 @@ export function HomeScreen() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <div>
-                <h1 className="text-lg font-semibold text-slate-900">Health Journal</h1>
-                <p className="text-sm text-slate-500">Your daily wellness companion</p>
+                <h1 className="text-lg font-semibold text-slate-900">Admin</h1>
               </div>
             </div>
             <Link 
@@ -72,7 +71,7 @@ export function HomeScreen() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
                 </svg>
               </div>
-              <h3 className="text-xs md:text-xl font-semibold text-slate-900 text-center">Voice</h3>
+              <h3 className="text-xs md:text-xl font-semibold text-slate-900 text-center">Voice Health</h3>
             </Link>
 
             {/* Text Entry */}
@@ -85,7 +84,7 @@ export function HomeScreen() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
               </div>
-              <h3 className="text-xs md:text-xl font-semibold text-slate-900 text-center">Text</h3>
+              <h3 className="text-xs md:text-xl font-semibold text-slate-900 text-center">Text Health</h3>
             </Link>
 
             {/* View Entries */}

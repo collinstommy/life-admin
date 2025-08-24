@@ -24,16 +24,6 @@ function RootLayout() {
 
   return (
     <div className="min-h-screen">
-      {/* Minimal header with logout - only shows on home screen */}
-      <div className="absolute right-4 top-4 z-50">
-        <button
-          onClick={logout}
-          className="rounded-md bg-gray-500 px-3 py-1 text-xs font-medium text-white shadow-sm transition-colors hover:bg-gray-600"
-        >
-          Sign Out
-        </button>
-      </div>
-
       {/* Route content */}
       <Outlet />
     </div>
