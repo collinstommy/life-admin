@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Conversation, ConversationContent } from '@/components/ai-elements/conversation';
 import { Message, MessageContent, MessageAvatar } from '@/components/ai-elements/message';
 import { PromptInput, PromptInputTextarea, PromptInputSubmit, PromptInputToolbar } from '@/components/ai-elements/prompt-input';
+import { useNavigate } from '@tanstack/react-router';
 
 interface Message {
   id: string;
@@ -10,6 +11,7 @@ interface Message {
 }
 
 export function AgentScreen() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -75,8 +77,33 @@ export function AgentScreen() {
   ];
 
   return (
-    <div className='bg-white min-h-screen'>
-      <div className="flex flex-col h-full max-w-4xl mx-auto">
+    <div className="min-h-screen bg-white">
+      <style>{`
+        .glass-card {
+          backdrop-filter: blur(10px);
+          background: rgba(255, 255, 255, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+      `}</style>
+      
+      {/* Navigation Header */}
+      <div className="glass-card sticky top-0 z-50 border-b border-slate-200/50 rounded-b-2xl">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <button
+              onClick={() => navigate({ to: '/' })}
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 rounded-lg transition-colors"
+            >
+              <span className="icon-[mdi--chevron-left] w-5 h-5 mr-2"></span>
+              Back
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col h-full">
         {/* Header */}
         <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-xl mb-4 border border-gray-200 dark:border-gray-700">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">💰 AI Expense Assistant</h1>
@@ -160,6 +187,7 @@ export function AgentScreen() {
               </button>
             ))}
           </div>
+        </div>
         </div>
       </div>
     </div>
