@@ -15,10 +15,11 @@ import { getAllHealthLogs, getHealthLogById, initDb, deleteHealthLog, deleteAllH
 // Import the saveHealthLog function
 import { saveHealthLog } from "./lib/db";
 // Import types from schema
-import { HealthLog } from "./db/schema";
+import { HealthLog, expenses as expensesTable } from "./db/schema";
 import { seedDatabase } from "./seed";
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
+import { desc } from 'drizzle-orm';
 
 // JWT token expiration duration (7 days in seconds)
 const SEVEN_DAYS = 60 * 60 * 24 * 7;
@@ -654,6 +655,33 @@ const apiRoutes = app
         {
           error: "Failed to delete all health logs",
           message: error instanceof Error ? error.message : String(error),
+        },
+        500,
+      );
+    }
+  })
+  .get("/api/expenses", async (c) => {
+    try {
+      console.log("Fetching all expenses from database");
+      
+      const db = c.get('db');
+      const expenses = await db.select().from(expensesTable).orderBy(desc(expensesTable.createdAt));
+      
+      console.log(`Retrieved ${expenses.length} expenses from database`);
+      
+      // Convert amounts from cents to dollars and add formatted display
+      const formattedExpenses = expenses.map(expense => ({
+        ...expense,
+        displayAmount: expense.amount / 100, // Convert cents to dollars/euros
+      }));
+      
+      return c.json(formattedExpenses);
+    } catch (error) {
+      console.error("Error fetching expenses:", error);
+      return c.json(
+        {
+          error: "Failed to fetch expenses",
+          message: error instanceof Error ? error.message : "Unknown error",
         },
         500,
       );

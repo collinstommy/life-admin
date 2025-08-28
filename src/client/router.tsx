@@ -15,6 +15,7 @@ import { ManualEntryScreen } from "./components/ManualEntryScreen";
 import { EditExistingEntryScreen } from "./components/EditExistingEntryScreen";
 import { EditValidationScreen } from "./components/EditValidationScreen";
 import { AgentScreen } from "./components/AgentScreen";
+import { ExpensesScreen } from "./components/ExpensesScreen";
 import { useAuth } from "./hooks/useAuth";
 import DesignSystem from "./components/DesignSystem";
 
@@ -122,12 +123,20 @@ const agentRoute = createRoute({
   component: AgentScreen,
 });
 
+// Expenses route
+const expensesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/expenses",
+  component: ExpensesScreen,
+});
+
 // Create the route tree
 const routeTree = rootRoute.addChildren([
   indexRoute,
   addEntryRoute,
   addTextEntryRoute,
   agentRoute,
+  expensesRoute,
   viewEntriesRoute,
   singleEntryRoute,
   editExistingEntryRoute,
