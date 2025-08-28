@@ -1,6 +1,110 @@
 # Voice Task System Design
 
-## Architecture: AI-Powered Intent Classification
+## Task Executor Requirements
+
+### What Are These Task Executors?
+
+These are **Task Executors** - specialized components that handle specific domains of user requests. They're not autonomous AI agents, but rather focused modules that process structured intents and perform domain-specific operations. Each executor is responsible for understanding its domain's requirements, validating inputs, and executing the requested actions.
+
+### 1. Expense List Task Executor
+
+**Domain**: Financial expense tracking  
+**Primary Actions**: Add expenses with automatic categorization
+
+**Example Inputs**:
+- "Add expense 200 euro for shower door"
+- "Add 500 euro expense for car repair"
+- "Add 200 for groceries"
+
+
+**Requirements**:
+- **Currency Handling**: User input in euros → store as cents in database → display as euros (multiply by 100)
+- **Category Classification**: AI should automatically categorize expenses using these predefined categories:
+  - entertainment
+  - house maintenance  
+  - furniture
+  - car
+  - house decoration
+  - garden
+  - travel
+  - groceries
+  - other
+- **Single Expense List**: All expenses go to one list, differentiated by category
+- **Required Parameters**: 
+  - Amount (convert euro input to cents)
+  - Description/item name
+  - Category (auto-determined by AI from description)
+- **Validation**: 
+  - Amount must be positive number
+  - Description cannot be empty
+  - Category must match one of predefined options, default to "other" if not specified
+- **Error Handling**:
+  - Invalid amount: "I need a valid amount"
+
+
+### 2. Book List Task Executor  
+
+**Domain**: Reading list management via Hardcover API
+**Primary Actions**: Search and add books to reading list
+
+**Example Inputs**:
+- "Add \"To Kill a Mockingbird\" to my reading list"
+- "Add the book Dune by Frank Herbert to my list"
+
+**Requirements**:
+- **Book Search Flow**:
+  - Extract book title/author from user input
+  - Search Hardcover API for matching books
+  - Handle search results:
+    - **1 match**: Automatically add to list with confirmation
+    - **Multiple matches**: Present options, ask user to choose
+    - **No matches**: "I couldn't find that book. Can you provide more details like the author or full title?"
+- **Third-Party Integration**: Add books directly to Hardcover app via API (no local storage)
+- **Required Parameters**:
+  - Book identifier (title, author, or both)
+- **API Integration**:
+  - Use existing Hardcover API endpoints
+  - Books are stored in Hardcover, not in our local database
+  - Handle API rate limits and errors gracefully
+- **Validation**:
+  - Book title cannot be empty
+  - Valid Hardcover API response required for successful addition
+
+### 3. General List Task Executor
+
+**Domain**: Arbitrary text-based lists (shopping, tasks, notes)
+**Primary Actions**: Add text items to named lists
+
+**Example Inputs**:
+- "Add milk to my shopping list"
+- "Add fix shed door to my DIY list"
+- "Create a new list called project ideas"
+
+
+**Requirements**:
+- **List Types**: Support any user-defined list name (shopping, DIY, tasks, etc.)
+- **Item Storage**: Store raw text string as provided by user
+- **List Management**:
+  - Auto-create lists if they don't exist
+  - Support multiple list types simultaneously
+- **Routing Logic**: 
+  - **Critical**: If input contains "expense", "cost", "euro", "money" → route to Expense Agent instead
+  - If input contains "book", "reading", "hardcover" → route to Book Task Executor instead
+  - Otherwise process as general list item
+- **Required Parameters**:
+  - Item text/description
+  - List name (extract from context: "shopping list", "DIY list")
+- **Examples**:
+  - "add milk to my shopping list" → list: "shopping", item: "milk"
+  - "add fix shed door to my DIY list" → list: "DIY", item: "fix shed door"
+- **Validation**:
+  - Item text cannot be empty
+  - List name must be extractable from input
+
+**Cross-Executor Routing**:
+- Expense keywords → Expense Task Executor
+- Book/reading keywords → Book Task Executor  
+- Everything else → General List Task Executor
 
 ### Overview
 Uses AI for intent recognition and parameter extraction, with structured approach and simple retry logic. This design provides a good balance of flexibility and implementation complexity while reusing existing Gemini infrastructure.
@@ -30,128 +134,160 @@ Response Generator
 
 ## Technical Components
 
-### 1. AI Intent System
+### 1. AI SDK Tools System
 
-**Intent Interface**
+**Task Executor Tools**
 ```typescript
-interface Intent {
-  action: string;        // add, create, search, etc.
-  confidence: number;    // 0-1 confidence score
-  parameters: Record<string, any>;  // extracted parameters
-  domain: string;        // expense, book, list, etc.
-}
-```
+import { generateText, tool } from 'ai';
+import { google } from '@ai-sdk/google';
+import { z } from 'zod';
 
-**Intent Classification**
-```typescript
-async function classifyIntent(transcript: string): Promise<Intent> {
-  const prompt = `
-Analyze this voice command and extract:
-- action: (add, create, search, etc.)
-- domain: (expense, book, list)  
-- parameters: (amount, name, description, etc.)
-- confidence: 0-1
-
-Input: "${transcript}"
-Return JSON format.
-`;
-  
-  return await callGeminiAPI(prompt);
-}
-```
-
-### 2. Task Execution Framework
-
-**Abstract Task Executor**
-```typescript
-abstract class TaskExecutor {
-  abstract domain: string;
-  abstract execute(intent: Intent): Promise<TaskResult>;
-  abstract validate(intent: Intent): boolean;
-}
-```
-
-**Expense Task Implementation**
-```typescript
-class ExpenseTaskExecutor extends TaskExecutor {
-  domain = "expense";
-  
-  async execute(intent: Intent): Promise<TaskResult> {
-    switch(intent.action) {
-      case "add":
-        return await this.addExpense(intent.parameters);
-      case "create_list":
-        return await this.createList(intent.parameters);
+const expenseTools = {
+  addExpense: tool({
+    description: 'Add an expense with automatic categorization',
+    parameters: z.object({
+      amount: z.number().positive(),
+      description: z.string().min(1),
+      category: z.enum(['entertainment', 'house_maintenance', 'furniture', 'car', 'house_decoration', 'garden', 'travel', 'groceries', 'other']).optional()
+    }),
+    execute: async ({ amount, description, category }) => {
+      // Convert euros to cents, categorize if needed
+      const amountInCents = Math.round(amount * 100);
+      const finalCategory = category || await categorizeExpense(description);
+      return { success: true, message: `Added ${amount}€ expense for ${description}`, category: finalCategory };
     }
-  }
-  
-  validate(intent: Intent): boolean {
-    // Validate required parameters for expense operations
-    if (intent.action === "add") {
-      return intent.parameters.amount && intent.parameters.listName;
+  })
+};
+
+const bookTools = {
+  addBook: tool({
+    description: 'Search and add a book to Hardcover reading list',
+    parameters: z.object({
+      title: z.string().min(3),
+      author: z.string().optional()
+    }),
+    execute: async ({ title, author }) => {
+      // Search Hardcover API and add book
+      return { success: true, message: `Added "${title}" to your reading list` };
     }
-    return true;
+  })
+};
+
+const listTools = {
+  addToList: tool({
+    description: 'Add item to a general list',
+    parameters: z.object({
+      listName: z.string().min(3),
+      item: z.string().min(3)
+    }),
+    execute: async ({ listName, item }) => {
+      // Add item to specified list
+      return { success: true, message: `Added "${item}" to your ${listName} list` };
+    }
+  }),
+  
+  createList: tool({
+    description: 'Create a new general list',
+    parameters: z.object({
+      listName: z.string().min(3)
+    }),
+    execute: async ({ listName }) => {
+      // Create new list
+      return { success: true, message: `Created new list called "${listName}"` };
+    }
+  })
+};
+```
+
+### 2. Voice Agent Implementation
+
+**Main Voice Agent**
+```typescript
+class VoiceTaskAgent {
+  private allTools = { ...expenseTools, ...bookTools, ...listTools };
+  
+  async processVoiceCommand(transcript: string): Promise<TaskResult> {
+    const { text, toolCalls } = await generateText({
+      model: google('gemini-pro'),
+      tools: this.allTools,
+      system: `You are a voice assistant that helps with:
+        - Expense tracking with automatic categorization (entertainment, house_maintenance, furniture, car, house_decoration, garden, travel, groceries, other)
+        - Adding books to Hardcover reading list via API
+        - Managing general lists (shopping, DIY, tasks, etc.)
+        
+        Route requests appropriately:
+        - Expense keywords (expense, cost, euro, money) → use addExpense tool
+        - Book keywords (book, reading, hardcover) → use addBook tool  
+        - Everything else → use addToList tool`,
+      prompt: transcript
+    });
+
+    if (toolCalls.length === 0) {
+      return { success: false, message: "I didn't understand that. Can you rephrase?" };
+    }
+
+    // Execute the first tool call
+    const result = await toolCalls[0].execute();
+    return result;
   }
 }
 ```
 
-### 3. Database Schema
+### 3. Database Schema (Drizzle)
 
-**Task Tracking**
-```sql
-CREATE TABLE tasks (
-  id INTEGER PRIMARY KEY,
-  voice_input TEXT,
-  intent_json TEXT,
-  status TEXT, -- pending, completed, failed
-  result_json TEXT,
-  created_at INTEGER,
-  updated_at INTEGER
-);
+```typescript
+import { integer, text, sqliteTable } from 'drizzle-orm/sqlite-core';
+
+// Task Tracking
+export const tasks = sqliteTable('tasks', {
+  id: integer('id').primaryKey(),
+  userMessage: text('user_message'),
+  intentJson: text('intent_json'),
+  status: text('status').$type<'pending' | 'completed' | 'failed'>(),
+  resultJson: text('result_json'),
+  createdAt: integer('created_at'),
+  updatedAt: integer('updated_at')
+});
+
+// Expense Domain
+export const expenseLists = sqliteTable('expense_lists', {
+  id: integer('id').primaryKey(),
+  name: text('name').unique(),
+  createdAt: integer('created_at'),
+  updatedAt: integer('updated_at')
+});
+
+export const expenses = sqliteTable('expenses', {
+  id: integer('id').primaryKey(),
+  listId: integer('list_id').references(() => expenseLists.id),
+  amount: integer('amount'), // stored in cents
+  currency: text('currency'),
+  description: text('description'),
+  category: text('category').$type<'entertainment' | 'house_maintenance' | 'furniture' | 'car' | 'house_decoration' | 'garden' | 'travel' | 'groceries' | 'other'>(),
+  createdAt: integer('created_at'),
+  updatedAt: integer('updated_at')
+});
+
+// General Lists
+export const lists = sqliteTable('lists', {
+  id: integer('id').primaryKey(),
+  name: text('name'),
+  createdAt: integer('created_at'),
+  updatedAt: integer('updated_at')
+});
+
+export const listItems = sqliteTable('list_items', {
+  id: integer('id').primaryKey(),
+  listId: integer('list_id').references(() => lists.id),
+  item: text('item'),
+  createdAt: integer('created_at'),
+  updatedAt: integer('updated_at')
+});
 ```
 
-**Expense Domain Tables**
-```sql
-CREATE TABLE expense_lists (
-  id INTEGER PRIMARY KEY,
-  name TEXT UNIQUE,
-  user_context TEXT, -- JSON for user preferences/mappings
-  created_at INTEGER,
-  updated_at INTEGER
-);
+**Notes:**
+- Books: No local storage - uses Hardcover API directly
 
-CREATE TABLE expenses (
-  id INTEGER PRIMARY KEY,
-  list_id INTEGER REFERENCES expense_lists(id),
-  amount REAL,
-  currency TEXT,
-  description TEXT,
-  created_at INTEGER,
-  updated_at INTEGER
-);
-```
-
-**Future Domain Tables**
-```sql
--- Books domain (for future implementation)
-CREATE TABLE book_lists (
-  id INTEGER PRIMARY KEY,
-  name TEXT UNIQUE,
-  list_type TEXT, -- hardcover, kindle, wishlist, etc.
-  created_at INTEGER
-);
-
-CREATE TABLE books (
-  id INTEGER PRIMARY KEY,
-  list_id INTEGER REFERENCES book_lists(id),
-  title TEXT,
-  author TEXT,
-  isbn TEXT,
-  external_id TEXT, -- API reference
-  status TEXT, -- to_read, reading, completed
-  created_at INTEGER
-);
-```
 
 ### 4. Retry Logic
 
@@ -383,3 +519,20 @@ Response: "Created new expense list called 'vacation'"
 7. **Confidence-Based Clarification**: Asks for clarification when uncertain
 
 This design provides a solid foundation for the voice task system while maintaining reasonable complexity and leveraging the existing codebase effectively.
+
+
+## Progress
+
+✅ Expense Task Executor Implementation
+
+• Database Schema - Added tasks, expenseLists, expenses tables with Drizzle ORM
+• AI SDK Integration - Using Google Gemini with AI SDK tools for natural language processing
+• Expense Tool - addExpense tool that extracts amount/description from voice input
+• Auto-categorization - AI categorizes expenses into predefined categories (entertainment, car, groceries, etc.)
+• Currency Conversion - Euros → cents for database storage
+• Chat Interface - React chat UI with message history and example prompts
+• API Endpoint - /api/agent/expense with validation and error handling
+• Navigation Integration - Added "Agent" card to home screen
+• Database Persistence - Expenses properly saved and viewable in Drizzle Studio
+• Error Handling - Parameter validation and database constraint handling
+• Success Confirmation - Console logging shows successful expense creation

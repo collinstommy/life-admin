@@ -37,7 +37,9 @@ npm run deploy
 
 ## ToDo
 
-### DX
+### Health
+
+####  DX
 - [x] admin screen to view past logs and recordings
 - [x] elysia - get errors from client api?
 - [x] use new design system
@@ -46,8 +48,19 @@ npm run deploy
     - [ ] test edit
     - [ ] test create
 
-### Features
+#### Features
 - [x] Edit entry using text
 - [x] Improved form for text entry (meals fields, common items)
 
+#### Bugs
+- [ ] when an entry is created, briefly shows no entry message
 
+#### Ideas
+- Save recipes - meal plan, similar recipes
+- Chat with ai to store recipe favourites, design meal plan, plan out week
+- Notion connector for recipes
+- Add project idea
+- Add phyio routines - dropdown to select program
+
+### AI Agents
+- [ ] Voice correction - "Actually, that should be entertainment"

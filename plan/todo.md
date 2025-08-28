@@ -31,3 +31,11 @@
 
 ## Bugs
 - [ ] long recording fails
+
+## Future ideas
+- [ ] Meals 
+   - [ ] Save recipes
+   - [ ] Chat with ai to store recipe favourites
+   - [ ] design meal plan, plan out week
+   - [ ] Notion connector for recipes
+- [ ] Add project ideas

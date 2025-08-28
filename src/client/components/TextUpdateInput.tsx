@@ -77,7 +77,7 @@ export function TextUpdateInput({ onSubmit, onCancel, isProcessing = false, disa
             </button>
             <button
               onClick={handleSubmit}
-              disabled={isProcessing || disabled || !text.trim()}
+              disabled={isProcessing || disabled || !text?.trim()}
               className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isProcessing ? (

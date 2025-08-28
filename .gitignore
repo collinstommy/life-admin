@@ -6,6 +6,7 @@ out.js
 /dist
 *.pem
 *.crx
+cookies.txt
 
 # Ignore the built files
 /assets/static/index.js

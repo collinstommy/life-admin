@@ -8,6 +8,20 @@
       "when": 1747947292317,
       "tag": "0000_abnormal_nocturne",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1755974971416,
+      "tag": "0001_sticky_jimmy_woo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1756032284731,
+      "tag": "0002_daffy_vulcan",
+      "breakpoints": true
     }
   ]
 }

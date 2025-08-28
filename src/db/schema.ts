@@ -111,9 +111,40 @@ export const painDiscomfortRelations = relations(painDiscomfort, ({ one }) => ({
   }),
 }));
 
+// Task Executor Tables
+export const tasks = sqliteTable("tasks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userMessage: text("user_message"),
+  intentJson: text("intent_json"),
+  status: text("status").$type<"pending" | "completed" | "failed">(),
+  resultJson: text("result_json"),
+  createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+});
+
+export const expenses = sqliteTable("expenses", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  amount: integer("amount").notNull(), // stored in cents
+  currency: text("currency").notNull().default("EUR"),
+  description: text("description").notNull(),
+  category: text("category")
+    .$type<"entertainment" | "house_maintenance" | "furniture" | "car" | "house_decoration" | "garden" | "travel" | "groceries" | "other">()
+    .notNull()
+    .default("other"),
+  createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+});
+
+// Task Executor Relations
+export const tasksRelations = relations(tasks, ({ many }) => ({}));
+
 // Exporting types for type safety
 export type HealthLog = typeof healthLogs.$inferSelect;
 export type HealthData = typeof healthData.$inferSelect;
 export type Workout = typeof workouts.$inferSelect;
 export type Meal = typeof meals.$inferSelect;
 export type PainDiscomfort = typeof painDiscomfort.$inferSelect;
+
+// Task Executor types
+export type Task = typeof tasks.$inferSelect;
+export type Expense = typeof expenses.$inferSelect;

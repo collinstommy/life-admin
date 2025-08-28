@@ -123,6 +123,20 @@ export function DebugScreen() {
               View Design System
             </button>
           </div>
+
+          {/* Expenses Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Expenses</h2>
+            <p className="text-gray-600 mb-4">
+              View and manage all expenses in the system.
+            </p>
+            <button
+              onClick={() => navigate({ to: '/expenses' })}
+              className="bg-emerald-500 text-white px-4 py-2 rounded hover:bg-emerald-600 transition-colors"
+            >
+              View Expenses
+            </button>
+          </div>
           
           <ConfirmDialog
             isOpen={showDeleteConfirm}
