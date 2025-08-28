@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCreateHealthLogFromText } from '../hooks/useHealthLogs';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Instructions } from './Instructions';
 
 interface FormData {
@@ -70,11 +70,14 @@ const formDataToText = (data: FormData): string => {
 };
 
 export const ManualEntryScreen: React.FC = () => {
-  // Initialize with today's date
-  const today = new Date().toISOString().split('T')[0];
+  // Get date from search params if provided
+  const search = useSearch({ from: '/add-text-entry' }) as { date?: string };
+  
+  // Initialize with provided date or today's date
+  const defaultDate = search?.date || new Date().toISOString().split('T')[0];
   
   const [formData, setFormData] = useState<FormData>({
-    date: today,
+    date: defaultDate,
     sleep: '',
     energy: '',
     mood: '',
@@ -93,6 +96,13 @@ export const ManualEntryScreen: React.FC = () => {
   });
   const createHealthLog = useCreateHealthLogFromText();
   const navigate = useNavigate();
+
+  // Update form data when search params change
+  useEffect(() => {
+    if (search?.date && search.date !== formData.date) {
+      setFormData(prev => ({ ...prev, date: search.date! }));
+    }
+  }, [search?.date]);
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

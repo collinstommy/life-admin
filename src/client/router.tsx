@@ -114,6 +114,9 @@ const addTextEntryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/add-text-entry",
   component: ManualEntryScreen,
+  validateSearch: (search: Record<string, unknown>) => ({
+    date: typeof search.date === 'string' ? search.date : undefined,
+  }),
 });
 
 // Agent route
