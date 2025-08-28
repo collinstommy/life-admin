@@ -143,26 +143,28 @@ export function EntriesList({ logs, isLoading, error, length, showActionButtons 
             });
 
             return (
-              <div key={`placeholder-${item.date}`} className="glass-card rounded-2xl overflow-hidden border-dashed border-2 border-slate-200 bg-slate-50/50">
-                <div className="flex items-center justify-between p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-slate-200 rounded-lg flex items-center justify-center">
-                      <span className="icon-[mdi--calendar-plus] w-6 h-6 text-slate-400"></span>
+              <div key={`placeholder-${item.date}`} className="opacity-60 hover:opacity-90 transition-opacity duration-200">
+                <div className="rounded-2xl overflow-hidden border-dotted border-2 border-slate-300 bg-transparent backdrop-blur-sm">
+                  <div className="flex items-center justify-between p-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center border border-slate-200">
+                        <span className="icon-[mdi--calendar-plus] w-6 h-6 text-slate-500"></span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-medium text-slate-700">{placeholderDate}</h3>
+                        <p className="text-sm text-slate-500">No entry for this day</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-slate-600">{placeholderDate}</h3>
-                      <p className="text-sm text-slate-500">No entry for this day</p>
-                    </div>
+                    
+                    <Link 
+                      to="/add-text-entry" 
+                      search={{ date: item.date }}
+                      className="btn btn-outline btn-sm text-slate-600 border-slate-400 hover:text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
+                    >
+                      <span className="icon-[mdi--plus] w-4 h-4 mr-1"></span>
+                      Add Entry
+                    </Link>
                   </div>
-                  
-                  <Link 
-                    to="/add-text-entry" 
-                    search={{ date: item.date }}
-                    className="btn btn-outline btn-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
-                  >
-                    <span className="icon-[mdi--plus] w-4 h-4 mr-1"></span>
-                    Add Entry
-                  </Link>
                 </div>
               </div>
             );
