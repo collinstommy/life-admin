@@ -35,7 +35,8 @@ This is a **Health Tracking Voice Recording Application** built as a Cloudflare 
 - **Storage**: Cloudflare R2 for audio recordings
 - **AI**: Cloudflare AI (Whisper for transcription, Gemini for data extraction)
 - **Auth**: JWT-based authentication with cookies
-- **Styling**: Tailwind CSS + DaisyUI components
+- **Styling**: Tailwind CSS + DaisyUI components + AI Elements for chat interface
+- **AI Components and Agents**: AI SDK: https://ai-sdk.dev/llms.txt
 
 ### Application Flow
 1. **Voice Recording**: User records voice through web interface (`VoiceRecorder.tsx`)

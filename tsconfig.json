@@ -8,6 +8,10 @@
     "moduleResolution": "bundler",
     "target": "es2020",
     "module": "esnext",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   }
 }

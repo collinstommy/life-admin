@@ -14,6 +14,8 @@ import { HistoryView } from "./components/HistoryView";
 import { ManualEntryScreen } from "./components/ManualEntryScreen";
 import { EditExistingEntryScreen } from "./components/EditExistingEntryScreen";
 import { EditValidationScreen } from "./components/EditValidationScreen";
+import { AgentScreen } from "./components/AgentScreen";
+import { ExpensesScreen } from "./components/ExpensesScreen";
 import { useAuth } from "./hooks/useAuth";
 import DesignSystem from "./components/DesignSystem";
 
@@ -23,16 +25,6 @@ function RootLayout() {
 
   return (
     <div className="min-h-screen">
-      {/* Minimal header with logout - only shows on home screen */}
-      <div className="absolute right-4 top-4 z-50">
-        <button
-          onClick={logout}
-          className="rounded-md bg-gray-500 px-3 py-1 text-xs font-medium text-white shadow-sm transition-colors hover:bg-gray-600"
-        >
-          Sign Out
-        </button>
-      </div>
-
       {/* Route content */}
       <Outlet />
     </div>
@@ -124,11 +116,27 @@ const addTextEntryRoute = createRoute({
   component: ManualEntryScreen,
 });
 
+// Agent route
+const agentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/agent",
+  component: AgentScreen,
+});
+
+// Expenses route
+const expensesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/expenses",
+  component: ExpensesScreen,
+});
+
 // Create the route tree
 const routeTree = rootRoute.addChildren([
   indexRoute,
   addEntryRoute,
-  addTextEntryRoute, // Add this line
+  addTextEntryRoute,
+  agentRoute,
+  expensesRoute,
   viewEntriesRoute,
   singleEntryRoute,
   editExistingEntryRoute,

@@ -98,7 +98,6 @@ export default {
       {
         healthApp: {
           "primary": "#667eea",
-          "secondary": "#8b5cf6",
           "accent": "#14b8a6",
           "neutral": "#1e293b",
           "base-100": "#ffffff",
