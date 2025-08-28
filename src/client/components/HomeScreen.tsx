@@ -71,7 +71,7 @@ export function HomeScreen() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
                 </svg>
               </div>
-              <h3 className="text-xs md:text-xl font-semibold text-slate-900 text-center">Voice Health33</h3>
+              <h3 className="text-xs md:text-xl font-semibold text-slate-900 text-center">Voice Health</h3>
             </Link>
 
             {/* Text Entry */}
