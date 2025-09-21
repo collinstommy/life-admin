@@ -6,6 +6,7 @@ import * as schema from "./db/schema";
 type Bindings = {
   NOTION_TOKEN: string;
   NOTION_DATABASE_ID: string;
+  NOTION_RECIPE_DATABASE_ID: string;
   DAILY_LOG_CACHE: KVNamespace;
   DAILY_LOG_API_KEY: string;
   LOGS_API_KEY: string;

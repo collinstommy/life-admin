@@ -1,11 +1,14 @@
+import { KVNamespace } from "@cloudflare/workers-types";
 import { Client } from "@notionhq/client";
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 import { NotionToMarkdown } from "notion-to-md";
 
-export type LogEntry = {
-  pageName: string;
+
+export type RecipeDBEntry = {
+  id: string;
   content: string;
-  date: string;
+  notionId: string;
+  lastEditedTime: string;
 };
 
 type CachedPage = {
@@ -84,7 +87,6 @@ export class NotionApiClient {
           content: mdString,
         };
       });
-
       return Promise.all(entries);
     } catch (error) {
       console.error("Error fetching logs:", error);
@@ -128,6 +130,85 @@ export class NotionApiClient {
       };
     } catch (error) {
       console.error("Error fetching page:", error);
+      throw error;
+    }
+  }
+}
+
+export class RecipeNotionClient {
+  private client: Client;
+  private databaseId: string;
+  private n2m: NotionToMarkdown;
+
+  constructor(notionSecret: string, databaseId: string) {
+    this.client = new Client({ auth: notionSecret });
+    this.databaseId = databaseId;
+    this.n2m = new NotionToMarkdown({ notionClient: this.client });
+  }
+
+  async getAllRecipes(): Promise<[]> {
+    try {
+      const database = await this.client.databases.query({
+        database_id: this.databaseId,
+        filter: {
+          property: "Save to admin",
+          checkbox: {
+            equals: true,
+          },
+        },
+      });
+
+      const entries = database.results.map(async (result) => {
+        const databaseItem = result as PageObjectResponse;
+        
+        // Get the actual page to extract title from page content
+        const page = (await this.client.pages.retrieve({
+          page_id: databaseItem.id,
+        })) as PageObjectResponse;
+        
+
+        // Convert Notion blocks to markdown
+        const mdblocks = await this.n2m.pageToMarkdown(result.id);
+        const content = this.n2m.toMarkdownString(mdblocks).parent;
+
+        return {
+          id: result.id,
+          content,
+          notionId: result.id,
+          lastEditedTime: page.last_edited_time,
+        };
+      });
+
+      return Promise.all(entries);
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+      throw error;
+    }
+  }
+
+  async getRecipe(pageId: string): Promise<RecipeDBEntry> {
+    try {
+      const page = (await this.client.pages.retrieve({
+        page_id: pageId,
+      })) as PageObjectResponse;
+      
+      console.log(page)
+      const properties = page.properties as Record<string, any>;
+  
+
+      // Convert to markdown
+      const mdblocks = await this.n2m.pageToMarkdown(pageId);
+      const content = this.n2m.toMarkdownString(mdblocks).parent;
+
+      return {
+        id: pageId,
+        title: properties["Title"],
+        content,
+        notionId: pageId,
+        lastEditedTime: page.last_edited_time,
+      };
+    } catch (error) {
+      console.error("Error fetching recipe:", error);
       throw error;
     }
   }

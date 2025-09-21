@@ -102,6 +102,72 @@ const withDb: MiddlewareHandler<HonoApp> = async (c, next) => {
 // Serve static files
 app.use("/static/*", serveStatic({ root: "./", manifest }));
 
+// Unauthenticated debug endpoint (TEMPORARY FOR POC)
+app.get("/api/debug/recipes", withDb, async (c) => {
+  try {
+    console.log("Debug recipes endpoint called");
+    
+    // Import recipe functions
+    const { RecipeNotionClient } = await import("./api/notion");
+    const { saveRecipe, getAllRecipes } = await import("./lib/db");
+    
+    // Initialize Notion client with recipe database
+    const recipeClient = new RecipeNotionClient(
+      c.env.NOTION_TOKEN,
+      c.env.NOTION_RECIPE_DATABASE_ID
+    );
+    
+    console.log("Fetching recipes from Notion...");
+    
+    // Fetch from Notion
+    const notionRecipes = await recipeClient.getAllRecipes();
+    console.log(`Found ${notionRecipes.length} recipes in Notion`);
+    
+    // Save to database
+    const savedRecipes = [];
+    for (const recipe of notionRecipes) {
+      try {
+        const recipeId = await saveRecipe(c as AppContext, recipe);
+        savedRecipes.push({ id: recipeId, title: recipe.title });
+      } catch (saveError) {
+        console.error(`Failed to save recipe ${recipe.title}:`, saveError);
+      }
+    }
+    
+    // Get all recipes from database
+    const dbRecipes = await getAllRecipes(c as AppContext);
+    
+    return c.json({
+      success: true,
+      message: "Recipe debug endpoint working",
+      stats: {
+        notionRecipesFound: notionRecipes.length,
+        recipesSaved: savedRecipes.length,
+        totalInDatabase: dbRecipes.length,
+      },
+      savedRecipes,
+      recipes: dbRecipes.map(recipe => ({
+        id: recipe.id,
+        title: recipe.title,
+        slug: recipe.slug,
+        contentLength: recipe.markdown?.length || 0,
+        hasIngredients: !!recipe.extractedIngredients,
+        isActive: recipe.isActive,
+        createdAt: recipe.createdAt,
+      })),
+    });
+  } catch (error) {
+    console.error("Error in debug recipes endpoint:", error);
+    return c.json(
+      {
+        error: "Failed to fetch recipes",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
+});
+
 // API routes require authentication
 app.use("/api/*", authenticateJwt);
 app.use("/api/*", withDb);

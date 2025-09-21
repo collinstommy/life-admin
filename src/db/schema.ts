@@ -135,6 +135,28 @@ export const expenses = sqliteTable("expenses", {
   updatedAt: integer("updated_at").notNull(),
 });
 
+// Recipes table for storing Notion recipes with AI-extracted ingredients
+export const recipes = sqliteTable("recipes", {
+  id: text("id").primaryKey(), // UUID
+  notionId: text("notion_id").unique(), // For syncing with Notion
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(), // URL-friendly version
+  markdown: text("markdown").notNull(), // Full recipe content from Notion
+  
+  // AI-extracted ingredient data (core feature)
+  extractedIngredients: text("extracted_ingredients"), // JSON array of ingredient strings
+  
+  // Optional metadata
+  isActive: integer("is_active").default(1), // 0 = inactive/archived recipes
+  tags: text("tags"), // JSON array for categorization
+  servings: integer("servings"), // Estimated servings
+  
+  // Processing timestamps
+  lastIngredientExtraction: integer("last_ingredient_extraction"),
+  createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+});
+
 // Task Executor Relations
 export const tasksRelations = relations(tasks, ({ many }) => ({}));
 
@@ -148,3 +170,6 @@ export type PainDiscomfort = typeof painDiscomfort.$inferSelect;
 // Task Executor types
 export type Task = typeof tasks.$inferSelect;
 export type Expense = typeof expenses.$inferSelect;
+
+// Recipe types
+export type Recipe = typeof recipes.$inferSelect;

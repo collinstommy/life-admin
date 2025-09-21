@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { AppContext } from "../types";
 import { StructuredHealthData } from "./ai";
 import * as schema from "../db/schema";
+import { RecipeDBEntry } from "../api/notion";
 
 /**
  * Initializes the database connection
@@ -656,6 +657,119 @@ export async function updateHealthLog(
       `Failed to update health log: ${
         error instanceof Error ? error.message : String(error)
       }`,
+    );
+  }
+}
+
+/**
+ * Saves a recipe to the database
+ * @param ctx Hono context with D1 binding
+ * @param recipeEntry Recipe data from Notion
+ * @returns ID of the created/updated recipe
+ */
+export async function saveRecipe(
+  ctx: AppContext,
+  recipeEntry: RecipeDBEntry,
+): Promise<string> {
+  const db = initDb(ctx);
+  const now = Math.floor(Date.now() / 1000);
+
+  // Generate a slug from the title
+  const slug = recipeEntry.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  const recipeData = {
+    id: recipeEntry.id,
+    notionId: recipeEntry.notionId,
+    title: recipeEntry.title,
+    slug,
+    markdown: recipeEntry.content,
+    extractedIngredients: null, // Will be populated later by AI processing
+    isActive: 1,
+    tags: null, // Will be populated later by AI processing
+    servings: null, // Will be populated later by AI processing
+    lastIngredientExtraction: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  try {
+    // Check if recipe already exists
+    const existingRecipe = await db.query.recipes.findFirst({
+      where: eq(schema.recipes.notionId, recipeEntry.notionId),
+    });
+
+    if (existingRecipe) {
+      // Update existing recipe
+      await db
+        .update(schema.recipes)
+        .set({
+          title: recipeData.title,
+          slug: recipeData.slug,
+          markdown: recipeData.markdown,
+          updatedAt: now,
+        })
+        .where(eq(schema.recipes.notionId, recipeEntry.notionId));
+      
+      console.log(`Updated existing recipe: ${recipeData.title} (${existingRecipe.id})`);
+      return existingRecipe.id;
+    } else {
+      // Insert new recipe
+      await db.insert(schema.recipes).values(recipeData);
+      console.log(`Inserted new recipe: ${recipeData.title} (${recipeData.id})`);
+      return recipeData.id;
+    }
+  } catch (error) {
+    console.error("Failed to save recipe:", error);
+    throw new Error(
+      `Failed to save recipe: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+/**
+ * Get all recipes from the database
+ * @param ctx Hono context with D1 binding
+ * @returns Array of all recipes
+ */
+export async function getAllRecipes(ctx: AppContext): Promise<schema.Recipe[]> {
+  const db = initDb(ctx);
+
+  try {
+    const recipes = await db.query.recipes.findMany({
+      orderBy: (recipes, { desc }) => [desc(recipes.updatedAt)],
+    });
+
+    return recipes;
+  } catch (error) {
+    console.error("Failed to get all recipes:", error);
+    throw new Error(
+      `Failed to get all recipes: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+/**
+ * Get a single recipe by ID
+ * @param ctx Hono context with D1 binding
+ * @param id Recipe ID
+ * @returns Single recipe or null if not found
+ */
+export async function getRecipeById(ctx: AppContext, id: string): Promise<schema.Recipe | null> {
+  const db = initDb(ctx);
+
+  try {
+    const recipe = await db.query.recipes.findFirst({
+      where: eq(schema.recipes.id, id),
+    });
+
+    return recipe || null;
+  } catch (error) {
+    console.error(`Failed to get recipe by ID ${id}:`, error);
+    throw new Error(
+      `Failed to get recipe: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 }
