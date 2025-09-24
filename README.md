@@ -64,3 +64,19 @@ npm run deploy
 
 ### AI Agents
 - [ ] Voice correction - "Actually, that should be entertainment"
+
+## Ideas
+- [ ] tanstack start
+- [ ] Update notes on workout item
+- [ ] Rich text for agent saving and format
+- [ ] Lunch money api for expense coach
+- [ ] Diary
+- [ ] Store physio routine by date
+- [ ] Log weights, show gym log of easy logging 
+- [ ] Tool to create new recipes and store in notion, should be able to call this from the chat
+- [ ] Some sort of chat memory, maybe this is a tool that can write to a profile or some other store of info
+- [ ] Recipe crawler, pull transcript from any video, add to notion and agent
+- [ ] Crawl full YouTube channel 
+- [ ] Setting to change the model so I can use up tokens
+- [ ] Maybe use https://www.copilotkit.ai/
+- [ ] Expose chat interface through telegram 
