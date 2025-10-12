@@ -33,3 +33,24 @@ migrations_dir = "drizzle/migrations"
 [[routes]]
 pattern = "admin.tcollins.dev"
 custom_domain = true
+
+[env.preview]
+name = "${env:PREVIEW_WORKER_NAME}"
+workers_dev = true
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "${env:PREVIEW_DATABASE_NAME}"
+database_id = "${env:PREVIEW_DATABASE_ID}"
+migrations_dir = "drizzle/migrations"
+
+[[env.preview.kv_namespaces]]
+binding = "DAILY_LOG_CACHE"
+preview_id = "eae9aca434284992a0429673c2ca3b2e"
+
+[[env.preview.r2_buckets]]
+binding = "HEALTH_RECORDINGS"
+bucket_name = "health-recordings-dev"
+
+[env.preview.ai]
+binding = "AI"
