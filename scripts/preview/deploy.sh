@@ -20,12 +20,14 @@ PREVIEW_MIGRATIONS_DIR="${PREVIEW_MIGRATIONS_DIR:-drizzle/migrations}"
 BASE_CONFIG="wrangler.toml"
 TEMP_CONFIG="wrangler.preview.toml"
 
-# Resolve Wrangler CLI path from local dependencies.
-NPM_BIN_DIR="$(npm bin 2>/dev/null || printf './node_modules/.bin')"
-WRANGLER_BIN="${NPM_BIN_DIR}/wrangler"
-
-if [[ ! -x "${WRANGLER_BIN}" ]]; then
-  echo "Wrangler CLI not found at ${WRANGLER_BIN}. Did you run 'npm ci'?" >&2
+# Resolve Wrangler CLI path from local dependencies or PATH.
+NPM_BIN_DIR="$(pwd)/node_modules/.bin"
+if [[ -x "${NPM_BIN_DIR}/wrangler" ]]; then
+  WRANGLER_BIN="${NPM_BIN_DIR}/wrangler"
+elif command -v wrangler >/dev/null 2>&1; then
+  WRANGLER_BIN="$(command -v wrangler)"
+else
+  echo "Wrangler CLI not found (expected at ${NPM_BIN_DIR}/wrangler or in PATH). Did you run 'npm ci'?" >&2
   exit 1
 fi
 
