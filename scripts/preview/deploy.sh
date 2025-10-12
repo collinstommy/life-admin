@@ -78,6 +78,10 @@ fetch_db_entry() {
   if [[ ${list_status} -ne 0 ]]; then
     echo "[deploy] wrangler d1 list failed (status ${list_status}):" >&2
     echo "${list_output}" >&2
+    echo "[deploy] Environment diagnostics:" >&2
+    echo "  CF_ACCOUNT_ID=${CF_ACCOUNT_ID:-<unset>}" >&2
+    echo "  CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID:-<unset>}" >&2
+    echo "  wrangler version: $(${WRANGLER_BIN} --version 2>/dev/null || echo 'unknown')" >&2
     return 1
   fi
 
