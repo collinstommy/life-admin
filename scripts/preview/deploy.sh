@@ -70,26 +70,34 @@ export CLOUDFLARE_API_TOKEN
 
 fetch_db_entry() {
   echo "[deploy] Fetching D1 database listing to find ${DB_NAME}"
-  local list_json
-  if ! list_json=$(${WRANGLER_BIN} d1 list --config "${BASE_CONFIG}" --json 2>&1); then
-    echo "[deploy] wrangler d1 list failed:" >&2
-    echo "${list_json}" >&2
+  local list_output list_status
+  list_output=$(${WRANGLER_BIN} d1 list --config "${BASE_CONFIG}" --json 2>&1)
+  list_status=$?
+
+  if [[ ${list_status} -ne 0 ]]; then
+    echo "[deploy] wrangler d1 list failed (status ${list_status}):" >&2
+    echo "${list_output}" >&2
     return 1
   fi
 
   echo "[deploy] wrangler d1 list succeeded"
 
-  local db_entry
-  if ! db_entry=$(printf '%s' "${list_json}" | jq -cr --arg name "${DB_NAME}" '
+  local db_entry jq_status
+  set +e
+  db_entry=$(printf '%s' "${list_output}" | jq -cr --arg name "${DB_NAME}" '
         if type == "array" then
           (map(select(.name == $name))[0] // empty)
         elif type == "object" and (.result? | type == "array") then
           (.result | map(select(.name == $name))[0] // empty)
         else empty end
-      ' 2>&1); then
-    echo "[deploy] Failed to parse wrangler d1 list output:" >&2
+      ')
+  jq_status=$?
+  set -e
+
+  if [[ ${jq_status} -ne 0 ]]; then
+    echo "[deploy] Failed to parse wrangler d1 list output (jq status ${jq_status}):" >&2
     echo "${db_entry}" >&2
-    echo "[deploy] Raw response: ${list_json}" >&2
+    echo "[deploy] Raw response: ${list_output}" >&2
     return 1
   fi
 
