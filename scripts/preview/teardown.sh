@@ -59,8 +59,7 @@ export CLOUDFLARE_API_TOKEN
 # Delete D1 database if it exists
 DB_ENTRY=$(${WRANGLER_BIN} d1 list \
   --config "${BASE_CONFIG}" \
-  --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
-  --output json | jq -cr --arg name "${DB_NAME}" '
+  --json | jq -cr --arg name "${DB_NAME}" '
         if type == "array" then
           (map(select(.name == $name))[0] // empty)
         elif type == "object" and (.result? | type == "array") then
@@ -73,7 +72,6 @@ if [[ -n "${DB_ENTRY}" ]]; then
   if [[ -n "${DB_ID}" && "${DB_ID}" != "null" ]]; then
     "${WRANGLER_BIN}" d1 delete "${DB_NAME}" \
       --config "${BASE_CONFIG}" \
-      --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
       --skip-confirmation || true
   fi
 fi
