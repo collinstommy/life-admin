@@ -34,6 +34,11 @@ if [[ -z "${CLOUDFLARE_ACCOUNT_ID}" ]]; then
   exit 1
 fi
 
+if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+  echo "CLOUDFLARE_API_TOKEN is required" >&2
+  exit 1
+fi
+
 WORKER_NAME="${PREVIEW_NAME_PREFIX}-pr-${PR_NUMBER}"
 DB_NAME="${PREVIEW_NAME_PREFIX//-/}_pr_${PR_NUMBER}"
 
@@ -42,25 +47,25 @@ if [[ ! -f "${BASE_CONFIG}" ]]; then
   exit 1
 fi
 
+export CLOUDFLARE_ACCOUNT_ID
+export CLOUDFLARE_API_TOKEN
+
 # Delete Worker (ignore errors if already gone)
-"${WRANGLER_BIN}" \
+"${WRANGLER_BIN}" delete \
   --config "${BASE_CONFIG}" \
-  --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
-  delete "${WORKER_NAME}" || true
+  --name "${WORKER_NAME}" || true
 
 # Delete D1 database if it exists
-DB_ENTRY=$(${WRANGLER_BIN} \
+DB_ENTRY=$(${WRANGLER_BIN} d1 list \
   --config "${BASE_CONFIG}" \
-  --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
-  d1 list --output json | jq --arg name "${DB_NAME}" '.result[] | select(.name == $name)')
+  --json | jq -cr --arg name "${DB_NAME}" 'map(select(.name == $name))[0] // empty')
 
 if [[ -n "${DB_ENTRY}" ]]; then
-  DB_ID=$(echo "${DB_ENTRY}" | jq -r '.uuid // .id')
+  DB_ID=$(echo "${DB_ENTRY}" | jq -r '.uuid // .id // .database_id // empty')
   if [[ -n "${DB_ID}" && "${DB_ID}" != "null" ]]; then
-    "${WRANGLER_BIN}" \
+    "${WRANGLER_BIN}" d1 delete "${DB_NAME}" \
       --config "${BASE_CONFIG}" \
-      --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
-      d1 delete "${DB_ID}" || true
+      --skip-confirmation || true
   fi
 fi
 

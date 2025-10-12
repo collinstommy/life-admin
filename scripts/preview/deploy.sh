@@ -41,6 +41,11 @@ if [[ -z "${CLOUDFLARE_ACCOUNT_ID}" ]]; then
   exit 1
 fi
 
+if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+  echo "CLOUDFLARE_API_TOKEN is required" >&2
+  exit 1
+fi
+
 if [[ -z "${CLOUDFLARE_WORKER_SUBDOMAIN}" ]]; then
   echo "CLOUDFLARE_WORKER_SUBDOMAIN is required" >&2
   exit 1
@@ -53,6 +58,9 @@ fi
 
 WORKER_NAME="${PREVIEW_NAME_PREFIX}-pr-${PR_NUMBER}"
 DB_NAME="${PREVIEW_NAME_PREFIX//-/}_pr_${PR_NUMBER}"
+
+export CLOUDFLARE_ACCOUNT_ID
+export CLOUDFLARE_API_TOKEN
 
 cleanup() {
   rm -f "${TEMP_CONFIG}"
@@ -69,27 +77,34 @@ if [[ ! -d "${PREVIEW_MIGRATIONS_DIR}" ]]; then
 fi
 
 # Create (or fetch existing) D1 database for this PR
-CREATE_OUTPUT=$(${WRANGLER_BIN} \
-  --config "${BASE_CONFIG}" \
-  --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
-  d1 create "${DB_NAME}" --output json || true)
+fetch_db_entry() {
+  ${WRANGLER_BIN} d1 list --config "${BASE_CONFIG}" --json \
+    | jq -cr --arg name "${DB_NAME}" 'map(select(.name == $name))[0] // empty'
+}
 
-# If the DB already exists, wrangler exits 1 but still prints JSON in stderr; re-run list as fallback.
-if [[ -z "${CREATE_OUTPUT}" ]]; then
-  CREATE_OUTPUT=$(${WRANGLER_BIN} \
-    --config "${BASE_CONFIG}" \
-    --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
-    d1 list --output json | jq --arg name "${DB_NAME}" '.result[] | select(.name == $name)')
-  if [[ -z "${CREATE_OUTPUT}" ]]; then
-    echo "Failed to create or locate D1 database ${DB_NAME}" >&2
-    exit 1
+DB_ENTRY=$(fetch_db_entry || true)
+
+if [[ -z "${DB_ENTRY}" ]]; then
+  if ! ${WRANGLER_BIN} d1 create "${DB_NAME}" --config "${BASE_CONFIG}"; then
+    echo "wrangler d1 create ${DB_NAME} failed; checking if database already exists" >&2
   fi
+
+  for attempt in 1 2 3 4 5; do
+    DB_ENTRY=$(fetch_db_entry || true)
+    [[ -n "${DB_ENTRY}" ]] && break
+    sleep 2
+  done
 fi
 
-DATABASE_ID=$(echo "${CREATE_OUTPUT}" | jq -r '.result.uuid // .uuid // .id')
-DATABASE_NAME=$(echo "${CREATE_OUTPUT}" | jq -r '.result.name // .name')
+if [[ -z "${DB_ENTRY}" ]]; then
+  echo "Failed to create or locate D1 database ${DB_NAME}" >&2
+  exit 1
+fi
 
-if [[ -z "${DATABASE_ID}" || "${DATABASE_ID}" == "null" ]]; then
+DATABASE_ID=$(echo "${DB_ENTRY}" | jq -r '.uuid // .id // .database_id // empty')
+DATABASE_NAME=$(echo "${DB_ENTRY}" | jq -r '.name // empty')
+
+if [[ -z "${DATABASE_ID}" ]]; then
   echo "Could not determine database id for ${DB_NAME}" >&2
   exit 1
 fi
@@ -109,15 +124,14 @@ EOF_CONFIG
 npm run build
 
 # Apply migrations to the preview database then deploy.
-"${WRANGLER_BIN}" \
+"${WRANGLER_BIN}" d1 migrations apply DB \
   --config "${TEMP_CONFIG}" \
-  --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
-  d1 migrations apply DB --remote --env preview
+  --env preview \
+  --remote
 
-"${WRANGLER_BIN}" \
+"${WRANGLER_BIN}" deploy \
   --config "${TEMP_CONFIG}" \
-  --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
-  deploy --env preview --name "${WORKER_NAME}"
+  --env preview
 
 PREVIEW_URL="https://${WORKER_NAME}.${CLOUDFLARE_WORKER_SUBDOMAIN}.workers.dev"
 DB_DASHBOARD_URL="https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/d1/${DATABASE_ID}"
