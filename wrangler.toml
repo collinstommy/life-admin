@@ -1,6 +1,6 @@
 name = "life-admin"
 main = "src/server.tsx"
-account_id = "${env:CLOUDFLARE_ACCOUNT_ID}"
+account_id = "${CLOUDFLARE_ACCOUNT_ID}"
 compatibility_date = "2023-09-18"
 
 # Enable logging
