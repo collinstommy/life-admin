@@ -113,7 +113,8 @@ npm run build
 
 "${WRANGLER_BIN}" deploy \
   --config "${BASE_CONFIG}" \
-  --env preview
+  --env preview \
+  --name "${WORKER_NAME}"
 
 PREVIEW_URL="https://${WORKER_NAME}.${CLOUDFLARE_WORKER_SUBDOMAIN}.workers.dev"
 DB_DASHBOARD_URL="https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/d1/${DATABASE_ID}"
