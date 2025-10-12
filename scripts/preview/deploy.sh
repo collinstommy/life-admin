@@ -70,6 +70,9 @@ trap cleanup EXIT
 mkdir -p "$(dirname "${TEMP_CONFIG}")"
 cp "${BASE_CONFIG}" "${TEMP_CONFIG}"
 
+# Ensure appended preview environment starts on a new line.
+printf '\n' >> "${TEMP_CONFIG}"
+
 # Ensure migrations directory exists before we proceed.
 if [[ ! -d "${PREVIEW_MIGRATIONS_DIR}" ]]; then
   echo "Migrations directory ${PREVIEW_MIGRATIONS_DIR} not found" >&2
