@@ -20,8 +20,14 @@ PREVIEW_MIGRATIONS_DIR="${PREVIEW_MIGRATIONS_DIR:-drizzle/migrations}"
 BASE_CONFIG="wrangler.toml"
 TEMP_CONFIG="wrangler.preview.toml"
 
-# Ensure local node_modules binaries (wrangler) are available in PATH.
-export PATH="${PATH}:$(npm bin 2>/dev/null || printf './node_modules/.bin')"
+# Resolve Wrangler CLI path from local dependencies.
+NPM_BIN_DIR="$(npm bin 2>/dev/null || printf './node_modules/.bin')"
+WRANGLER_BIN="${NPM_BIN_DIR}/wrangler"
+
+if [[ ! -x "${WRANGLER_BIN}" ]]; then
+  echo "Wrangler CLI not found at ${WRANGLER_BIN}. Did you run 'npm ci'?" >&2
+  exit 1
+fi
 
 if [[ -z "${PR_NUMBER}" ]]; then
   echo "PR_NUMBER is required" >&2
@@ -61,14 +67,14 @@ if [[ ! -d "${PREVIEW_MIGRATIONS_DIR}" ]]; then
 fi
 
 # Create (or fetch existing) D1 database for this PR
-CREATE_OUTPUT=$(wrangler \
+CREATE_OUTPUT=$(${WRANGLER_BIN} \
   --config "${BASE_CONFIG}" \
   --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
   d1 create "${DB_NAME}" --output json || true)
 
 # If the DB already exists, wrangler exits 1 but still prints JSON in stderr; re-run list as fallback.
 if [[ -z "${CREATE_OUTPUT}" ]]; then
-  CREATE_OUTPUT=$(wrangler \
+  CREATE_OUTPUT=$(${WRANGLER_BIN} \
     --config "${BASE_CONFIG}" \
     --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
     d1 list --output json | jq --arg name "${DB_NAME}" '.result[] | select(.name == $name)')
@@ -101,12 +107,12 @@ EOF_CONFIG
 npm run build
 
 # Apply migrations to the preview database then deploy.
-wrangler \
+"${WRANGLER_BIN}" \
   --config "${TEMP_CONFIG}" \
   --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
   d1 migrations apply DB --remote --env preview
 
-wrangler \
+"${WRANGLER_BIN}" \
   --config "${TEMP_CONFIG}" \
   --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
   deploy --env preview --name "${WORKER_NAME}"

@@ -13,8 +13,14 @@ CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-}"
 PREVIEW_NAME_PREFIX="${PREVIEW_NAME_PREFIX:-life-admin}"
 BASE_CONFIG="wrangler.toml"
 
-# Ensure local node_modules binaries (wrangler) are available in PATH.
-export PATH="${PATH}:$(npm bin 2>/dev/null || printf './node_modules/.bin')"
+# Resolve Wrangler CLI path from local dependencies.
+NPM_BIN_DIR="$(npm bin 2>/dev/null || printf './node_modules/.bin')"
+WRANGLER_BIN="${NPM_BIN_DIR}/wrangler"
+
+if [[ ! -x "${WRANGLER_BIN}" ]]; then
+  echo "Wrangler CLI not found at ${WRANGLER_BIN}. Did you run 'npm ci'?" >&2
+  exit 1
+fi
 
 if [[ -z "${PR_NUMBER}" ]]; then
   echo "PR_NUMBER is required" >&2
@@ -35,13 +41,13 @@ if [[ ! -f "${BASE_CONFIG}" ]]; then
 fi
 
 # Delete Worker (ignore errors if already gone)
-wrangler \
+"${WRANGLER_BIN}" \
   --config "${BASE_CONFIG}" \
   --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
   delete "${WORKER_NAME}" || true
 
 # Delete D1 database if it exists
-DB_ENTRY=$(wrangler \
+DB_ENTRY=$(${WRANGLER_BIN} \
   --config "${BASE_CONFIG}" \
   --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
   d1 list --output json | jq --arg name "${DB_NAME}" '.result[] | select(.name == $name)')
@@ -49,7 +55,7 @@ DB_ENTRY=$(wrangler \
 if [[ -n "${DB_ENTRY}" ]]; then
   DB_ID=$(echo "${DB_ENTRY}" | jq -r '.uuid // .id')
   if [[ -n "${DB_ID}" && "${DB_ID}" != "null" ]]; then
-    wrangler \
+    "${WRANGLER_BIN}" \
       --config "${BASE_CONFIG}" \
       --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
       d1 delete "${DB_ID}" || true
