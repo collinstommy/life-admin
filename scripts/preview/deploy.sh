@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+trap 'echo "[deploy] Command failed at \\${BASH_SOURCE[0]}:${LINENO}" >&2' ERR
+
 # Deploys a PR-specific preview Worker and D1 database.
 # Required env vars:
 #   PR_NUMBER                 - Pull request number (used for naming resources)
@@ -67,21 +69,40 @@ export CLOUDFLARE_ACCOUNT_ID
 export CLOUDFLARE_API_TOKEN
 
 fetch_db_entry() {
-  ${WRANGLER_BIN} d1 list --config "${BASE_CONFIG}" --json \
-    | jq -cr --arg name "${DB_NAME}" '
+  echo "[deploy] Fetching D1 database listing to find ${DB_NAME}"
+  local list_json
+  if ! list_json=$(${WRANGLER_BIN} d1 list --config "${BASE_CONFIG}" --json 2>&1); then
+    echo "[deploy] wrangler d1 list failed:" >&2
+    echo "${list_json}" >&2
+    return 1
+  fi
+
+  echo "[deploy] wrangler d1 list succeeded"
+
+  local db_entry
+  if ! db_entry=$(printf '%s' "${list_json}" | jq -cr --arg name "${DB_NAME}" '
         if type == "array" then
           (map(select(.name == $name))[0] // empty)
         elif type == "object" and (.result? | type == "array") then
           (.result | map(select(.name == $name))[0] // empty)
         else empty end
-      '
+      ' 2>&1); then
+    echo "[deploy] Failed to parse wrangler d1 list output:" >&2
+    echo "${db_entry}" >&2
+    echo "[deploy] Raw response: ${list_json}" >&2
+    return 1
+  fi
+
+  printf '%s' "${db_entry}"
 }
 
 DB_ENTRY=$(fetch_db_entry || true)
 
 if [[ -z "${DB_ENTRY}" ]]; then
-  if ! ${WRANGLER_BIN} d1 create "${DB_NAME}" --config "${BASE_CONFIG}"; then
-    echo "wrangler d1 create ${DB_NAME} failed; checking if database already exists" >&2
+  echo "[deploy] No existing database found; creating ${DB_NAME}"
+  if ! create_output=$(${WRANGLER_BIN} d1 create "${DB_NAME}" --config "${BASE_CONFIG}" 2>&1); then
+    echo "[deploy] wrangler d1 create ${DB_NAME} failed; checking if database already exists" >&2
+    echo "${create_output}" >&2
   fi
 
   for attempt in 1 2 3 4 5; do
@@ -92,7 +113,7 @@ if [[ -z "${DB_ENTRY}" ]]; then
 fi
 
 if [[ -z "${DB_ENTRY}" ]]; then
-  echo "Failed to create or locate D1 database ${DB_NAME}" >&2
+  echo "[deploy] Failed to create or locate D1 database ${DB_NAME}" >&2
   exit 1
 fi
 
@@ -100,7 +121,7 @@ DATABASE_ID=$(echo "${DB_ENTRY}" | jq -r '.uuid // .id // .database_id // empty'
 DATABASE_NAME=$(echo "${DB_ENTRY}" | jq -r '.name // empty')
 
 if [[ -z "${DATABASE_ID}" ]]; then
-  echo "Could not determine database id for ${DB_NAME}" >&2
+  echo "[deploy] Could not determine database id for ${DB_NAME}" >&2
   exit 1
 fi
 
@@ -109,14 +130,17 @@ export PREVIEW_DATABASE_NAME="${DATABASE_NAME}"
 export PREVIEW_DATABASE_ID="${DATABASE_ID}"
 
 # Build the project before deploying so we ship fresh assets.
+echo "[deploy] Building project"
 npm run build
 
 # Apply migrations to the preview database then deploy.
+echo "[deploy] Applying migrations to preview database ${DATABASE_NAME} (${DATABASE_ID})"
 "${WRANGLER_BIN}" d1 migrations apply DB \
   --config "${BASE_CONFIG}" \
   --env preview \
   --remote
 
+echo "[deploy] Deploying worker ${WORKER_NAME}"
 "${WRANGLER_BIN}" deploy \
   --config "${BASE_CONFIG}" \
   --env preview \
