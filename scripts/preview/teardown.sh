@@ -53,18 +53,27 @@ export CLOUDFLARE_API_TOKEN
 # Delete Worker (ignore errors if already gone)
 "${WRANGLER_BIN}" delete \
   --config "${BASE_CONFIG}" \
+  --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
   --name "${WORKER_NAME}" || true
 
 # Delete D1 database if it exists
 DB_ENTRY=$(${WRANGLER_BIN} d1 list \
   --config "${BASE_CONFIG}" \
-  --json | jq -cr --arg name "${DB_NAME}" 'map(select(.name == $name))[0] // empty')
+  --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
+  --output json | jq -cr --arg name "${DB_NAME}" '
+        if type == "array" then
+          (map(select(.name == $name))[0] // empty)
+        elif type == "object" and (.result? | type == "array") then
+          (.result | map(select(.name == $name))[0] // empty)
+        else empty end
+      ')
 
 if [[ -n "${DB_ENTRY}" ]]; then
   DB_ID=$(echo "${DB_ENTRY}" | jq -r '.uuid // .id // .database_id // empty')
   if [[ -n "${DB_ID}" && "${DB_ID}" != "null" ]]; then
     "${WRANGLER_BIN}" d1 delete "${DB_NAME}" \
       --config "${BASE_CONFIG}" \
+      --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
       --skip-confirmation || true
   fi
 fi

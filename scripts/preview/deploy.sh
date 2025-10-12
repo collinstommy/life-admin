@@ -67,14 +67,20 @@ export CLOUDFLARE_ACCOUNT_ID
 export CLOUDFLARE_API_TOKEN
 
 fetch_db_entry() {
-  ${WRANGLER_BIN} d1 list --config "${BASE_CONFIG}" --json \
-    | jq -cr --arg name "${DB_NAME}" 'map(select(.name == $name))[0] // empty'
+  ${WRANGLER_BIN} d1 list --config "${BASE_CONFIG}" --account-id "${CLOUDFLARE_ACCOUNT_ID}" --output json \
+    | jq -cr --arg name "${DB_NAME}" '
+        if type == "array" then
+          (map(select(.name == $name))[0] // empty)
+        elif type == "object" and (.result? | type == "array") then
+          (.result | map(select(.name == $name))[0] // empty)
+        else empty end
+      '
 }
 
 DB_ENTRY=$(fetch_db_entry || true)
 
 if [[ -z "${DB_ENTRY}" ]]; then
-  if ! ${WRANGLER_BIN} d1 create "${DB_NAME}" --config "${BASE_CONFIG}"; then
+  if ! ${WRANGLER_BIN} d1 create "${DB_NAME}" --config "${BASE_CONFIG}" --account-id "${CLOUDFLARE_ACCOUNT_ID}"; then
     echo "wrangler d1 create ${DB_NAME} failed; checking if database already exists" >&2
   fi
 
@@ -108,11 +114,13 @@ npm run build
 # Apply migrations to the preview database then deploy.
 "${WRANGLER_BIN}" d1 migrations apply DB \
   --config "${BASE_CONFIG}" \
+  --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
   --env preview \
   --remote
 
 "${WRANGLER_BIN}" deploy \
   --config "${BASE_CONFIG}" \
+  --account-id "${CLOUDFLARE_ACCOUNT_ID}" \
   --env preview \
   --name "${WORKER_NAME}"
 
