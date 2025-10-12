@@ -35,6 +35,14 @@ npm run db:apply:remote
 npm run deploy
 ```
 
+## Preview Environments
+
+- Each pull request automatically provisions a Cloudflare Worker and its own D1 database via `.github/workflows/preview.yml`.
+- Required repository secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_WORKER_SUBDOMAIN` (the workers.dev subdomain for constructing preview URLs).
+- The workflow runs `scripts/preview/deploy.sh`, which creates or reuses a `life-admin-pr-<PR>` Worker, applies migrations, deploys the latest build, and comments on the PR with the preview + D1 dashboard links.
+- Closing the PR triggers `scripts/preview/teardown.sh` to remove the Worker and drop the temporary D1 database.
+- You can test locally by exporting the same environment variables and running `npm ci && PR_NUMBER=123 scripts/preview/deploy.sh` (then `scripts/preview/teardown.sh`) against a sandbox account.
+
 ## ToDo
 
 ### Health
