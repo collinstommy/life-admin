@@ -124,7 +124,7 @@ The AI can analyze ingredients for insights:
 **When**: One-time bulk import during system setup
 **Process**:
 
-1. Fetch all recipe pages from Notion using existing API integration
+1. Fetch all recipe pages from Notion using `NOTION_RECIPE_DATABASE_ID` environment variable
 2. Convert Notion blocks to markdown (existing capability)
 3. Use AI to extract ingredient lists from markdown content
 4. Store recipes with `isActive` by default. When importing from Notion, set `isActive` to the `save to admin` property.
@@ -209,7 +209,6 @@ Not all Notion recipes are actively used - some may be experiments, old versions
 
 - Manual deactivation via admin interface
 
-
 **Inactive Recipe Behavior**:
 
 - Hidden from dropdowns but searchable
@@ -218,13 +217,47 @@ Not all Notion recipes are actively used - some may be experiments, old versions
 
 ## Implementation Phases
 
+### Phase 0: Notion Recipe Validation (Day 1)
+
+- **TEMPORARY**: Debug endpoint `/api/debug/recipes` for POC testing (unauthenticated - remove after validation)
+- Fetches recipes from Notion using `NOTION_RECIPE_DATABASE_ID` environment variable
+- Returns first 2 recipes in JSON format for validation
+- No database storage or AI processing (pure Notion API test)
+
+**Response Format**:
+
+```json
+{
+  "success": true,
+  "message": "Notion recipe database connection working",
+  "stats": {
+    "notionRecipesFound": 15,
+    "returnedRecipes": 2
+  },
+  "recipes": [
+    {
+      "id": "notion-page-id-1",
+      "title": "Recipe Name 1",
+      "contentLength": 1250,
+      "lastEditedTime": "2025-11-01T10:00:00.000Z"
+    },
+    {
+      "id": "notion-page-id-2",
+      "title": "Recipe Name 2",
+      "contentLength": 980,
+      "lastEditedTime": "2025-10-28T15:30:00.000Z"
+    }
+  ]
+}
+```
+
 ### Phase 1: Core Recipe Storage (Week 1)
 
 - Enhanced meals table with recipe linking fields
 - Recipes table implementation
 - Notion recipe extraction script
 - AI ingredient extraction pipeline
-- **TEMPORARY**: Debug endpoint `/api/debug/recipes` for POC testing (unauthenticated - remove after validation)
+- Enhanced debug endpoint with database storage
 
 ### Phase 2: UI Integration (Week 2)
 
@@ -246,43 +279,16 @@ Not all Notion recipes are actively used - some may be experiments, old versions
 
 **Data Freshness**: Notion sync strategy balances freshness with API rate limits
 
-## POC Debug Endpoint (TEMPORARY)
+## Phase 0 Debug Endpoint (TEMPORARY)
 
 **Endpoint**: `GET /api/debug/recipes` (unauthenticated)
 
-**Purpose**: Validates Notion integration and database storage during POC phase.
+**Purpose**: Validates Notion recipe database connection during initial setup.
 
 **Functionality**:
 
-- Fetches recipes from Notion with "Save to admin" = true filter
-- Stores raw markdown content in database
-- Returns summary statistics and recipe metadata
-- No AI processing (ingredients extraction will be Phase 2)
+- Fetches recipes from Notion using `NOTION_RECIPE_DATABASE_ID` environment variable
+- Returns first 2 recipes for validation
+- No database storage or AI processing
 
-**Response Format**:
-
-```json
-{
-  "success": true,
-  "message": "Recipe debug endpoint working",
-  "stats": {
-    "notionRecipesFound": 15,
-    "recipesSaved": 15,
-    "totalInDatabase": 15
-  },
-  "recipes": [
-    {
-      "id": "uuid",
-      "title": "Recipe Name",
-      "contentLength": 1250,
-      "hasIngredients": false,
-      "servings": 4,
-      "tags": ["dinner", "vegetarian"],
-      "isActive": 1,
-      "createdAt": 1234567890
-    }
-  ]
-}
-```
-
-**⚠️ IMPORTANT**: Remove this endpoint and add authentication to production recipe endpoints after POC validation.
+**⚠️ IMPORTANT**: Remove this endpoint after Phase 0 validation and replace with authenticated endpoints in Phase 1.
