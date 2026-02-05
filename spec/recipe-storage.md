@@ -217,39 +217,6 @@ Not all Notion recipes are actively used - some may be experiments, old versions
 
 ## Implementation Phases
 
-### Phase 0: Notion Recipe Validation (Day 1)
-
-- **TEMPORARY**: Debug endpoint `/api/debug/recipes` for POC testing (unauthenticated - remove after validation)
-- Fetches recipes from Notion using `NOTION_RECIPE_DATABASE_ID` environment variable
-- Returns first 2 recipes in JSON format for validation
-- No database storage or AI processing (pure Notion API test)
-
-**Response Format**:
-
-```json
-{
-  "success": true,
-  "message": "Notion recipe database connection working",
-  "stats": {
-    "notionRecipesFound": 15,
-    "returnedRecipes": 2
-  },
-  "recipes": [
-    {
-      "id": "notion-page-id-1",
-      "title": "Recipe Name 1",
-      "contentLength": 1250,
-      "lastEditedTime": "2025-11-01T10:00:00.000Z"
-    },
-    {
-      "id": "notion-page-id-2",
-      "title": "Recipe Name 2",
-      "contentLength": 980,
-      "lastEditedTime": "2025-10-28T15:30:00.000Z"
-    }
-  ]
-}
-```
 
 ### Phase 1: Core Recipe Storage (Week 1)
 

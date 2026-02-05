@@ -128,7 +128,17 @@ export const expenses = sqliteTable("expenses", {
   currency: text("currency").notNull().default("EUR"),
   description: text("description").notNull(),
   category: text("category")
-    .$type<"entertainment" | "house_maintenance" | "furniture" | "car" | "house_decoration" | "garden" | "travel" | "groceries" | "other">()
+    .$type<
+      | "entertainment"
+      | "house_maintenance"
+      | "furniture"
+      | "car"
+      | "house_decoration"
+      | "garden"
+      | "travel"
+      | "groceries"
+      | "other"
+    >()
     .notNull()
     .default("other"),
   createdAt: integer("created_at").notNull(),
@@ -140,19 +150,17 @@ export const recipes = sqliteTable("recipes", {
   id: text("id").primaryKey(), // UUID
   notionId: text("notion_id").unique(), // For syncing with Notion
   title: text("title").notNull(),
-  slug: text("slug").notNull().unique(), // URL-friendly version
   markdown: text("markdown").notNull(), // Full recipe content from Notion
-  
+
   // AI-extracted ingredient data (core feature)
   extractedIngredients: text("extracted_ingredients"), // JSON array of ingredient strings
-  
+
   // Optional metadata
   isActive: integer("is_active").default(1), // 0 = inactive/archived recipes
   tags: text("tags"), // JSON array for categorization
   servings: integer("servings"), // Estimated servings
-  
-  // Processing timestamps
-  lastIngredientExtraction: integer("last_ingredient_extraction"),
+
+  // Standard timestamps (matches existing schema pattern)
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at").notNull(),
 });

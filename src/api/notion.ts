@@ -1,15 +1,9 @@
+import { Recipe } from '@/db/schema';
 import { KVNamespace } from "@cloudflare/workers-types";
 import { Client } from "@notionhq/client";
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 import { NotionToMarkdown } from "notion-to-md";
 
-
-export type RecipeDBEntry = {
-  id: string;
-  content: string;
-  notionId: string;
-  lastEditedTime: string;
-};
 
 type CachedPage = {
   date: string;
@@ -160,12 +154,12 @@ export class RecipeNotionClient {
 
       const entries = database.results.map(async (result) => {
         const databaseItem = result as PageObjectResponse;
-        
+
         // Get the actual page to extract title from page content
         const page = (await this.client.pages.retrieve({
           page_id: databaseItem.id,
         })) as PageObjectResponse;
-        
+
 
         // Convert Notion blocks to markdown
         const mdblocks = await this.n2m.pageToMarkdown(result.id);
@@ -186,15 +180,15 @@ export class RecipeNotionClient {
     }
   }
 
-  async getRecipe(pageId: string): Promise<RecipeDBEntry> {
+  async getRecipe(pageId: string): Promise<Recipe> {
     try {
       const page = (await this.client.pages.retrieve({
         page_id: pageId,
       })) as PageObjectResponse;
-      
+
       console.log(page)
       const properties = page.properties as Record<string, any>;
-  
+
 
       // Convert to markdown
       const mdblocks = await this.n2m.pageToMarkdown(pageId);
@@ -203,9 +197,14 @@ export class RecipeNotionClient {
       return {
         id: pageId,
         title: properties["Title"],
-        content,
+        markdown: content,
         notionId: pageId,
-        lastEditedTime: page.last_edited_time,
+        extractedIngredients: null,
+        isActive: 1,
+        tags: null,
+        servings: null,
+        createdAt: Math.floor(Date.now() / 1000),
+        updatedAt: Math.floor(Date.now() / 1000),
       };
     } catch (error) {
       console.error("Error fetching recipe:", error);

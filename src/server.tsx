@@ -106,23 +106,23 @@ app.use("/static/*", serveStatic({ root: "./", manifest }));
 app.get("/api/debug/recipes", withDb, async (c) => {
   try {
     console.log("Debug recipes endpoint called");
-    
+
     // Import recipe functions
     const { RecipeNotionClient } = await import("./api/notion");
     const { saveRecipe, getAllRecipes } = await import("./lib/db");
-    
+
     // Initialize Notion client with recipe database
     const recipeClient = new RecipeNotionClient(
       c.env.NOTION_TOKEN,
       c.env.NOTION_RECIPE_DATABASE_ID
     );
-    
+
     console.log("Fetching recipes from Notion...");
-    
+
     // Fetch from Notion
     const notionRecipes = await recipeClient.getAllRecipes();
     console.log(`Found ${notionRecipes.length} recipes in Notion`);
-    
+
     // Save to database
     const savedRecipes = [];
     for (const recipe of notionRecipes) {
@@ -133,10 +133,10 @@ app.get("/api/debug/recipes", withDb, async (c) => {
         console.error(`Failed to save recipe ${recipe.title}:`, saveError);
       }
     }
-    
+
     // Get all recipes from database
     const dbRecipes = await getAllRecipes(c as AppContext);
-    
+
     return c.json({
       success: true,
       message: "Recipe debug endpoint working",
@@ -146,15 +146,7 @@ app.get("/api/debug/recipes", withDb, async (c) => {
         totalInDatabase: dbRecipes.length,
       },
       savedRecipes,
-      recipes: dbRecipes.map(recipe => ({
-        id: recipe.id,
-        title: recipe.title,
-        slug: recipe.slug,
-        contentLength: recipe.markdown?.length || 0,
-        hasIngredients: !!recipe.extractedIngredients,
-        isActive: recipe.isActive,
-        createdAt: recipe.createdAt,
-      })),
+      recipes: dbRecipes.map(recipe => recipe)
     });
   } catch (error) {
     console.error("Error in debug recipes endpoint:", error);
@@ -204,10 +196,10 @@ const authRoutes = app
   })
   .post("/auth/logout", async (c) => {
     // Clear the JWT cookie by setting it to expire immediately
-    setCookie(c, "jwt", "", { 
-      httpOnly: true, 
-      secure: true, 
-      sameSite: "Strict", 
+    setCookie(c, "jwt", "", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "Strict",
       maxAge: 0 // This expires the cookie immediately
     });
     return c.json({ message: "Logged out successfully" });
@@ -359,14 +351,14 @@ const apiRoutes = app
     try {
       console.log("Judge health data request received");
       const { originalData, updateTranscript, resultData } = c.req.valid('json');
-      
+
       console.log("Judging merge operation...");
-      
+
       try {
         // Use AI judge to evaluate the merge
         const judgeResult = await judgeHealthDataMerge(c, originalData, updateTranscript, resultData);
         console.log("AI Judge evaluation completed, score:", judgeResult.score);
-        
+
         return c.json({
           success: true,
           message: "Merge evaluation completed",
@@ -671,7 +663,7 @@ const apiRoutes = app
   .delete("/api/health-log/:id", async (c) => {
     try {
       const id = parseInt(c.req.param("id"), 10);
-      
+
       if (isNaN(id)) {
         return c.json({ error: "Invalid health log ID" }, 400);
       }
@@ -687,9 +679,9 @@ const apiRoutes = app
       }
 
       console.log(`Successfully deleted health log with ID ${id}`);
-      return c.json({ 
-        success: true, 
-        message: `Health log ${id} deleted successfully` 
+      return c.json({
+        success: true,
+        message: `Health log ${id} deleted successfully`
       });
     } catch (error) {
       console.error("Error deleting health log:", error);
@@ -710,10 +702,10 @@ const apiRoutes = app
       const deletedCount = await deleteAllHealthLogs(c as AppContext);
 
       console.log(`Successfully deleted ${deletedCount} health logs`);
-      return c.json({ 
-        success: true, 
+      return c.json({
+        success: true,
         message: `${deletedCount} health logs deleted successfully`,
-        deletedCount 
+        deletedCount
       });
     } catch (error) {
       console.error("Error deleting all health logs:", error);
@@ -729,18 +721,18 @@ const apiRoutes = app
   .get("/api/expenses", async (c) => {
     try {
       console.log("Fetching all expenses from database");
-      
+
       const db = c.get('db');
       const expenses = await db.select().from(expensesTable).orderBy(desc(expensesTable.createdAt));
-      
+
       console.log(`Retrieved ${expenses.length} expenses from database`);
-      
+
       // Convert amounts from cents to dollars and add formatted display
       const formattedExpenses = expenses.map(expense => ({
         ...expense,
         displayAmount: expense.amount / 100, // Convert cents to dollars/euros
       }));
-      
+
       return c.json(formattedExpenses);
     } catch (error) {
       console.error("Error fetching expenses:", error);
@@ -793,7 +785,7 @@ const apiRoutes = app
       try {
         // Get the existing health log to retrieve original transcript
         const existingLog = await getHealthLogById(c as AppContext, id);
-        
+
         if (!existingLog) {
           console.error(`Health log with ID ${id} not found`);
           return c.json({ error: "Health log not found" }, 404);
@@ -809,7 +801,7 @@ const apiRoutes = app
           originalTranscript,
           updateTranscript,
         );
-        
+
         console.log("Health log updated successfully with ID:", updatedId);
 
         return c.json({
@@ -919,7 +911,7 @@ const apiRoutes = app
       // Handle both old format {message: string} and new AI SDK format {messages: array}
       const body = await c.req.json();
       let userMessage = '';
-      
+
       if (body.message) {
         // Old format
         userMessage = body.message;
@@ -928,20 +920,20 @@ const apiRoutes = app
         const lastMessage = body.messages.findLast((msg: any) => msg.role === 'user');
         userMessage = lastMessage?.content || '';
       }
-      
+
       if (!userMessage) {
         return new Response('No message found', { status: 400 });
       }
-      
+
       // Import the ExpenseTaskAgent
       const { ExpenseTaskAgent } = await import('./lib/ai-agents');
-      
+
       // Create agent instance
       const agent = new ExpenseTaskAgent(c.env.DB, c.env.GEMINI_API_KEY);
-      
+
       // Process the message
       const result = await agent.processMessage(userMessage);
-      
+
       // Return streaming response for AI SDK compatibility
       return new Response(result.message, {
         headers: {
@@ -961,27 +953,27 @@ const apiRoutes = app
   .post("/api/agent/chat", async (c) => {
     try {
       const { messages } = await c.req.json();
-      
+
       // Get the last user message
       const lastMessage = messages.findLast((msg: any) => msg.role === 'user');
       if (!lastMessage) {
         return new Response('No user message found', { status: 400 });
       }
-      
+
       // Extract content from message (could be string or parts array)
-      const userContent = typeof lastMessage.content === 'string' 
-        ? lastMessage.content 
+      const userContent = typeof lastMessage.content === 'string'
+        ? lastMessage.content
         : lastMessage.content.map((part: any) => part.text || '').join('');
-      
+
       // Import the ExpenseTaskAgent
       const { ExpenseTaskAgent } = await import('./lib/ai-agents');
-      
+
       // Create agent instance
       const agent = new ExpenseTaskAgent(c.env.DB, c.env.GEMINI_API_KEY);
-      
+
       // Process the message
       const result = await agent.processMessage(userContent);
-      
+
       // Return as streaming text response compatible with AI SDK
       return new Response(result.message, {
         headers: {
@@ -990,7 +982,7 @@ const apiRoutes = app
       });
     } catch (error) {
       console.error('Error processing agent chat request:', error);
-      return new Response('Sorry, I encountered an error. Please try again.', { 
+      return new Response('Sorry, I encountered an error. Please try again.', {
         status: 500,
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
@@ -1039,7 +1031,7 @@ const htmlTemplate = `<!doctype html>
   <body class="bg-gray-100 min-h-screen">
     <!-- React App Root -->
     <div id="app"></div>
-    
+
     <!-- React Application Bundle -->
     <script src="/static/index.js"></script>
   </body>
@@ -1054,12 +1046,12 @@ app.get("/", async (c) => {
 // This must be LAST to avoid interfering with API routes
 app.get("*", async (c) => {
   const path = c.req.path;
-  
+
   // Don't serve SPA for API routes, static files, or recordings
   if (path.startsWith("/api/") || path.startsWith("/static/") || path.startsWith("/recordings/") || path.startsWith("/logs")) {
     return c.notFound();
   }
-  
+
   // Serve the SPA for all other routes (client-side routing)
   return c.html(htmlTemplate);
 });

@@ -29,6 +29,13 @@
       "when": 1756673904576,
       "tag": "0003_grey_quicksilver",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1762292410082,
+      "tag": "0004_lethal_arclight",
+      "breakpoints": true
     }
   ]
 }

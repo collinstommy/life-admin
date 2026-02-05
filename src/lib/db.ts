@@ -240,7 +240,7 @@ export async function getHealthLogById(ctx: AppContext, id: number) {
       };
     } catch (relationError) {
       console.error(`Error fetching related data for log ${id}:`, relationError);
-      
+
       // Fallback to structured data JSON if relations fail
       let structuredData = null;
       if (healthLog.structuredData) {
@@ -298,7 +298,7 @@ export async function deleteHealthLog(ctx: AppContext, id: number): Promise<bool
     await db.delete(schema.meals).where(eq(schema.meals.logId, id));
     await db.delete(schema.painDiscomfort).where(eq(schema.painDiscomfort.logId, id));
     await db.delete(schema.healthData).where(eq(schema.healthData.logId, id));
-    
+
     // Finally delete the main health log
     const result = await db.delete(schema.healthLogs).where(eq(schema.healthLogs.id, id));
 
@@ -434,7 +434,7 @@ export async function getAllHealthLogs(ctx: AppContext) {
           };
         } catch (relationError) {
           console.error(`Error fetching related data for log ${log.id}:`, relationError);
-          
+
           // Fallback to structured data JSON if relations fail
           let structuredData = null;
           if (log.structuredData) {
@@ -633,9 +633,9 @@ export async function updateHealthLog(
     }
 
     // 6. Insert new pain/discomfort if any
-    if (healthData.painDiscomfort && 
-        (healthData.painDiscomfort.location || 
-         healthData.painDiscomfort.intensity || 
+    if (healthData.painDiscomfort &&
+        (healthData.painDiscomfort.location ||
+         healthData.painDiscomfort.intensity ||
          healthData.painDiscomfort.notes)) {
       await db.insert(schema.painDiscomfort).values({
         logId: id,
@@ -684,7 +684,6 @@ export async function saveRecipe(
     id: recipeEntry.id,
     notionId: recipeEntry.notionId,
     title: recipeEntry.title,
-    slug,
     markdown: recipeEntry.content,
     extractedIngredients: null, // Will be populated later by AI processing
     isActive: 1,
@@ -712,7 +711,7 @@ export async function saveRecipe(
           updatedAt: now,
         })
         .where(eq(schema.recipes.notionId, recipeEntry.notionId));
-      
+
       console.log(`Updated existing recipe: ${recipeData.title} (${existingRecipe.id})`);
       return existingRecipe.id;
     } else {
